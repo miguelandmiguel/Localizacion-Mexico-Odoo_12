@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!--Generated for OpenBIAS-->
+    <data noupdate="1">
+        <record id="catalogo_regimen_contratacion_02" model="l10n_mx_payroll.regimen_contratacion">
+            <field name="code">02</field>
+            <field name="name">Sueldos y salarios </field>
+        </record>
+        <record id="catalogo_regimen_contratacion_03" model="l10n_mx_payroll.regimen_contratacion">
+            <field name="code">03</field>
+            <field name="name">Jubilados </field>
+        </record>
+        <record id="catalogo_regimen_contratacion_04" model="l10n_mx_payroll.regimen_contratacion">
+            <field name="code">04</field>
+            <field name="name">Pensionados </field>
+        </record>
+        <record id="catalogo_regimen_contratacion_05" model="l10n_mx_payroll.regimen_contratacion">
+            <field name="code">05</field>
+            <field name="name">Asimilados a salarios, Miembros de las Sociedades Cooperativas de Producción. </field>
+        </record>
+        <record id="catalogo_regimen_contratacion_06" model="l10n_mx_payroll.regimen_contratacion">
+            <field name="code">06</field>
+            <field name="name">Asimilados a salarios, Integrantes de Sociedades y Asociaciones Civiles </field>
+        </record>
+        <record id="catalogo_regimen_contratacion_07" model="l10n_mx_payroll.regimen_contratacion">
+            <field name="code">07</field>
+            <field name="name">Asimilados a salarios, Miembros de consejos directivos, de vigilancia, consultivos, honorarios a administradores, comisarios y gerentes generales. </field>
+        </record>
+        <record id="catalogo_regimen_contratacion_08" model="l10n_mx_payroll.regimen_contratacion">
+            <field name="code">08</field>
+            <field name="name">Asimilados a salarios, Actividad empresarial (comisionistas) </field>
+        </record>
+        <record id="catalogo_regimen_contratacion_09" model="l10n_mx_payroll.regimen_contratacion">
+            <field name="code">09</field>
+            <field name="name">Asimilados a salarios, Honorarios asimilados a salarios </field>
+        </record>
+        <record id="catalogo_regimen_contratacion_10" model="l10n_mx_payroll.regimen_contratacion">
+            <field name="code">10</field>
+            <field name="name">Asimilados a salarios, Ingresos acciones o títulos valor </field>
+        </record>
+    </data>
+</odoo>

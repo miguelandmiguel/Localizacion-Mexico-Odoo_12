@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!--Generated for OpenBIAS-->
+    <data noupdate="1">
+        <record id="l10n_mx_payroll.tipopensionados_primaria" model="l10n_mx_payroll.escolaridad">
+            <field name="name">Primaria</field>
+            <field name="code">primaria</field>
+        </record>
+        <record id="l10n_mx_payroll.tipopensionados_secundaria" model="l10n_mx_payroll.escolaridad">
+            <field name="name">Secundaria</field>
+            <field name="code">secundaria</field>
+        </record>
+        <record id="l10n_mx_payroll.tipopensionados_prepa" model="l10n_mx_payroll.escolaridad">
+            <field name="name">Preparatoria</field>
+            <field name="code">prepa</field>
+        </record>
+        <record id="l10n_mx_payroll.tipopensionados_licenciatura" model="l10n_mx_payroll.escolaridad">
+            <field name="name">Licenciatura</field>
+            <field name="code">licenciatura</field>
+        </record>
+        <record id="l10n_mx_payroll.tipopensionados_tecnico" model="l10n_mx_payroll.escolaridad">
+            <field name="name">Técnico superior universitario</field>
+            <field name="code">tecnico</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,361 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!--Generated for OpenBIAS-->
+    <data noupdate="1">
+        <record id="catalogo_deduccion1" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">001</field>
+            <field name="name">Seguridad social</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion2" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">002</field>
+            <field name="name">ISR</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion3" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">003</field>
+            <field name="name">Aportaciones a retiro, cesantía en edad avanzada y vejez.</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion4" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">004</field>
+            <field name="name">Otros</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion5" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">005</field>
+            <field name="name">Aportaciones a Fondo de vivienda</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion6" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">006</field>
+            <field name="name">Descuento por incapacidad</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion7" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">007</field>
+            <field name="name">Pensión alimenticia</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion8" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">008</field>
+            <field name="name">Renta</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion9" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">009</field>
+            <field name="name">Préstamos provenientes del Fondo Nacional de la Vivienda para los Trabajadores</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion10" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">010</field>
+            <field name="name">Pago por crédito de vivienda</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion11" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">011</field>
+            <field name="name">Pago de abonos INFONACOT</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion12" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">012</field>
+            <field name="name">Anticipo de salarios</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion13" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">013</field>
+            <field name="name">Pagos hechos con exceso al trabajador</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion14" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">014</field>
+            <field name="name">Errores</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion15" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">015</field>
+            <field name="name">Pérdidas</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion16" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">016</field>
+            <field name="name">Averías</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion17" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">017</field>
+            <field name="name">Adquisición de artículos producidos por la empresa o establecimiento</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion18" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">018</field>
+            <field name="name">Cuotas para la constitución y fomento de sociedades cooperativas y de cajas de ahorro</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion19" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">019</field>
+            <field name="name">Cuotas sindicales</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion20" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">020</field>
+            <field name="name">Ausencia (Ausentismo)</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion21" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">021</field>
+            <field name="name">Cuotas obrero patronales</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion22" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">022</field>
+            <field name="name">Impuestos Locales</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_deduccion23" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">023</field>
+            <field name="name">Aportaciones voluntarias</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_deduccion" />
+        </record>
+        <record id="catalogo_tipo_incapacidad1" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">001</field>
+            <field name="name">Riesgo de trabajo</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_incapacidad" />
+        </record>
+        <record id="catalogo_tipo_incapacidad2" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">002</field>
+            <field name="name">Enfermedad en general</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_incapacidad" />
+        </record>
+        <record id="catalogo_tipo_incapacidad3" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">003</field>
+            <field name="name">Maternidad</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_incapacidad" />
+        </record>
+        <record id="catalogo_otro_pago1" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">001</field>
+            <field name="name">Reintegro de ISR pagado en exceso (siempre que no haya sido enterado al SAT).</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_otro_pago" />
+        </record>
+        <record id="catalogo_otro_pago2" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">002</field>
+            <field name="name">Subsidio para el empleo (efectivamente entregado al trabajador).</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_otro_pago" />
+        </record>
+        <record id="catalogo_otro_pago3" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">003</field>
+            <field name="name">Viáticos (entregados al trabajador).</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_otro_pago" />
+        </record>
+        <record id="catalogo_otro_pago4" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">004</field>
+            <field name="name">Aplicación de saldo a favor por compensación anual.</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_otro_pago" />
+        </record>
+        <record id="catalogo_otro_pago5" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">999</field>
+            <field name="name">Pagos distintos a los listados y que no deben considerarse como ingreso por sueldos, salarios o ingresos asimilados.</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_otro_pago" />
+        </record>
+        <record id="catalogo_percepcion1" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">001</field>
+            <field name="name">Sueldos, Salarios  Rayas y Jornales</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion2" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">002</field>
+            <field name="name">Gratificación Anual (Aguinaldo)</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion3" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">003</field>
+            <field name="name">Participación de los Trabajadores en las Utilidades PTU</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion4" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">004</field>
+            <field name="name">Reembolso de Gastos Médicos Dentales y Hospitalarios</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion5" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">005</field>
+            <field name="name">Fondo de Ahorro</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion6" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">006</field>
+            <field name="name">Caja de ahorro</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion7" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">009</field>
+            <field name="name">Contribuciones a Cargo del Trabajador Pagadas por el Patrón</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion8" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">010</field>
+            <field name="name">Premios por puntualidad</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion9" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">011</field>
+            <field name="name">Prima de Seguro de vida</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion10" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">012</field>
+            <field name="name">Seguro de Gastos Médicos Mayores</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion11" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">013</field>
+            <field name="name">Cuotas Sindicales Pagadas por el Patrón</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion12" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">014</field>
+            <field name="name">Subsidios por incapacidad</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion13" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">015</field>
+            <field name="name">Becas para trabajadores y/o hijos</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion14" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">019</field>
+            <field name="name">Horas extra</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion15" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">020</field>
+            <field name="name">Prima dominical</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion16" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">021</field>
+            <field name="name">Prima vacacional</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion17" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">022</field>
+            <field name="name">Prima por antigüedad</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion18" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">023</field>
+            <field name="name">Pagos por separación</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion19" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">024</field>
+            <field name="name">Seguro de retiro</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion20" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">025</field>
+            <field name="name">Indemnizaciones</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion21" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">026</field>
+            <field name="name">Reembolso por funeral</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion22" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">027</field>
+            <field name="name">Cuotas de seguridad social pagadas por el patrón</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion23" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">028</field>
+            <field name="name">Comisiones</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion24" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">029</field>
+            <field name="name">Vales de despensa</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion25" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">030</field>
+            <field name="name">Vales de restaurante</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion26" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">031</field>
+            <field name="name">Vales de gasolina</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion27" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">032</field>
+            <field name="name">Vales de ropa</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion28" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">033</field>
+            <field name="name">Ayuda para renta</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion29" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">034</field>
+            <field name="name">Ayuda para artículos escolares</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion30" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">035</field>
+            <field name="name">Ayuda para anteojos</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion31" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">036</field>
+            <field name="name">Ayuda para transporte</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion32" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">037</field>
+            <field name="name">Ayuda para gastos de funeral</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion33" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">038</field>
+            <field name="name">Otros ingresos por salarios</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion34" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">039</field>
+            <field name="name">Jubilaciones, pensiones o haberes de retiro</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion35" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">044</field>
+            <field name="name">Jubilaciones, pensiones o haberes de retiro en parcialidades</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion36" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">045</field>
+            <field name="name">Ingresos en acciones o títulos valor que representan bienes</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion37" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">046</field>
+            <field name="name">Ingresos asimilados a salarios</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion38" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">047</field>
+            <field name="name">Alimentación</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion39" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">048</field>
+            <field name="name">Habitación</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+        <record id="catalogo_percepcion40" model="l10n_mx_payroll.codigo_agrupador">
+            <field name="code">049</field>
+            <field name="name">Premios por asistencia</field>
+            <field name="cfdi_tipo_id" ref="l10n_mx_payroll.catalogo_tipo_percepcion" />
+        </record>
+    </data>
+</odoo>

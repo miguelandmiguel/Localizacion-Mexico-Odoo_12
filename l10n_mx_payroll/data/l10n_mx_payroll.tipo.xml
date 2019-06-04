@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!--Generated for OpenBIAS-->
+    <data noupdate="1">
+        <record id="catalogo_tipo_percepcion" model="l10n_mx_payroll.tipo">
+            <field name="name">Percepciones</field>
+        </record>
+        <record id="catalogo_tipo_deduccion" model="l10n_mx_payroll.tipo">
+            <field name="name">Deducciones</field>
+        </record>
+        <record id="catalogo_tipo_incapacidad" model="l10n_mx_payroll.tipo">
+            <field name="name">Incapacidades</field>
+        </record>
+        <record id="catalogo_tipo_otro_pago" model="l10n_mx_payroll.tipo">
+            <field name="name">Otro pago</field>
+        </record>
+        <record id="catalogo_tipo_hora_extra" model="l10n_mx_payroll.tipo">
+            <field name="name">Horas Extras</field>
+        </record>
+    </data>
+</odoo>

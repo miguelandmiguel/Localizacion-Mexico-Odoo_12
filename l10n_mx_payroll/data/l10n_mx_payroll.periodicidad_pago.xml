@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!--Generated for OpenBIAS-->
+    <data noupdate="1">
+        <record id="catalogo_periodicidad1" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">01</field>
+            <field name="name">Diario</field>
+        </record>
+        <record id="catalogo_periodicidad2" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">02</field>
+            <field name="name">Semanal</field>
+        </record>
+        <record id="catalogo_periodicidad3" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">03</field>
+            <field name="name">Catorcenal</field>
+        </record>
+        <record id="catalogo_periodicidad4" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">04</field>
+            <field name="name">Quincenal</field>
+        </record>
+        <record id="catalogo_periodicidad5" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">05</field>
+            <field name="name">Mensual</field>
+        </record>
+        <record id="catalogo_periodicidad6" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">06</field>
+            <field name="name">Bimestral</field>
+        </record>
+        <record id="catalogo_periodicidad7" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">07</field>
+            <field name="name">Unidad obra</field>
+        </record>
+        <record id="catalogo_periodicidad8" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">08</field>
+            <field name="name">Comisión</field>
+        </record>
+        <record id="catalogo_periodicidad9" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">09</field>
+            <field name="name">Precio alzado</field>
+        </record>
+        <record id="catalogo_periodicidad10" model="l10n_mx_payroll.periodicidad_pago">
+            <field name="code">99</field>
+            <field name="name">Otra Periodicidad</field>
+        </record>
+    </data>
+</odoo>

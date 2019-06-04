@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!--Generated for OpenBIAS-->
+    <data noupdate="1">
+        <record id="catalogo_tipo_contrato1" model="hr.contract.type">
+            <field name="code">01</field>
+            <field name="name">Contrato de trabajo por tiempo indeterminado</field>
+        </record>
+        <record id="catalogo_tipo_contrato2" model="hr.contract.type">
+            <field name="code">02</field>
+            <field name="name">Contrato de trabajo para obra determinada</field>
+        </record>
+        <record id="catalogo_tipo_contrato3" model="hr.contract.type">
+            <field name="code">03</field>
+            <field name="name">Contrato de trabajo por tiempo determinado</field>
+        </record>
+        <record id="catalogo_tipo_contrato4" model="hr.contract.type">
+            <field name="code">04</field>
+            <field name="name">Contrato de trabajo por temporada</field>
+        </record>
+        <record id="catalogo_tipo_contrato5" model="hr.contract.type">
+            <field name="code">05</field>
+            <field name="name">Contrato de trabajo sujeto a prueba</field>
+        </record>
+        <record id="catalogo_tipo_contrato6" model="hr.contract.type">
+            <field name="code">06</field>
+            <field name="name">Contrato de trabajo con capacitación inicial</field>
+        </record>
+        <record id="catalogo_tipo_contrato7" model="hr.contract.type">
+            <field name="code">07</field>
+            <field name="name">Modalidad de contratación por pago de hora laborada</field>
+        </record>
+        <record id="catalogo_tipo_contrato8" model="hr.contract.type">
+            <field name="code">08</field>
+            <field name="name">Modalidad de trabajo por comisión laboral</field>
+        </record>
+        <record id="catalogo_tipo_contrato9" model="hr.contract.type">
+            <field name="code">09</field>
+            <field name="name">Modalidades de contratación donde no existe relación de trabajo</field>
+        </record>
+        <record id="catalogo_tipo_contrato10" model="hr.contract.type">
+            <field name="code">10</field>
+            <field name="name">Jubilación, pensión, retiro.</field>
+        </record>
+        <record id="catalogo_tipo_contrato11" model="hr.contract.type">
+            <field name="code">99</field>
+            <field name="name">Otro contrato</field>
+        </record>
+    </data>
+</odoo>

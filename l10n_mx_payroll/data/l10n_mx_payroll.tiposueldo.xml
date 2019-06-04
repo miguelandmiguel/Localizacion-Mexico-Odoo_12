@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!--Generated for OpenBIAS-->
+    <data noupdate="1">
+        <record id="l10n_mx_payroll.tiposueldo_1" model="l10n_mx_payroll.tiposueldo">
+            <field name="name">Fijo</field>
+            <field name="code">0</field>
+        </record>
+        <record id="l10n_mx_payroll.tiposueldo_2" model="l10n_mx_payroll.tiposueldo">
+            <field name="name">Variable</field>
+            <field name="code">1</field>
+        </record>
+        <record id="l10n_mx_payroll.tiposueldo_3" model="l10n_mx_payroll.tiposueldo">
+            <field name="name">Mixto</field>
+            <field name="code">2</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <menuitem id="menu_l10n_mx_payroll" 
+            name="Localizacion Mexico" 
+            parent="hr_payroll.menu_hr_payroll_root" 
+            sequence="25" />
+
+            <menuitem 
+                action="l10n_mx_payroll.act_open_tipotrabajador"
+                id="menu_open_tipotrabajador"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll"
+                sequence="10" />
+            <menuitem 
+                action="l10n_mx_payroll.act_open_tipojornada"
+                id="menu_open_tipojornada"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll"
+                sequence="11" />  
+            <menuitem 
+                action="l10n_mx_payroll.act_open_tiposueldo"
+                id="menu_open_tiposueldo"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll"
+                sequence="20" />
+            <menuitem 
+                action="l10n_mx_payroll.act_open_zonasalario"
+                id="menu_open_zonasalario"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll"
+                sequence="30" />
+            <menuitem 
+                action="l10n_mx_payroll.act_open_formapago"
+                id="menu_open_formapago"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll" 
+                sequence="40"/>
+            <menuitem 
+                action="l10n_mx_payroll.act_open_regpat"
+                id="menu_open_regpat"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll"
+                sequence="50"/>
+            <menuitem 
+                action="l10n_mx_payroll.act_open_escolaridad"
+                id="menu_open_escolaridad"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll"
+                sequence="60" />
+            <menuitem 
+                action="l10n_mx_payroll.act_open_tipodescuento"
+                id="menu_open_tipodescuento"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll"
+                sequence="70" />
+
+
+            <menuitem 
+                action="l10n_mx_payroll.act_open_l10n_mx_payroll_codigo_agrupador"
+                id="menu_l10n_mx_payroll_codigoagrupador"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll" />
+            <menuitem 
+                action="l10n_mx_payroll.act_open_hr_tabla_isr"
+                id="menu_hr_tabla_isr"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll" />
+            <menuitem 
+                action="l10n_mx_payroll.act_open_hr_tabla_subsidio"
+                id="menu_hr_tabla_subsidio"
+                parent="l10n_mx_payroll.menu_l10n_mx_payroll" />
+        
+
+    </data>
+</odoo>
