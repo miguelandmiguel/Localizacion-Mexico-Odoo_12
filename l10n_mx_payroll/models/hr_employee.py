@@ -199,9 +199,10 @@ class Employee(models.Model):
     def _onchange_user(self):
         if self.user_id:
             self.work_email = self.user_id.email or ''
-            self.work_phone_ext = self.user_id.phone_ext or ''
             self.cfdi_curp = self.cfdi_curp or '' 
             self.image = self.user_id.image
+            # self.work_phone_ext = self.user_id.phone_ext or ''
+
 
 
     @api.onchange('cfdi_date_start', 'cfdi_date_end')

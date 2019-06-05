@@ -2,16 +2,21 @@
 <odoo>
     <data>
 
-        <record id="view_company_hr_cfdi_form" model="ir.ui.view">
-            <field name="name">view_company_hr_cfdi_form</field>
+        <record id="view_company_hr_form" model="ir.ui.view">
+            <field name="name">view_company_hr_form</field>
             <field name="model">res.company</field>
-            <field name="inherit_id" ref="cfd_mx.view_company_cfdi_form"/>
+            <field name="inherit_id" ref="base.view_company_form"/>
             <field name="arch" type="xml">
-                <group name="cfdi_timbrar" position="after">
-                    <group string="Recursos humanos" name="cfdi_hr">
-                        <field name="cfdi_registropatronal_id" />
-                    </group>
-                </group>
+                <notebook position="inside">
+                    <page string="CFDI MX" name="cfdi_timbrar">
+                        <group>
+                            <group string="Recursos humanos">
+                                <field name="cfdi_registropatronal_id" />
+                                <field name="cfdi_riesgo_puesto_id" />
+                            </group>
+                        </group>
+                    </page>
+                </notebook>
             </field>
         </record>
 

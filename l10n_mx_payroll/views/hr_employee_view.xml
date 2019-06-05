@@ -281,7 +281,7 @@
                         </group>
                     </xpath>
                     <field name="company_id" position="after">
-                        <field name="cfdi_registropatronal_id"/>
+                        <field name="cfdi_registropatronal_id" invisible="1"/>
                     </field>
                 </data>
             </field>

@@ -434,30 +434,6 @@ class TipoDeduccion(models.Model):
         return recs.name_get()
 
 
-class TipoJornada(models.Model):
-    _name = "l10n_mx_payroll.tipo_jornada"
-    _description = "Tipo jornada"
-
-    name = fields.Char(string="Nombre", required=True)
-    code = fields.Char(string=u"Codigo Catalogo SAT", required=True)
-
-    @api.multi
-    def name_get(self):
-        result = []
-        for rec in self:
-            result.append((rec.id, "[%s] %s" % (rec.code, rec.name or '')))
-        return result
-
-    @api.model
-    def name_search(self, name, args=None, operator='ilike', limit=100):
-        recs = super(TipoJornada, self).name_search(name, args=args, operator=operator, limit=limit)
-        args = args or []
-        recs = self.browse()
-        if name:
-            recs = self.search([('code', operator, name)] + args, limit=limit)
-        if not recs:
-            recs = self.search([('name', operator, name)] + args, limit=limit)
-        return recs.name_get()
 
 class TipoOtroPago(models.Model):
     _name = "l10n_mx_payroll.tipo_otro_pago"

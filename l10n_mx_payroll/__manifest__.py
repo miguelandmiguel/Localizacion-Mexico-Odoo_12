@@ -32,9 +32,8 @@
         
         'views/l10n_mx_payroll_views.xml',
         'views/hr_employee_view.xml',
-        
+        'views/res_company_views.xml',
         'views/hr_payroll_views.xml',
-
         'views/l10n_mx_payroll_menuitem.xml'
     ],
 }
