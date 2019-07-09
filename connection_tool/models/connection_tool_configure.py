@@ -46,6 +46,13 @@ import datetime
 import logging
 import time
 
+try:
+    import xlsxwriter
+except ImportError:
+    _logger.debug('Can not import xlsxwriter`.')
+
+from io import BytesIO
+
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 from odoo.tools.translate import _
@@ -140,6 +147,7 @@ IMPORT_TYPE = [
 ]
 OUTPUT_TYPE = [
     ('csv', 'CSV'),
+    ('xlsx', 'Excel (xlsx)'),
     ('csv_meta', 'CSV with Metadata'),
     ('text', 'Text'),
     ('text_columns', 'Text with Columns Header'),
@@ -303,17 +311,29 @@ class Configure(models.Model):
         for model in meta['model_list']:
             if not data['val'].get(model,False) or not data['val'][model].keys():
                 continue
-
             keys, import_fields, values = self._get_values(meta['val']['lines'])
-            print("flag_imp", flag_imp, "Values=", values, "import_fields", import_fields)
             if flag_imp:
                 if self.output_destination == 'this_database':
                     # print("self.output_destination", self.output_destination)
                     import_result = self.env[model].load(import_fields, values)
-                    print("import_result", import_result)
                     # self.raise_message(import_result)
+            if self.output_type: 
+                if self.output_type in ('xlsx'):
+                    file_data = BytesIO()
+                    workbook = xlsxwriter.Workbook(file_data, {'in_memory': True})
+                    worksheet = workbook.add_worksheet( self.model_id.name )
+                    worksheet.write_row('A1', import_fields)
+                    row = 2
+                    for v in values:
+                        worksheet.write_row('A%s'%row, v)
+                        row += 1
+                    workbook.close()
+                    file_data.seek(0)
+                    self.export_file = base64.b64encode(file_data.getvalue())
+
         # print("dataaaaaaaaaaaaaaaa", data)
         # print("metaaaaaaaaaaaaaaaa", meta)
+
 
 
 
@@ -431,6 +451,12 @@ class Configure(models.Model):
                     if line_dict[ldict].startswith("vacio"):
                         line_dict[ldict] = ""
 
+                if self.model_id.model == 'account.move':
+                    if line_dict.get("line_ids/credit", "0.0") != "0.0" and line_dict.get("line_ids/debit", "0.0") != "0.0":
+                        line_dict_tmp = line_dict.copy()
+                        line_dict_tmp["line_ids/credit"] = "0.0"
+                        line_dict["line_ids/debit"] = "0.0"
+                        meta['val']['lines'].append(line_dict_tmp)
                 meta['val']['lines'].append(line_dict)
                 
 
@@ -518,9 +544,6 @@ class Configure(models.Model):
                         raise UserError(_('Result must be integer in macro sequence %s, the actual result value is %s, row = %s ')%(macro.sequence, val, meta['relative_index']))
             i -= 1
         return data, meta
-
-
-
 
 
 
@@ -809,16 +832,16 @@ class Configure(models.Model):
         return result, meta
 
 
-
-
-
-
-
-
-
+    # 
+    # Botones
+    # 
     @api.multi
     def button_import(self, automatic=False):
         return self._import(flag_imp=True, automatic=automatic)
+
+    @api.multi
+    def button_test_import(self, automatic=False):
+        return self._import(flag_imp=False, automatic=False)
 
     # Macros
     @api.multi
@@ -839,7 +862,6 @@ class Configure(models.Model):
     def button_delete_macro(self): 
         for imprt in self:
             self.macro_ids.unlink()
-
 
     @api.multi
     def button_create_macro(self): 
@@ -885,60 +907,6 @@ class Configure(models.Model):
             imprt.write({'macro_ids': map(lambda x: (0,0,x), values)})
         return {}
 
-
-    @api.multi
-    def button_create_macro_old(self): 
-        Macros = self.env['connection_tool.macro']
-        for imprt in self:
-            tmp = {}
-            values, field_ids, fields_name, columns = [], [], [], {}
-            for model in imprt.model_ids:
-                tmp_fields = {}
-                for tmp in self.get_fields(self.model_id.model):
-                    if tmp['id'] not in tmp_fields:
-                        tmp_fields[ tmp['id'] ] = tmp
-                columns[model.model] = tmp_fields
-                for field in filter(lambda w: w.name in columns[model.model] and w.name not in fields_name, model.field_id):
-                    field_ids.append(field)
-                    fields_name.append(field.name)
-
-           
-            for idx, field in enumerate([1] + field_ids + [2,3]):
-                field_int = type(field).__name__ == 'int' or False
-                ttype = field_int and (field==1 and 'register_id' or field==2 and 'next_index' or field==3 and 'jump') or 'register'
-                model_ids = [x.id for x in imprt.model_ids]
-                db_field, db_field_type = None, None # self.get_db_field(field, imprt, ttype)
-                selection = False
-                return_type = False
-                if not field_int:
-                    if field.ttype in ('many2many', 'one2many', 'many2one'):
-                        return_type = 'external'
-                    elif field.ttype == 'selection':
-                        selection = tmp_fields.get( field.name ) and tmp_fields[field.name]['selection'] or []
-                val = {
-                    'name': not field_int and field.field_description or dict(TYPE_SELECTION)[ttype],
-                    'field_id': not field_int and field.id,
-                    'field_name': not field_int and field.name,
-                    'field_type': not field_int and field.ttype,
-                    'field_model': not field_int and field.model,
-                    'selection': selection,
-                    'return_type': return_type,
-                    'table': imprt.table,
-                    'parent_table': imprt.table,
-                    'row': imprt.table,
-                    'col': db_field,
-                    'db_field': db_field,
-                    'db_field_type': db_field_type,
-                    'sequence': idx + 1,
-                    'model_id': imprt.model_id.id,
-                    'model_ids': [(6, False, model_ids)],
-                    'type': ttype,
-                    'import_type': imprt.type,
-                    'row_type': 'relative',
-                }
-                values.append(val)
-            imprt.write({'macro_ids': map(lambda x: (0,0,x), values)})
-        return {}
 
 
     @api.multi
