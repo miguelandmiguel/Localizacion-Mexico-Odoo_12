@@ -1,0 +1,389 @@
+<odoo>
+    <data>
+
+        <record id="view_connection_tool_configure_form" model="ir.ui.view">
+            <field name="name">Connection Tool Configure Form</field>
+            <field name="model">connection_tool.configure</field>
+            <field name="arch" type="xml">
+                <form string="Connection Tool Configure" >
+                    <header>
+                        <button name="button_import" string="Import" type="object" class="oe_highlight" />
+                        <button name="button_test_import" string="Output" type="object" />
+                    </header>
+                    <sheet string="Connection Tool Configure">
+                        <label for="name" class="oe_edit_only" string="Model and Name"/>
+                        <h1>
+                            <field name="model_id" class="oe_inline" placeholder="Model" /> -
+                            <field name="name" class="oe_inline" placeholder="Name" style="width: 6em"/> -
+                            <field name="model_ids" class="oe_inline" widget="many2many_tags" attrs="{'invisible': [('model_id', '=', False)]}"/>
+                        </h1>
+                        <group colspan="2">
+                            <field name="register_to_process" />
+                            <field name="company_id" invisible="0" />
+                        </group>
+                        <notebook>
+                            <page string="Extract >>> ">
+                                <group>
+                                    <group>
+                                        <field name="type"/>
+                                    </group>
+                                    <group attrs="{'invisible' : [('type', 'not in', ['csv','ftp'])]}" >
+                                        <field name="quoting" class="oe_inline" placeholder="Quoting"/>
+                                        <field name="separator" class="oe_inline" placeholder="Separator"/> 
+                                        <field name="with_header" />
+                                    </group>
+                                </group>
+                                <group colspan="4" col="4" attrs="{'invisible' : [('type', 'not in', ['csv'])]}" >
+                                    <group colspan="4">
+                                        <field name="datas_fname" invisible="1"/>
+                                        <field name="datas_file" filename="datas_fname" class="oe_inline"
+                                            attrs="{'invisible' : [('type', '!=', 'csv')]}"
+                                            context="{'active_id':active_id}" />
+                                    </group>
+                                    <group colspan="4">
+                                        <label for="headers" colspan="2"/>
+                                        <field name="headers" nolabel="1" colspan="4" />
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Transform >>> ">
+                                <button name="button_disable" string="Disable" type="object"/>
+                                <button name="button_enable" string="Enable" type="object"/>
+                                <button name="button_create_macro" string="Create Macros" type="object" attrs="{'invisible': [('macro_ids','!=',[])]}"/>
+                                <button name="button_delete_macro" string="Delete Macros" type="object" attrs="{'invisible': [('macro_ids','=',[])]}"/>
+                                <field name="macro_ids" nolabel="1" 
+                                    context="{
+                                        'active_id':active_id, 
+                                        'import_id':active_id, 
+                                        'model_id':model_id, 
+                                        'model_ids':model_ids,
+                                        'import_type':type,
+                                        'headers':headers
+                                    }"/>
+                            </page>
+                            <page string="Load >>>">
+                                <group string="Output">
+                                    <group colspan="2">
+                                        <field name="output_type" on_change="onchange_output_type(output_type)"/>
+                                    </group>
+                                    <group  colspan="2" attrs="{'invisible': ['|',('type', '=', 'wizard'), ('output_type', '=', False)]}">
+                                        <field name="output_destination"/>
+
+                                        <label for="export_file" string="Output File"/>
+                                        <div>
+                                            <field name="export_filename" class="oe_inline" placeholder="Export File Name" 
+                                                    attrs="{'required': [('output_destination', 'in', ['ftp','ftp_traffic'])]}"/>
+                                            <field name="export_file" readonly="1" filename="export_filename" class="oe_inline"/>
+                                        </div>
+                                        <field name="export_file_encoding" attrs="{'invisible': [('output_type', 'not in', ('text', 'text_columns'))]}" 
+                                                    context="{'export_file_encoding':export_file_encoding}"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Advanced">
+                                 <group colspan="4" col="4">
+                                  <group col="2" string="Export/Import Macros">
+                                    <button name="button_export_macros" string="Export Macros" type="object" icon="gtk-execute" colspan="4"/>
+                                    <button name="button_import_macros" string="Import Macros" type="object" icon="gtk-execute" colspan="4"/>
+                                    <field name="macro_file" filename="export_filename" colspan="4"/>
+                                  </group>
+                                  <group string="Import Secondary Configurations Files" col="2">
+                                    <field name="secondary_ids" widget="many2many_tags" placeholder="Import secondary configurations..." colspan="4" />
+                                  </group>
+                                </group>
+                                <group colspan="4" col="4" string="Export/Import Data Object">
+                                    <group colspan="2">
+                                        <button name="button_export_object_data" string="Export Object Data" type="object" icon="gtk-execute" colspan="4" />
+                                        <button name="button_import_object_data" string="Import Object Data" type="object" icon="gtk-execute" colspan="4" />
+                                        <field name="object_copy_data_file" filename="datas_fname_object_copy" colspan="4"/>   
+                                    </group>
+                                </group>
+                                <group col="4">
+                                    <separator string="Search String in Macro Python Code" colspan="4"/>
+                                    <field name="string" nolabel="1" on_change="onchange_string(string, macro_ids)" colspan="4"/>
+                                    <field name="string_macro" colspan="4"/>
+                                </group>
+                            </page>
+                            <page string="Instructions">
+                                <group>
+                                    <separator string="Prerequisites" colspan="4"/>
+                                    <field name="message_prerequisites" colspan="4" nolabel="1" />
+                                    <separator string="Instructions for Use" colspan="4"/>
+                                    <field name="message_instruction" colspan="4" nolabel="1" />
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_connection_tool_configure_tree" model="ir.ui.view">
+            <field name="name">Connection Tool Configure Tree</field>
+            <field name="model">connection_tool.configure</field>
+            <field name="arch" type="xml">
+                <tree string="Connection Tool Configure">
+                    <field name="name"/>
+                    <field name="model_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_connection_tool_configure" model="ir.actions.act_window">
+            <field name="name">Connection Tool Configure</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">connection_tool.configure</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem 
+            action="action_connection_tool_configure" 
+            id="menu_connection_tool_configure" 
+            parent="base.next_id_6"/>
+
+
+
+
+
+
+        <record id="view_connection_tool_macro_form" model="ir.ui.view">
+            <field name="name">Connection Tool Form</field>
+            <field name="model">connection_tool.macro</field>
+            <field name="arch" type="xml">
+                <form string="Connection Tool" >
+                    <group col="6">
+                        <field name="sequence" colspan="2"/>
+                        <field name="disable" colspan="2"/>
+                        <field name="lenght" colspan="2" attrs="{'invisible' : [('output_type', 'not in', ['text','text_columns'])]}"/>
+                        <field name="import_type" invisible="0"/>
+                        <field name="output_type" invisible="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Configuration">
+                            <group>
+                                <group string="General Information">
+                                    <field name="import_id" invisible="1"/>
+                                    <field name="model_ids" widget="many2many_tags" attrs="{'invisible' : [('model_id', '=', False)]}"/>
+                                    <field name="name"/>
+                                    <field name="type" context="{'import_id': import_id, 'macro_ids': parent.macro_ids, 'model_ids':model_ids}"/>
+                                    <field name="model_id" invisible="0"/>
+                                    
+                                </group>
+                                <group string="Field Information" attrs="{'invisible' : [('type', 'not in', ('register','python','line'))]}">
+                                    <field name="field_id" 
+                                            domain="[('model_id','=', model_id)]" attrs="{'invisible' : [('model_id', '=', False)]}"/>
+                                    <field name="field_name" 
+                                            attrs="{'invisible' : [('model_id', '=', False)], 'required':[('type','=', 'register' )]}"/>
+                                    <field name="field_model" 
+                                            attrs="{'invisible' : ['|',('model_id', '=', False),('field_type', 'not in',('many2one','many2many','one2many'))]}"/>
+                                    <field name="field_type" readonly="0"/>
+                                    <field name="return_type" 
+                                            attrs="{
+                                                'invisible':['|','|',('field_type', 'not in',('many2one','many2many','one2many')), ('type', '=', 'line'), ('field_id', '=', False)], 
+                                                'required':[('type', '!=', 'line'), ('field_type', 'in',['many2one','many2many','one2many']), ('field_id', '!=', False)]
+                                            }"/>
+                                </group>
+                            </group>
+                            <group col="4" string="Selection" attrs="{'invisible' : [('field_type', '!=', 'selection')]}">
+                                <field name="selection"/>
+                            </group>
+
+                            <group string="Cell Information" attrs="{'invisible' : ['|',('type','=','line'),('import_type','in',('postgresql', 'xml-rpc'))]}">
+                                <group>
+                                    <field name="row" />
+                                    <field name="row_type" attrs="{'invisible':['|',('row','=',False), ('type','=','first_index')]}"/>
+                                </group>
+                                <group>
+                                    <field name="col" attrs="{'invisible': ['|',('type','=','first_index'),('import_type','not in',['csv','ftp'])]}"/>
+                                    <field  name="col_csv" attrs="{'invisible': ['|', ('import_type','not in', ['csv','ftp']), ('type','=','first_index')]}"/>
+                                </group>
+                            </group>
+
+                            <group col="5" attrs="{'invisible' : ['|',('type','==','first_index'),('import_type','not in',('postgresql', 'xml-rpc'))]}">
+                                <separator string="Table Information" colspan="5"/>
+                                <div>
+                                    <field name="table" nolabel="1" class="oe_inline"/> -
+                                    <field name="parent_table" nolabel="1" class="oe_inline"
+                                            attrs="{'invisible' : [('type','!=','line')]}"/>
+                                </div>
+                                <div>
+                                    <field name="db_field" nolabel="1" class="oe_inline"/> - [
+                                    <field name="db_field_type" nolabel="1" class="oe_inline"/>]
+                                    <field name="db_relational_field" nolabel="1" class="oe_inline" 
+                                            attrs="{'invisible' : [('type','!=','line'),('db_relational_field','=',False)]}"/>
+                                </div>
+                            </group>
+                            <group string="Python Code" colspan="4" 
+                                    attrs="{'invisible' : [('type', 'in', ('line','first_index'))]}">
+                                <field name="python" nolabel="1"/>
+                            </group>
+                        </page>
+                        <page string="Extra Configuration" attrs="{'invisible' : ['!', ('output_type', 'not in', ['text', 'text_columns']), ('import_type', 'not in', ['xml-rpc', 'postgresql'])]}">
+                            <group col="4" string="Result Output Type Text">
+                                <field name="result_format_date"/>
+                                <field name="result_format_number"/>
+                                <newline />
+                                <field name="result_type"/>
+                                <field name="result_zero"/>
+                                <field name="result_start"/>
+                                <field name="result_end"/>
+                                <field name="result_required"/>
+                            </group>
+                            <group col="4" string="Configuration postgresql / xml-rpc" >
+                                <newline />
+                                <field name="result_where" colspan="4" placeholder="WHERE active=True / [('active', '=', '1')]" />
+                                <field name="result_orderby" colspan="4" placeholder="ORDER BY name ASC / name ASC" />
+                            </group>
+                        </page>
+                        <page string="Help ">
+                            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                                <div class="panel panel-info">
+                                    <div class="panel-heading" role="tab" id="headingOne">
+                                        <h4 class="panel-title">
+                                            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                                RETURN: Return value in 'result' variable, example
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                                        <div class="panel-body">
+                                            <ul class="list-group">
+                                                <li class="list-group-item">return = 1</li>
+                                                <li class="list-group-item">result = 'EOL,n'  (only in action Next Index, n: rows to add at relative_index)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-info">
+                                    <div class="panel-heading" role="tab" id="headingTwo">
+                                        <h4 class="panel-title">
+                                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                            VARIABLES: 
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+                                        <div class="panel-body">
+                                            <code>
+                                                osv, netsvc, self, cr, uid, value, row_value, relative_index, data_global, model, 
+                                                parent_model, model_list, register_id, register, parent_register_id, parent_register, 
+                                                'EOL,n' , EOF, context, ids, (if Type = PostgreSQL: cursor, table, db_field)
+                                            </code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-info">
+                                    <div class="panel-heading" role="tab" id="headingThree">
+                                        <h4 class="panel-title">
+                                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                                STRING FUNCTIONS (s):
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+                                        <div class="panel-body">
+                                            <code>
+                                                remove_accents(s), s.upper(), s.lower(), s.title(), int(s), 
+                                                s.split(), s.strip(), s.replace(' ', '_'), re.split(r'[()]',s), 
+                                                re.sub('[ \n]', '', value), s = u.encode('utf-8')
+                                            </code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-info">
+                                    <div class="panel-heading" role="tab" id="headingFour">
+                                        <h4 class="panel-title">
+                                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                                OBJECT FUNCTIONS:
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    <div id="collapseFour" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFour">
+                                        <div class="panel-body">
+                                            <code>
+                                                self.get_obj(cr, uid, model, external_id) <br />
+                                                self.get_external_id(cr, uid, model, res_id) <br />
+                                                self.create_external_id(cr, uid, model, res_id, external_id)
+                                            </code>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-info">
+                                    <div class="panel-heading" role="tab" id="headingFive">
+                                        <h4 class="panel-title">
+                                            <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                                DATE OPERATION:
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    <div id="collapseFive" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFive">
+                                        <div class="panel-body">
+                                            <code>
+                                                time.strftime('%%Y-%%m-%%d', time.strptime('16/06/14', '%%d/%%m/%%y'))
+                                            </code>
+                                        </div>
+                                    </div>
+                              </div>
+                              <div class="panel panel-info">
+                                <div class="panel-heading" role="tab" id="headingSix">
+                                  <h4 class="panel-title">
+                                    <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                                      ERROR HANDLING:
+                                    </a>
+                                  </h4>
+                                </div>
+                                <div id="collapseSix" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingSix">
+                                  <div class="panel-body">
+                                    <code>
+                                    try: <br />
+                                    (Function), <br />
+                                    except: <br />
+                                    raise UserError(('Description of error in this variable resource'))
+                                    </code>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                        </page>
+                    </notebook>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_connection_tool_macro_tree" model="ir.ui.view">
+            <field name="name">Connection Tool Tree</field>
+            <field name="model">connection_tool.macro</field>
+            <field name="arch" type="xml">
+                <tree string="Connection Tool" colors="blue:disable == True; black:type=='register_id'; green:type=='jump'">
+                    <field name="sequence" string="Seq" widget="handle"/>
+                    <field name="name"/>
+                    <field name="row_type"/>
+                    <field name="row" string="Row/Table"/>
+                    <field name="col" string="Col/Field"/>
+                    <field name="type"/>
+                    <field name="field_id"/>
+                    <field name="return_type" invisible="0"/>
+                    <!--field name="lenght" attrs="{'invisible' : [('output_type', 'not in', ['text','text_columns'])]}"/-->
+                    <field name="field_type" invisible="1"/>
+                    <field name="output_type" invisible="1"/>
+                    <field name="disable" invisible="0"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_connection_tool_macro" model="ir.actions.act_window">
+            <field name="name">Connection Tool</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">connection_tool.macro</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+
+
+
+
+    </data>
+</odoo>
