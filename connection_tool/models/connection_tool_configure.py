@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from ftplib import FTP
+
 try:
     from itertools import ifilter as filter
 except ImportError:
@@ -10,6 +12,9 @@ try:
 except ImportError:
     imap=map
 
+
+import io
+from io import BytesIO
 try:
     from StringIO import StringIO
 except ImportError:
@@ -32,7 +37,6 @@ import unicodedata
 
 import chardet
 import datetime
-import io
 import itertools
 import logging
 import psycopg2
@@ -50,8 +54,6 @@ try:
     import xlsxwriter
 except ImportError:
     _logger.debug('Can not import xlsxwriter`.')
-
-from io import BytesIO
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
@@ -103,6 +105,11 @@ EXTENSIONS = {
 }
 
 # from odoo.addons.connection_tool.models.common_import import *
+
+class StrToBytesIO(io.BytesIO):
+    def write(self, s, encoding='utf-8'):
+        return super().write(s.encode(encoding))
+
 
 def remove_accents(s):
     def remove_accent1(c):
@@ -169,10 +176,23 @@ class Configure(models.Model):
     _description = "Import Files Configure"
     _order = 'name'
 
+    # model_ids = fields.Many2many('ir.model', 'import_model_rel','import_id','model_id','Working Models')
+
     name = fields.Char(string='Name',required=True)
     model_id = fields.Many2one('ir.model', 'Model')
-    model_ids = fields.Many2many('ir.model', 'import_model_rel','import_id','model_id','Working Models')
+    source_connector_id = fields.Many2one('connection_tool.connector', 'Source Connector')
+    source_type = fields.Selection(related='source_connector_id.type', string="Source Type", store=True, readonly=True)
+    source_ftp_path = fields.Char(string='FTP Path', default="/")
+    source_ftp_path_done = fields.Char(string='FTP Path Done', default="/")
+    source_ftp_filename = fields.Char(string='Import Filename')
+    source_ftp_refilename = fields.Char(string='Regular Expression Filename')
+    source_ftp_re = fields.Boolean(string='Regular Expression?')
+    source_ftp_read_control = fields.Char('Read Control Filename')
+    source_ftp_write_control = fields.Char('Write Control Filename')
+
+    # No hay utilidad
     register_to_process = fields.Integer('Register to Process', default=1)
+
     
     quoting = fields.Char('Quoting', size=8, default="\"")
     separator = fields.Char('Separator', size=8, default="|")
@@ -228,8 +248,8 @@ class Configure(models.Model):
     @api.onchange('model_id')
     def onchange_model_id(self):
         if self.model_id:
-            model_ids = self.get_inherit_modules()
-            self.model_ids = model_ids
+            # model_ids = self.get_inherit_modules()
+            # self.model_ids = model_ids
             self.name = self.model_id.name
 
     @api.onchange('datas_file', 'quoting', 'separator')
@@ -264,7 +284,18 @@ class Configure(models.Model):
                         elif isinstance(m, int):
                             m = str(msg[key])
                         messages += key.title() +": "+ m + "\n"
-            raise osv.except_osv(_('Error!'), _('%s')%messages)
+            raise UserError(_('%s')%messages)
+        return True
+
+    @api.multi
+    def action_raise_message(self, msg_log=False, automatic=False):
+        self.ensure_one()
+        context = dict(self._context) or {}
+        if not automatic:
+            if len(msg_log) != 0:
+                raise UserError(msg_log)
+        else:
+            _logger.info("Mensaje de Validacion %s "%msg_log )
         return True
 
     @api.multi
@@ -281,7 +312,59 @@ class Configure(models.Model):
             values.append(data_tmp)
         return keys, import_fields, values 
 
-    
+    @api.multi
+    def _import_ftp_pre(self, flag_imp=False, automatic=False):    
+        self.ensure_one()
+        message = ""
+        try:
+            if self.source_type == 'ftp':
+                imprt = self.source_connector_id.with_context(imprt=self)
+                imprt._get_ftp_dirfile(filename=self.source_ftp_refilename, automatic=automatic)
+                # _check_filename_exist
+                if self.source_ftp_write_control:
+                    if imprt._get_ftp_check_filename_exist(filename=self.source_ftp_write_control, automatic=automatic):
+                        return ''
+                #   Check if import data file exist
+                if not imprt._get_ftp_check_filename_exist(filename=self.source_ftp_filename, automatic=automatic):
+                    return ''
+                # First: create control file if if Read Control File Name
+                o = StringIO()
+                self.source_ftp_write_control and imprt._push_to_ftp(self.source_ftp_write_control, o, automatic=automatic)
+                o.close()
+                # Second: read file from ftp site
+                remote_file = imprt._read_ftp_filename(self.source_ftp_filename, automatic=automatic)
+                self.datas_file =  base64.b64encode(remote_file)
+        except ValueError as e:
+            print("11111111111111111111", str(e))
+            message = str(e)
+        except Exception as e:
+            print("22222222222222222222", str(e))
+            message = str(e)
+        if message:
+            message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
+            self.action_raise_message(msg_log=message, automatic=automatic)
+        return True
+
+
+    @api.multi
+    def _import_ftp_post(self, flag_imp=False, automatic=False):    
+        self.ensure_one()
+        message = ""
+        try:
+            if self.source_type == 'ftp':
+                imprt = self.source_connector_id.with_context(imprt=self)
+                if imprt._get_ftp_check_filename_exist(filename=self.source_ftp_write_control, automatic=automatic):
+                    imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
+        except ValueError as e:
+            message = str(e)
+        except Exception as e:
+            message = str(e)
+        if message:
+            message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
+            self.action_raise_message(msg_log=message, automatic=automatic)
+        return True
+
+
     @api.multi
     def _import(self, flag_imp=False, automatic=False):
         self.ensure_one()
@@ -290,6 +373,9 @@ class Configure(models.Model):
         context = self._context
         if not self.macro_ids:
             raise UserError(_('No macro lines defined. '))
+
+        # Busca archivo ftp
+        self._import_ftp_pre(flag_imp=False, automatic=automatic)
 
         data = {'val':{}}
         meta = {
@@ -314,9 +400,10 @@ class Configure(models.Model):
             keys, import_fields, values = self._get_values(meta['val']['lines'])
             if flag_imp:
                 if self.output_destination == 'this_database':
-                    # print("self.output_destination", self.output_destination)
+
                     import_result = self.env[model].load(import_fields, values)
-                    # self.raise_message(import_result)
+                    self.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)
+
             if self.output_type: 
                 if self.output_type in ('xlsx'):
                     file_data = BytesIO()
@@ -331,10 +418,21 @@ class Configure(models.Model):
                     file_data.seek(0)
                     self.export_file = base64.b64encode(file_data.getvalue())
 
-        # print("dataaaaaaaaaaaaaaaa", data)
-        # print("metaaaaaaaaaaaaaaaa", meta)
+        res = self._import_ftp_post(flag_imp=False, automatic=automatic)
+        if res and self.source_type == 'ftp':
+            imprt = self.source_connector_id.with_context(imprt=self)
+            imprt._move_ftp_filename(self.source_ftp_write_control, automatic=automatic)
 
 
+    def raise_message(self, import_result, flag_imp=False, automatic=False):
+        _logger.info(import_result)
+        if import_result['messages']:
+            messages = ''
+            for msg in import_result['messages']:
+                messages += '%s \n'%(str( msg.get('message') or '' )) 
+            self._import_ftp_post(flag_imp=False, automatic=automatic)
+            raise UserError(_('%s')%messages)
+        return True
 
 
     def process_macro(self, data, meta, automatic=False):
@@ -753,8 +851,8 @@ class Configure(models.Model):
         sequence = macro.sequence
         python_code = macro.python
         Model = self.env['ir.model']
-        model_ids = Model.search([('model','=',meta['model_id'])], limit=1)
-        model_id = model_ids and model_ids.id
+        # model_ids = Model.search([('model','=',meta['model_id'])], limit=1)
+        # model_id = model_ids and model_ids.id
         imprt = self
         localdict = {
             'this':self, 
@@ -779,7 +877,8 @@ class Configure(models.Model):
             'datetime': datetime,
             'ws':False,  #TODO add a web service 
             'context':context,
-            '_logger': _logger
+            '_logger': _logger,
+            'UserError': UserError
         }
         if python_code:
             try:
@@ -873,7 +972,7 @@ class Configure(models.Model):
             for idx, field in enumerate([1] + field_ids + [2,3]):
                 field_int = type(field).__name__ == 'int' or False
                 ttype = field_int and (field==1 and 'register_id' or field==2 and 'next_index' or field==3 and 'jump') or 'register'
-                model_ids = [x.id for x in imprt.model_ids]
+                # model_ids = [x.id for x in imprt.model_ids]
                 db_field, db_field_type = None, None # self.get_db_field(field, imprt, ttype)
                 selection = False
                 return_type = False
@@ -898,7 +997,7 @@ class Configure(models.Model):
                     'db_field_type': db_field_type,
                     'sequence': idx + 1,
                     'model_id': imprt.model_id.id,
-                    'model_ids': [(6, False, model_ids)],
+                    # 'model_ids': [(6, False, model_ids)],
                     'type': ttype,
                     'import_type': imprt.type,
                     'row_type': 'relative',
@@ -1113,8 +1212,6 @@ class Configure(models.Model):
             if any(x for x in row if x.strip())
         )
 
-
-
 # access_connection_tool_macro,connection_tool.macro,model_connection_tool_macro,,1,1,1,1
 # access_connection_tool_sheet,connection_tool.sheet,model_connection_tool_sheet,,1,1,1,1
 
@@ -1141,7 +1238,7 @@ class Macro(models.Model):
 
     field_id = fields.Many2one('ir.model.fields', string='Field')
     model_id = fields.Many2one('ir.model', string='Model')
-    model_ids = fields.Many2many('ir.model', 'macro_model_rel','import_id','model_id', string='Models')
+    # model_ids = fields.Many2many('ir.model', 'macro_model_rel','import_id','model_id', string='Models')
     import_type = fields.Selection(IMPORT_TYPE, string='Import Type')
     field_type = fields.Selection(selection=FIELD_TYPES, string='Field Type')
     output_type = fields.Selection(selection=OUTPUT_TYPE, string='Output Type', help="Output file format")
@@ -1194,3 +1291,27 @@ class Macro(models.Model):
 
     
   
+
+
+
+
+
+
+
+"""
+
+import re
+
+
+vat = 'FRDGLIMPPOL20190509094113.dat'
+vat_re = r"^([^0-9 ]{11}[0-9]{14})\.dat$"
+
+regex = re.compile(vat_re)
+# vat_re = "[^0-9]{5,5}[A-Z]{3,3}[A-Z]{3,3}[0-9]{4,3}[0-9]{2,2}[0-9]{2,2}[0-9]{3,2}[0-9]{3,2}"
+
+b  = regex.match(vat) and True or False
+print "b", b
+
+reg = r"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+
+"""
