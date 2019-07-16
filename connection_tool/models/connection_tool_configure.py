@@ -356,11 +356,13 @@ class Configure(models.Model):
             raise UserError(_('No macro lines defined. '))
 
         # escribe datos
+        """
         self.write({
             'datas_fname': False,
             'datas_file': False,
             'headers': False
         })
+        """
 
         # Busca archivo ftp
         self._import_ftp_pre(flag_imp=False, automatic=automatic)
