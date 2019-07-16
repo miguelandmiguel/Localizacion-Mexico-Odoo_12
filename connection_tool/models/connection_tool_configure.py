@@ -271,23 +271,6 @@ class Configure(models.Model):
 
 
     @api.multi
-    def raise_message(self, import_result):
-        self.ensure_one()
-        if import_result['messages']:
-            messages = ''
-            for msg in import_result['messages'][0:2]:
-                for key in ['type', 'field', 'message', 'rows', 'record']:#, 'moreinfo']:
-                    if key in msg.keys():
-                        m = msg[key]
-                        if isinstance(m, dict):
-                            m = str(msg[key]).encode('utf-8')
-                        elif isinstance(m, int):
-                            m = str(msg[key])
-                        messages += key.title() +": "+ m + "\n"
-            raise UserError(_('%s')%messages)
-        return True
-
-    @api.multi
     def action_raise_message(self, msg_log=False, automatic=False):
         self.ensure_one()
         context = dict(self._context) or {}
@@ -335,10 +318,8 @@ class Configure(models.Model):
                 remote_file = imprt._read_ftp_filename(self.source_ftp_filename, automatic=automatic)
                 self.datas_file =  base64.b64encode(remote_file)
         except ValueError as e:
-            print("11111111111111111111", str(e))
             message = str(e)
         except Exception as e:
-            print("22222222222222222222", str(e))
             message = str(e)
         if message:
             message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
@@ -374,12 +355,19 @@ class Configure(models.Model):
         if not self.macro_ids:
             raise UserError(_('No macro lines defined. '))
 
+        # escribe datos
+        self.write({
+            'datas_fname': False,
+            'datas_file': False,
+            'headers': False
+        })
+
         # Busca archivo ftp
         self._import_ftp_pre(flag_imp=False, automatic=automatic)
 
         data = {'val':{}}
         meta = {
-            'global':{'LINE_IDS':[], 'LINE_IDS_INDEX':0},
+            'global':{'LINE_IDS':[], 'LINE_IDS_INDEX':0, 'global_debit': 0.0, 'global_credit': 0.0, 'len_datas': 0},
             'model_id':False,
             'model_list':[],
             'register_id':{},
@@ -400,8 +388,9 @@ class Configure(models.Model):
             keys, import_fields, values = self._get_values(meta['val']['lines'])
             if flag_imp:
                 if self.output_destination == 'this_database':
-
-                    import_result = self.env[model].load(import_fields, values)
+                    base_model = self.env[model].with_context(import_file=True, name_create_enabled_fields={})
+                    import_result = base_model.load(import_fields, values)
+                    _logger.info("import_result %s"%import_result)
                     self.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)
 
             if self.output_type: 
@@ -468,6 +457,9 @@ class Configure(models.Model):
             options['separator'] = self.separator or OPTIONS['separator']
         import_data, import_fields = self._convert_import_data(options)
         # import_data = self._parse_import_data(import_data, import_fields, options)
+        lendatas = len(import_data)
+
+        meta['global']['len_datas'] = len(import_data)
 
         meta['relative_index'] = meta['first_index'] = sheet_id = 0
         # Define initial metadata Models
@@ -555,6 +547,8 @@ class Configure(models.Model):
                         line_dict_tmp["line_ids/credit"] = "0.0"
                         line_dict["line_ids/debit"] = "0.0"
                         meta['val']['lines'].append(line_dict_tmp)
+
+
                 meta['val']['lines'].append(line_dict)
                 
 
@@ -1291,6 +1285,31 @@ class Macro(models.Model):
 
     
   
+
+class ResCompany(models.Model):
+    _inherit = 'res.company'
+
+    account_import_id = fields.Many2one('account.account', string='Adjustment Account (import)')
+
+
+class ResConfigSettings(models.TransientModel):
+    _inherit = 'res.config.settings'
+
+    @api.one
+    @api.depends('company_id')
+    def _get_account_import_id(self):
+        self.account_import_id = self.company_id.account_import_id
+
+    @api.one
+    def _set_account_import_id(self):
+        if self.account_import_id != self.company_id.account_import_id:
+            self.company_id.account_import_id = self.account_import_id
+
+    
+
+    account_import_id = fields.Many2one('account.account', compute='_get_account_import_id', inverse='_set_account_import_id', required=False,
+        string='Adjustment Account (import)', help="Adjustment Account (import).")
+
 
 
 

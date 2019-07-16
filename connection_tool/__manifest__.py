@@ -11,7 +11,7 @@
     'website': "http://www.bias.com.mx",
     'category': 'Uncategorized',
     'version': '1.0.1',
-    'depends': ['mail'],
+    'depends': ['mail', 'account'],
     'data': [
         'security/ir.model.access.csv',
         'views/connection_tool_configure.xml',

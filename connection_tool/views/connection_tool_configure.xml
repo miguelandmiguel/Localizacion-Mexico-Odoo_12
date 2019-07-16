@@ -395,6 +395,30 @@
 
 
 
+        <record id="res_config_settings_connection_view_form" model="ir.ui.view">
+            <field name="name">res_config_settings_connection_view_form</field>
+            <field name="model">res.config.settings</field>
+            <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@id='recommended_apps']" position="inside">
+
+                    <div class="col-12 col-lg-6 o_setting_box" id="import_account" 
+                        title="Adjustment Account (import).">
+                        <div class="o_setting_left_pane"/>
+                        <div class="o_setting_right_pane">
+                            <label for="account_import_id"/>
+                            <field name="account_import_id" class="col-lg-3 o_light_label"/>
+                        </div>
+                    </div>
+
+                </xpath>
+            </field>
+        </record>
+
+
+
+
+
 
     </data>
 </odoo>
