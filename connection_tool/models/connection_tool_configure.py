@@ -325,6 +325,7 @@ class Configure(models.Model):
         except Exception as e:
             message = str(e)
         if message:
+            self.datas_file = b''
             message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
             self.action_raise_message(msg_log=message, automatic=automatic)
         return True
@@ -406,9 +407,13 @@ class Configure(models.Model):
         })
         """
 
-        # Busca archivo ftp
-        self._import_ftp_pre(flag_imp=flag_imp, automatic=automatic)
+        self.datas_file = b''
 
+        # Busca archivo ftp
+        if self.source_connector_id:
+            res = self._import_ftp_pre(flag_imp=flag_imp, automatic=automatic)
+            if not res:
+                return False
         if self.source_python_script:
             options = {
                 'headers': self.with_header
@@ -429,6 +434,8 @@ class Configure(models.Model):
                 imprt = self.source_connector_id.with_context(imprt=self)
                 imprt._move_ftp_filename(self.source_ftp_write_control, automatic=automatic)
             return {}
+
+        print("estasaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
         data = {'val':{}}
         meta = {

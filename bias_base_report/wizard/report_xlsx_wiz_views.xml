@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="report_xlsx_wiz_form" model="ir.ui.view">
+            <field name="name">report_xlsx_wiz_form</field>
+            <field name="model">report.xlsx.wiz</field>
+            <field name="arch" type="xml">
+                <form string="Crear Reporte xlsx">
+                    <footer>
+                        <button type="object" 
+                            name="action_report_demo" 
+                            string="Crear Reporte"
+                            class="oe_highlight"
+                            icon="fa-cogs" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_report_xlsx_wiz" model="ir.actions.act_window">
+            <field name="name">Crear Reporte xlsx</field>
+            <field name="res_model">report.xlsx.wiz</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_type">form</field>
+            <field name="view_id" ref="report_xlsx_wiz_form"/>
+            <field name="context">{}</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem 
+            action="action_report_xlsx_wiz" 
+            id="menu_report_xlsx_wiz" 
+            parent="account.menu_finance_reports" 
+            sequence="1"/>
+
+        <report
+            id="report_xlsx_wiz"
+            model="report.xlsx.wiz"
+            string="Print to XLSX"
+            report_type="xlsx"
+            name="bias_base_report.report_xlsx_wiz"
+            file="report_xlsx_wiz"
+            attachment_use="False"
+        />
+
+    </data>
+</odoo>

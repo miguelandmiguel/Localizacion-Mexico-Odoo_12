@@ -1,0 +1,98 @@
+.o_cfdi_footer, .o_cfdi_header, .o_report_layout_cfdi {
+    color: gray('700');
+    font-size: 0.90rem;
+}
+.o_cfdi_header {
+    min-width: 900px;
+    border-bottom: 1px solid gray('200');
+    img {
+        max-height: 96px;
+        max-width: 200px;
+        margin-right: 16px;
+    }
+    h3 {
+        color: $o-enterprise-primary-color;
+        font-weight: 700;
+        font-size: 1.00rem;
+        max-width: 300px;
+    }
+    .company_address > span {
+        font-size: 0.80rem;
+    }
+}
+.o_cfdi_footer {
+    ul {
+        border-top: 1px solid $o-brand-primary;
+        border-bottom: 1px solid $o-brand-primary;
+        padding: 4px 0;
+        margin: 0 0 4px 0;
+        li {
+            color: $o-brand-odoo;
+            font-size: 0.70rem;
+        }
+    }
+}
+.o_report_layout_cfdi {
+    background-image: url(/base/static/img/bg_background_template.jpg);
+    background-size: cover;
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    min-height: 620px;
+    h2 {
+        font-size: 1.25rem;
+    }
+    .test {
+        color: $o-brand-primary;
+        font-size: 1.25rem;
+    }
+    thead tr th {
+        border-bottom: 1px solid $o-brand-odoo;
+    }
+    thead tr th, h2 {
+        color: $o-brand-odoo;
+        font-weight: bolder;
+    }
+    tbody {
+        color: gray('700');
+        font-size: 0.85rem;
+        tr:nth-child(odd) {
+            background-color: rgba(220, 205, 216, 0.1);
+            
+        }
+        tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0);
+        }
+        tr td {
+            border-top: none;
+        }
+        tr.sat td {
+            border-bottom: 1px solid $o-brand-odoo;
+        }
+    }
+    /*Total table*/
+    .row > .col-4 > table {
+        tr:nth-child(odd) {
+            background-color: transparent !important;
+        }
+        tr:first-child td {
+            /*we could get rid of this rule if .border-black td would be terminated in report.scss*/
+            border-top: none !important;
+        }
+        tr:last-child td {
+            color: $o-brand-primary;
+        }
+    }
+    #total {
+        table tr:last-child td {
+            border-bottom: 1px solid black;
+        }
+    }
+
+    .bg_font_color {
+        color: #828282 !important;
+    }
+    .font_inv {
+        font-size:10px;
+    }
+
+}
