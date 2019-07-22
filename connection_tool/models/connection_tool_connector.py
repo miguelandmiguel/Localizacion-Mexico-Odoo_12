@@ -170,6 +170,6 @@ class Conector(models.Model):
         self.ensure_one()
         imprt = self._context.get('imprt') or False
         ftp = self._get_ftp(automatic=automatic)
-        ftp.rename(imprt.source_ftp_filename, './'+imprt.source_ftp_path_done+'/'+imprt.source_ftp_filename)
+        ftp.rename(imprt.source_ftp_filename, imprt.source_ftp_path_done+'/'+imprt.source_ftp_filename)
         ftp.quit()
         return False

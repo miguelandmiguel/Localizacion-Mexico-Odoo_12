@@ -170,6 +170,8 @@ OUTPUT_DESTINATION = [
 OPTIONS = {'headers': True, 'quoting': '"', 'separator': ',', 'encoding': 'utf-8'}
 FIELD_TYPES = [(key, key) for key in sorted(fields.Field.by_type)]
 
+
+
 class Configure(models.Model):
     _name = 'connection_tool.configure'
     _inherit = ['mail.thread']
@@ -189,6 +191,7 @@ class Configure(models.Model):
     source_ftp_re = fields.Boolean(string='Regular Expression?')
     source_ftp_read_control = fields.Char('Read Control Filename')
     source_ftp_write_control = fields.Char('Write Control Filename')
+    source_python_script = fields.Text("Python Script")
 
     # No hay utilidad
     register_to_process = fields.Integer('Register to Process', default=1)
@@ -347,6 +350,45 @@ class Configure(models.Model):
 
 
     @api.multi
+    def get_source_python_script(self, import_data, import_fields, flag_imp=False, automatic=False):
+        self.ensure_one()
+        localdict = {
+            'this':self, 
+            're': re,
+            'time': time,
+            'datetime': datetime,
+            'context': dict(self._context),
+            '_logger': _logger,
+            'UserError': UserError,
+            'import_data': import_data,
+            'import_fields': import_fields
+        }
+        if self.source_python_script:
+            try:
+                safe_eval(self.source_python_script, localdict, mode='exec', nocopy=True)
+            except Exception as e:
+                raise UserError(_('%s in macro')%(e))
+        result = localdict.get('result',False)
+        if result:
+            header = result.get('header') or []
+            body = result.get('body') or []
+            for values in body:
+                if self.output_destination == 'this_database':
+                    base_model = self.env[self.model_id.model].with_context(import_file=True, name_create_enabled_fields={})
+                    print("base_model", base_model)
+
+                    b = body[values].get('lines') or []
+                    print("bbbbbbb", b)
+                    import_result = base_model.load(header, b)
+                    print("import_result", import_result)
+                    _logger.info("import_result %s"%values)
+                    self.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)  
+
+
+        return True
+
+
+    @api.multi
     def _import(self, flag_imp=False, automatic=False):
         self.ensure_one()
         self._cr.execute('SAVEPOINT import')
@@ -365,7 +407,28 @@ class Configure(models.Model):
         """
 
         # Busca archivo ftp
-        self._import_ftp_pre(flag_imp=False, automatic=automatic)
+        self._import_ftp_pre(flag_imp=flag_imp, automatic=automatic)
+
+        if self.source_python_script:
+            options = {
+                'headers': self.with_header
+            }
+            if self.type == 'csv':
+                if not self.quoting and self.separator:
+                    raise UserError(_("Set Quoting and Separator fields before load CSV File."))
+                options = OPTIONS
+                options['quoting'] = self.quoting or OPTIONS['quoting']
+                options['separator'] = self.separator or OPTIONS['separator']
+            import_data, import_fields = self._convert_import_data(options)
+            # import_data = self._parse_import_data(import_data, import_fields, options)
+            lendatas = len(import_data)
+            res = self.get_source_python_script(import_data, import_fields, flag_imp=flag_imp, automatic=automatic)
+
+            res = self._import_ftp_post(flag_imp=False, automatic=automatic)
+            if res and self.source_type == 'ftp':
+                imprt = self.source_connector_id.with_context(imprt=self)
+                imprt._move_ftp_filename(self.source_ftp_write_control, automatic=automatic)
+            return {}
 
         data = {'val':{}}
         meta = {
