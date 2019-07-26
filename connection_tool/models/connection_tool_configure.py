@@ -299,7 +299,7 @@ class Configure(models.Model):
         return keys, import_fields, values 
 
     @api.multi
-    def _import_ftp_pre(self, flag_imp=False, automatic=False):    
+    def _import_ftp_pre(self, flag_imp=False, automatic=False):
         self.ensure_one()
         message = ""
         try:
@@ -434,8 +434,6 @@ class Configure(models.Model):
                 imprt = self.source_connector_id.with_context(imprt=self)
                 imprt._move_ftp_filename(self.source_ftp_write_control, automatic=automatic)
             return {}
-
-        print("estasaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
         data = {'val':{}}
         meta = {
@@ -1278,9 +1276,154 @@ class Configure(models.Model):
             if any(x for x in row if x.strip())
         )
 
+
+    @api.multi
+    def create_action(self):
+        ModelData = self.env['ir.model.data']
+        ActWindow = self.env['ir.actions.act_window']
+        IrVaues = self.env['ir.default']
+        model_data_id = self.env.ref('connection_tool.view_wizard_connection_tool')
+        action_id = ActWindow.create({
+            'name': self.name,
+             'type': 'ir.actions.act_window',
+             'res_model': 'wizard.connection.tool',
+             'src_model': self.model_id.model,
+             'view_type': 'form',
+             'context': "{'import_id': %d}" % (self.id),
+             'view_mode':'form,tree',
+             'view_id': model_data_id.id,
+             'target': 'new',
+             'auto_refresh':1
+        })
+        value_id  = IrVaues.create({
+            'name': self.name,
+            'model': self.model_id.model,
+            'key2': 'client_action_multi',
+            'value': "ir.actions.act_window," + str(action_id),
+            'object': True,  
+        })
+        self.write({
+            'ref_ir_act_window': action_id,
+            'ref_ir_value': value_id,
+        })
+        return True
+
+    @api.multi
+    def unlink_menu(self):
+        try:
+            if self.ref_menu_ir_act_window:
+                self.env['ir.actions.act_window'].sudo().browse([self.ref_menu_ir_act_window.id]).unlink()
+            if self.ref_ir_menu:
+                self.env['ir.ui.menu'].sudo().browse([self.ref_ir_menu.id]).unlink()
+        except:
+            raise UserError(_("Deletion of the action record failed."))
+        return True
+
+
+    def create_action_old(self, cr, uid, ids, context=None):
+        if not context:
+            context = {}
+        data_obj = self.pool.get('ir.model.data')
+        action_obj = self.pool.get('ir.actions.act_window')
+        model_data_id = data_obj._get_id(cr, uid, 'connection_tool', 'view_wizard_connection_tool')
+        for template in self.browse(cr, uid, ids, context=context):
+            src_obj = template.model_id.model
+            res_id = data_obj.browse(cr, uid, model_data_id, context=context).res_id
+            button_name = template.name
+            action_id = action_obj.create(cr, uid, {
+                 'name': button_name,
+                 'type': 'ir.actions.act_window',
+                 'res_model': 'wizard.connection.tool',
+                 'src_model': src_obj,
+                 'view_type': 'form',
+                 'context': "{'import_id': %d}" % (template.id),
+                 'view_mode':'form,tree',
+                 'view_id': res_id,
+                 'target': 'new',
+                 'auto_refresh':1
+            }, context)
+            value_id = self.pool.get('ir.values').create(cr, uid, {
+                 'name': button_name,
+                 'model': src_obj,
+                 'key2': 'client_action_multi',
+                 'value': "ir.actions.act_window," + str(action_id),
+                 'object': True,
+             }, context)
+        self.write(cr, uid, ids, {
+                    'ref_ir_act_window': action_id,
+                    'ref_ir_value': value_id,
+                }, context)
+        return True
+
 # access_connection_tool_macro,connection_tool.macro,model_connection_tool_macro,,1,1,1,1
 # access_connection_tool_sheet,connection_tool.sheet,model_connection_tool_sheet,,1,1,1,1
 
+
+class WizardConnectionTool(models.TransientModel):
+    """Credit Notes"""
+
+    _name = "wizard.connection.tool"
+    _description = "wizard.connection.tool"
+
+    name = fields.Char(string="Name", default="Import Files", readonly=True)
+    note = fields.Text(string="Note", readonly=True)
+
+    @api.multi
+    def button_import(self):
+        Configure = self.env['connection_tool.configure']
+        import_id = self._context.get('import_id')
+        if import_id:
+            imprt = Configure.browse(import_id)._import(flag_imp=False, automatic=False)
+
+            print("imprt", imprt)
+
+
+
+class WizardImportMenuCreate(models.TransientModel):
+    """Credit Notes"""
+
+    _name = "wizard.import.menu.create"
+    _description = "wizard.import.menu.create"
+
+    menu_id = fields.Many2one('ir.ui.menu', 'Parent Menu', required=True)
+    name = fields.Char(string='Menu Name', size=64, required=True)
+    sequence = fields.Integer(string='Sequence')
+    group_ids = fields.Many2many('res.groups', 'menuimport_group_rel', 'menu_id', 'group_id', 'Groups')
+
+    @api.multi
+    def menu_create(self):
+        ModelData = self.env['ir.model.data']
+        ActWindow = self.env['ir.actions.act_window']
+        IrMenu = self.env['ir.ui.menu']
+        Configure = self.env['connection_tool.configure']
+        model_data_id = self.env.ref('connection_tool.view_wizard_connection_tool')
+
+        import_id = self._context.get('import_id')
+        vals = {
+            'name': self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'wizard.connection.tool',
+            'view_type': 'form',
+            'context': "{'import_id': %d}" % (import_id),
+            'view_mode': 'tree,form',
+            'view_id': model_data_id.id,
+            'target': 'new',
+            'auto_refresh':1
+        }
+        action_id = ActWindow.sudo().create(vals)
+        menu_id = IrMenu.sudo().create({
+            'name': self.name,
+            'parent_id': self.menu_id.id,
+            'action': 'ir.actions.act_window,%d' % (action_id.id,),
+            'icon': 'STOCK_INDENT',
+            'sequence': self.sequence,
+            'groups_id': self.group_ids and [(6, False, [x.id for x in self.group_ids])] or False,
+        })
+        Configure.sudo().browse([import_id]).write({
+            'ref_menu_ir_act_window': action_id.id,
+            'ref_ir_menu': menu_id.id,
+        })
+        return {'type':'ir.actions.act_window_close'}
 
 
 class Macro(models.Model):

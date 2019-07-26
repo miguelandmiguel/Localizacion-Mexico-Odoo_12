@@ -1,6 +1,51 @@
 <odoo>
     <data>
 
+        <record id="view_import_menu_create" model="ir.ui.view">
+            <field name="name">Create Menu</field>
+            <field name="model">wizard.import.menu.create</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Create Menu" version="7.0">
+                    <group col="4">
+                        <field name="name" colspan="4"/>
+                        <field name="menu_id" domain="[('parent_id','&lt;&gt;',False)]" colspan="4"/>
+                        <field name="sequence" colspan="4"/>
+                        <field name="group_ids" widget="many2many_tags" placeholder="Groups..." colspan="4"/>
+                     </group>
+                    <footer>
+                        <button name="menu_create" string="Create _Menu" type="object" icon="gtk-ok"/>
+                        <button special="cancel" string="Close" icon="gtk-cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <act_window 
+        context="{'model_id': active_id, 'import_id':active_id}" 
+        id="act_import_menu_create" 
+        name="Create Menu" 
+        res_model="wizard.import.menu.create" 
+        target="new" 
+        view_mode="form"/>
+
+
+        <record id="view_wizard_connection_tool" model="ir.ui.view">
+            <field name="name">Import File</field>
+            <field name="model">wizard.connection.tool</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Import File">
+                     <h1><field name="name" class="oe_inline"/></h1>
+
+                    <footer>
+                        <button string="Close" class="oe_highlight" special="cancel"/>
+                        <button name="button_import" string="Import" type="object" class="oe_highlight"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+
         <record id="view_connection_tool_configure_form" model="ir.ui.view">
             <field name="name">Connection Tool Configure Form</field>
             <field name="model">connection_tool.configure</field>
@@ -98,6 +143,31 @@
                                 </group>
                             </page>
                             <page string="Advanced">
+                                <group colspan="4" col="4">
+                                    <group string="Add in the More Menu" colspan="4">
+
+                                        <button name="create_action" string="Add Menu" type="object" icon="fa fa-cogs"
+                                                colspan="2" attrs="{'invisible':[('ref_ir_act_window','!=',False)]}"
+                                                help="Display a button in the sidebar of related documents to open a composition wizard with this template"/>
+                                        <field name="ref_ir_act_window" attrs="{'invisible':[('ref_ir_act_window','=',False)]}"/>
+                                        <field name="ref_ir_value" attrs="{'invisible':[('ref_ir_act_window','=',False)]}"/>
+                                        <button name="unlink_action" string="Remove More button" type="object" icon="gtk-delete"
+                                                colspan="2" attrs="{'invisible':[('ref_ir_act_window','=',False)]}"
+                                                help="Remove the More button currently displayed on related documents"/>
+
+                                    </group>
+                                    <group string="Create a Menu" colspan="4">
+                                        <button colspan="2" icon="gtk-justify-fill"  name="%(connection_tool.act_import_menu_create)d"
+                                                attrs="{'invisible':[('ref_menu_ir_act_window','!=',False)]}"
+                                                string="Create a Menu" type="action" target="new" />
+                                        <field name="ref_menu_ir_act_window" /> <!-- attrs="{'invisible':[('ref_menu_ir_act_window','=',False)]}" -->
+                                        <field name="ref_ir_menu" /> <!-- attrs="{'invisible':[('ref_ir_menu','=',False)]}" -->
+                                        <button name="unlink_menu" string="Remove Menu" type="object" icon="gtk-delete"
+                                                colspan="2" attrs="{'invisible':[('ref_menu_ir_act_window','=',False)]}"
+                                                help="Remove the leftbar menu."/>
+
+                                    </group>
+                                </group>
                                  <group colspan="4" col="4">
                                   <group col="2" string="Export/Import Macros">
                                     <button name="button_export_macros" string="Export Macros" type="object" icon="gtk-execute" colspan="4"/>
@@ -419,6 +489,12 @@
                 </xpath>
             </field>
         </record>
+
+
+
+
+
+
 
 
 
