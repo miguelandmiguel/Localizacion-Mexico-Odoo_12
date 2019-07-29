@@ -144,7 +144,7 @@
                             </page>
                             <page string="Advanced">
                                 <group colspan="4" col="4">
-                                    <group string="Add in the More Menu" colspan="4">
+                                    <group string="Add in the More Menu" col="2" colspan="2">
 
                                         <button name="create_action" string="Add Menu" type="object" icon="fa fa-cogs"
                                                 colspan="2" attrs="{'invisible':[('ref_ir_act_window','!=',False)]}"
@@ -156,7 +156,7 @@
                                                 help="Remove the More button currently displayed on related documents"/>
 
                                     </group>
-                                    <group string="Create a Menu" colspan="4">
+                                    <group string="Create a Menu" col="2" colspan="2">
                                         <button colspan="2" icon="gtk-justify-fill"  name="%(connection_tool.act_import_menu_create)d"
                                                 attrs="{'invisible':[('ref_menu_ir_act_window','!=',False)]}"
                                                 string="Create a Menu" type="action" target="new" />
@@ -167,28 +167,41 @@
                                                 help="Remove the leftbar menu."/>
 
                                     </group>
+                                    <group string="Recurring Import" col="4" colspan="4">
+                                        <group col="2" colspan="2">
+                                            <field name="recurring_import" />
+                                            <button class="oe_link" name="recurring_run_import" 
+                                                attrs="{'invisible': [('recurring_import','!=',True)]}" 
+                                                string="⇒ run automatic import" type="object" groups="base.group_no_one"/>
+                                        </group>
+                                        <group col="2" colspan="2" attrs="{'invisible': [('recurring_import','!=',True)]}">
+                                            <field name="recurring_interval" class="oe_inline" attrs="{'required': [('recurring_import', '=', True)]}"/>
+                                            <field name="recurring_rule_type" class="oe_inline" attrs="{'required': [('recurring_import', '=', True)]}"/>
+                                            <field name="recurring_next_date"/>
+                                        </group>
+                                    </group>
                                 </group>
-                                 <group colspan="4" col="4">
-                                  <group col="2" string="Export/Import Macros">
-                                    <button name="button_export_macros" string="Export Macros" type="object" icon="gtk-execute" colspan="4"/>
-                                    <button name="button_import_macros" string="Import Macros" type="object" icon="gtk-execute" colspan="4"/>
-                                    <field name="macro_file" filename="export_filename" colspan="4"/>
-                                  </group>
-                                  <group string="Import Secondary Configurations Files" col="2">
-                                    <field name="secondary_ids" widget="many2many_tags" placeholder="Import secondary configurations..." colspan="4" />
-                                  </group>
+                                <group colspan="4" col="4">
+                                    <group col="2" colspan="2"  string="Export/Import Macros">
+                                        <button name="button_export_macros" string="Export Macros" type="object" icon="gtk-execute" colspan="4"/>
+                                        <button name="button_import_macros" string="Import Macros" type="object" icon="gtk-execute" colspan="4"/>
+                                        <field name="macro_file" filename="export_filename" colspan="4"/>
+                                    </group>
+                                    <group col="2" colspan="2" string="Import Secondary Configurations Files">
+                                        <field name="secondary_ids" widget="many2many_tags" placeholder="Import secondary configurations..." colspan="4" />
+                                    </group>
                                 </group>
                                 <group colspan="4" col="4" string="Export/Import Data Object">
-                                    <group colspan="2">
+                                    <group col="2" colspan="2">
                                         <button name="button_export_object_data" string="Export Object Data" type="object" icon="gtk-execute" colspan="4" />
                                         <button name="button_import_object_data" string="Import Object Data" type="object" icon="gtk-execute" colspan="4" />
                                         <field name="object_copy_data_file" filename="datas_fname_object_copy" colspan="4"/>   
                                     </group>
-                                </group>
-                                <group col="4">
-                                    <separator string="Search String in Macro Python Code" colspan="4"/>
-                                    <field name="string" nolabel="1" on_change="onchange_string(string, macro_ids)" colspan="4"/>
-                                    <field name="string_macro" colspan="4"/>
+                                    <group col="2" colspan="2">
+                                        <separator string="Search String in Macro Python Code" colspan="4"/>
+                                        <field name="string" nolabel="1" on_change="onchange_string(string, macro_ids)" colspan="4"/>
+                                        <field name="string_macro" colspan="4"/>
+                                    </group>
                                 </group>
                             </page>
                             <page string="Instructions">

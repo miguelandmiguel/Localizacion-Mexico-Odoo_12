@@ -46,14 +46,9 @@ import re
 import requests
 
 from dateutil.relativedelta import relativedelta
-import datetime
 import logging
 import time
 
-try:
-    import xlsxwriter
-except ImportError:
-    _logger.debug('Can not import xlsxwriter`.')
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
@@ -62,6 +57,14 @@ from odoo.tools.mimetypes import guess_mimetype
 from odoo.tools.safe_eval import safe_eval
 from odoo.tools import config, DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT, pycompat
 
+_logger = logging.getLogger(__name__)
+
+try:
+    import xlsxwriter
+except ImportError:
+    _logger.debug('Can not import xlsxwriter`.')
+
+
 FIELDS_RECURSION_LIMIT = 2
 ERROR_PREVIEW_BYTES = 200
 DEFAULT_IMAGE_TIMEOUT = 3
@@ -69,7 +72,7 @@ DEFAULT_IMAGE_MAXBYTES = 10 * 1024 * 1024
 DEFAULT_IMAGE_REGEX = r"(?:http|https)://.*(?:png|jpe?g|tiff?|gif|bmp)"
 DEFAULT_IMAGE_CHUNK_SIZE = 32768
 IMAGE_FIELDS = ["icon", "image", "logo", "picture"]
-_logger = logging.getLogger(__name__)
+
 BOM_MAP = {
     'utf-16le': codecs.BOM_UTF16_LE,
     'utf-16be': codecs.BOM_UTF16_BE,
@@ -193,8 +196,22 @@ class Configure(models.Model):
     source_ftp_write_control = fields.Char('Write Control Filename')
     source_python_script = fields.Text("Python Script")
 
-    # No hay utilidad
+    recurring_import = fields.Boolean('Recurring Import?')
+    recurring_next_date = fields.Datetime('Date of Next Process')
+    recurring_interval = fields.Integer('Repeat Every', help="Repeat every (Days/Week/Month/Year)")
+    recurring_rule_type = fields.Selection([
+        ('minutely', 'Minute(s)'),
+        ('hourly', 'Hour(s)'),
+        ('daily', 'Day(s)'),
+        ('weekly', 'Week(s)'),
+        ('monthly', 'Month(s)'),
+        ('yearly', 'Year(s)'),
+    ], string='Recurrency', help="Import automatically repeat at specified interval")
+
+
+    # No hay
     register_to_process = fields.Integer('Register to Process', default=1)
+
 
     
     quoting = fields.Char('Quoting', size=8, default="\"")
@@ -215,17 +232,8 @@ class Configure(models.Model):
     ref_ir_menu = fields.Many2one('ir.ui.menu', 'Leftbar Menu', readonly=True, help="Leftbar menu to open the leftbar menu action")
     ref_menu_ir_act_window = fields.Many2one('ir.actions.act_window', 'Leftbar Menu Action', readonly=True,
              help="This is the action linked to leftbar menu.")
-    recurring_import = fields.Boolean(string='Generate recurring import automatically')
-    recurring_interval = fields.Integer('Repeat Every', help="Repeat every (Days/Week/Month/Year)")
-    recurring_next_date = fields.Datetime('Date of Next Invoice')
-    recurring_rule_type = fields.Selection([
-        ('minutely', 'Minute(s)'),
-        ('hourly', 'Hour(s)'),
-        ('daily', 'Day(s)'),
-        ('weekly', 'Week(s)'),
-        ('monthly', 'Month(s)'),
-        ('yearly', 'Year(s)'),
-    ], string='Recurrency', help="Import automatically repeat at specified interval")
+
+
     secondary_ids = fields.Many2many('connection_tool.configure', 'import_secondary_rel','import_id','secondary_id','Import secondary configurations')
     datas_fname_object_copy = fields.Char('Filename')
     object_copy_data_file = fields.Binary('Object File (.txt Format)')
@@ -247,6 +255,63 @@ class Configure(models.Model):
 
     company_id = fields.Many2one('res.company', string='Company', change_default=True,
         required=True, readonly=True, default=lambda self: self.env['res.company']._company_default_get('connection_tool.configure'))
+
+
+    @api.onchange('recurring_import')
+    def onchange_recurring_import(self):
+        if self.recurring_import:
+            date = fields.Datetime.now()
+            self.recurring_next_date = '%s'%(date)
+
+    @api.multi
+    def recurring_run_import(self):
+        self.ensure_one()
+        return self._recurring_connection_tool(automatic=False)
+
+    def _cron_connection_tool(self):
+        current_date =  time.strftime('%Y-%m-%d %H:%M:%S')
+        imprt_ids = self.sudo().search([('recurring_next_date','<=', current_date), ('recurring_import','=', True)])
+        _logger.info("CRON imprt_ids %s %s "%(current_date, imprt_ids) )
+        for imprt_id in imprt_ids:
+            imprt_id.sudo()._recurring_connection_tool(automatic=True)
+        return True
+
+    @api.multi
+    def _recurring_connection_tool(self, automatic=False):
+        self.ensure_one()
+        ctx = self._context
+        current_date =  time.strftime('%Y-%m-%d %H:%M:%S')
+        _logger.info("CRON Recurrent Date %s"%current_date )
+        try:
+            self.button_import(automatic=automatic) # Run Import
+            next_date = datetime.datetime.strptime(current_date, "%Y-%m-%d %H:%M:%S")
+            interval = self.recurring_interval
+            if self.recurring_rule_type == 'minutely':
+                new_date = next_date+relativedelta(minutes=+interval)
+            elif self.recurring_rule_type == 'hourly':
+                new_date = next_date+relativedelta(hours=+interval)
+            elif self.recurring_rule_type == 'daily':
+                new_date = next_date+relativedelta(days=+interval)
+            elif self.recurring_rule_type == 'weekly':
+                new_date = next_date+relativedelta(weeks=+interval)
+            elif self.recurring_rule_type == 'monthly':
+                new_date = next_date+relativedelta(months=+interval)
+            else:
+                new_date = next_date+relativedelta(years=+interval)
+            self.write({
+                'recurring_next_date': new_date.strftime('%Y-%m-%d %H:%M:%S')
+            })
+
+        except Exception as e:
+            if automatic:
+                self._cr.rollback()
+                _logger.exception('%s, in recurring import configuration %s'%(e, self.name))
+                _logger.debug("Sending recurring import configuration error notification to uid %s", self._uid)
+            else:
+                raise
+
+        _logger.info("CRON: Termina proceso")
+        return True
 
     @api.onchange('model_id')
     def onchange_model_id(self):
@@ -302,6 +367,7 @@ class Configure(models.Model):
     def _import_ftp_pre(self, flag_imp=False, automatic=False):
         self.ensure_one()
         message = ""
+        _logger.info("CRON: ftp_pre")
         try:
             if self.source_type == 'ftp':
                 imprt = self.source_connector_id.with_context(imprt=self)
@@ -320,6 +386,7 @@ class Configure(models.Model):
                 # Second: read file from ftp site
                 remote_file = imprt._read_ftp_filename(self.source_ftp_filename, automatic=automatic)
                 self.datas_file =  base64.b64encode(remote_file)
+                _logger.info("CRON: ftp_pre_fil64")
         except ValueError as e:
             message = str(e)
         except Exception as e:
@@ -365,6 +432,7 @@ class Configure(models.Model):
             'import_fields': import_fields
         }
         if self.source_python_script:
+            print("self.source_python_script", self.source_python_script)
             try:
                 safe_eval(self.source_python_script, localdict, mode='exec', nocopy=True)
             except Exception as e:
@@ -376,12 +444,8 @@ class Configure(models.Model):
             for values in body:
                 if self.output_destination == 'this_database':
                     base_model = self.env[self.model_id.model].with_context(import_file=True, name_create_enabled_fields={})
-                    print("base_model", base_model)
-
                     b = body[values].get('lines') or []
-                    print("bbbbbbb", b)
                     import_result = base_model.load(header, b)
-                    print("import_result", import_result)
                     _logger.info("import_result %s"%values)
                     self.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)  
 
@@ -397,18 +461,9 @@ class Configure(models.Model):
         context = self._context
         if not self.macro_ids:
             raise UserError(_('No macro lines defined. '))
-
-        # escribe datos
-        """
-        self.write({
-            'datas_fname': False,
-            'datas_file': False,
-            'headers': False
-        })
-        """
-
         self.datas_file = b''
 
+        _logger.info("CRON _import")
         # Busca archivo ftp
         if self.source_connector_id:
             res = self._import_ftp_pre(flag_imp=flag_imp, automatic=automatic)
@@ -425,6 +480,7 @@ class Configure(models.Model):
                 options['quoting'] = self.quoting or OPTIONS['quoting']
                 options['separator'] = self.separator or OPTIONS['separator']
             import_data, import_fields = self._convert_import_data(options)
+            _logger.info("CRON: import_data %s "%(import_data))
             # import_data = self._parse_import_data(import_data, import_fields, options)
             lendatas = len(import_data)
             res = self.get_source_python_script(import_data, import_fields, flag_imp=flag_imp, automatic=automatic)
@@ -1374,8 +1430,6 @@ class WizardConnectionTool(models.TransientModel):
         import_id = self._context.get('import_id')
         if import_id:
             imprt = Configure.browse(import_id)._import(flag_imp=False, automatic=False)
-
-            print("imprt", imprt)
 
 
 

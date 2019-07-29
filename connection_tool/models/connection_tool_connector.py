@@ -10,9 +10,13 @@ try:
 except ImportError:
     from io import StringIO
 
+import logging
+
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 from odoo.tools.translate import _
+
+_logger = logging.getLogger(__name__)
 
 
 class Conector(models.Model):
@@ -105,6 +109,7 @@ class Conector(models.Model):
                 break
             else:
                 dir_file = ''
+        _logger.info("CRON: file ftp %s"%dir_file )
         imprt.source_ftp_filename = dir_file
 
 
