@@ -29,6 +29,7 @@ class Conector(models.Model):
     user = fields.Char(string='User', required=True)
     password = fields.Char(string='Password', required=True)
     dbname = fields.Char(string='Data Base', readonly=True)
+    security = fields.Boolean(string='Security', default=False)
     type = fields.Selection([
             ('sql','PostgreSQL'),
             ('ftp','FTP'),

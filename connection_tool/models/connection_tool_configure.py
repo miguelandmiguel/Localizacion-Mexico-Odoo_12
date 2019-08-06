@@ -391,6 +391,7 @@ class Configure(models.Model):
             message = str(e)
         except Exception as e:
             message = str(e)
+        print("messagemessagemessagemessage", message)
         if message:
             self.datas_file = b''
             message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
@@ -432,7 +433,6 @@ class Configure(models.Model):
             'import_fields': import_fields
         }
         if self.source_python_script:
-            print("self.source_python_script", self.source_python_script)
             try:
                 safe_eval(self.source_python_script, localdict, mode='exec', nocopy=True)
             except Exception as e:
@@ -483,6 +483,8 @@ class Configure(models.Model):
             _logger.info("CRON: import_data %s "%(import_data))
             # import_data = self._parse_import_data(import_data, import_fields, options)
             lendatas = len(import_data)
+            if not lendatas:
+                return {}
             res = self.get_source_python_script(import_data, import_fields, flag_imp=flag_imp, automatic=automatic)
 
             res = self._import_ftp_post(flag_imp=False, automatic=automatic)
