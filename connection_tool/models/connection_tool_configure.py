@@ -363,59 +363,8 @@ class Configure(models.Model):
             values.append(data_tmp)
         return keys, import_fields, values 
 
-    @api.multi
-    def _import_ftp_pre(self, flag_imp=False, automatic=False):
-        self.ensure_one()
-        message = ""
-        _logger.info("CRON: ftp_pre")
-        try:
-            if self.source_type == 'ftp':
-                imprt = self.source_connector_id.with_context(imprt=self)
-                imprt._get_ftp_dirfile(filename=self.source_ftp_refilename, automatic=automatic)
-                # _check_filename_exist
-                if self.source_ftp_write_control:
-                    if imprt._get_ftp_check_filename_exist(filename=self.source_ftp_write_control, automatic=automatic):
-                        return ''
-                #   Check if import data file exist
-                if not imprt._get_ftp_check_filename_exist(filename=self.source_ftp_filename, automatic=automatic):
-                    return ''
-                # First: create control file if if Read Control File Name
-                o = StringIO()
-                self.source_ftp_write_control and imprt._push_to_ftp(self.source_ftp_write_control, o, automatic=automatic)
-                o.close()
-                # Second: read file from ftp site
-                remote_file = imprt._read_ftp_filename(self.source_ftp_filename, automatic=automatic)
-                self.datas_file =  base64.b64encode(remote_file)
-                _logger.info("CRON: ftp_pre_fil64")
-        except ValueError as e:
-            message = str(e)
-        except Exception as e:
-            message = str(e)
-        print("messagemessagemessagemessage", message)
-        if message:
-            self.datas_file = b''
-            message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
-            self.action_raise_message(msg_log=message, automatic=automatic)
-        return True
 
 
-    @api.multi
-    def _import_ftp_post(self, flag_imp=False, automatic=False):    
-        self.ensure_one()
-        message = ""
-        try:
-            if self.source_type == 'ftp':
-                imprt = self.source_connector_id.with_context(imprt=self)
-                if imprt._get_ftp_check_filename_exist(filename=self.source_ftp_write_control, automatic=automatic):
-                    imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
-        except ValueError as e:
-            message = str(e)
-        except Exception as e:
-            message = str(e)
-        if message:
-            message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
-            self.action_raise_message(msg_log=message, automatic=automatic)
-        return True
 
 
     @api.multi
@@ -448,10 +397,70 @@ class Configure(models.Model):
                     import_result = base_model.load(header, b)
                     _logger.info("import_result %s"%values)
                     self.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)  
-
-
         return True
 
+
+    @api.multi
+    def _import_ftp_pre(self, flag_imp=False, automatic=False):
+        self.ensure_one()
+        message = ""
+        _logger.info("CRON: ftp_pre")
+        try:
+            if self.source_type == 'ftp':
+                self.source_ftp_filename = ''
+
+                imprt = self.source_connector_id.with_context(imprt=self)
+
+                # 01 Busca archivo
+                res = imprt._get_ftp_dirfile(filename=self.source_ftp_refilename, automatic=automatic)
+                if res == None:
+                    return res
+
+                # 02 Busca archivo de Control
+                if self.source_ftp_write_control:
+                    if imprt._get_ftp_check_filename_exist(filename=self.source_ftp_write_control, automatic=automatic):
+                        return None
+                """
+                if not imprt._get_ftp_check_filename_exist(filename=self.source_ftp_filename, automatic=automatic):
+                    return ''
+                """
+                # 03 Crea archivo de control
+                self.source_ftp_write_control and imprt._push_to_ftp(self.source_ftp_write_control, automatic=automatic)
+
+                # 04 Crea archivo de control
+                remote_file = imprt._read_ftp_filename(self.source_ftp_filename, automatic=automatic)
+                if remote_file == None:
+                    return res
+                self.datas_file =  base64.b64encode(remote_file)
+                _logger.info("CRON: ftp_pre_fil64")
+        except ValueError as e:
+            message = str(e)
+        except Exception as e:
+            message = str(e)
+        if message:
+            self.datas_file = b''
+            message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
+            _logger.info("Error -- %s "%message )
+            self.action_raise_message(msg_log=message, automatic=automatic)
+        return True
+
+    @api.multi
+    def _import_ftp_post(self, flag_imp=False, automatic=False):    
+        self.ensure_one()
+        message = ""
+        try:
+            if self.source_type == 'ftp':
+                imprt = self.source_connector_id.with_context(imprt=self)
+                if imprt._get_ftp_check_filename_exist(filename=self.source_ftp_write_control, automatic=automatic):
+                    imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
+        except ValueError as e:
+            message = str(e)
+        except Exception as e:
+            message = str(e)
+        if message:
+            message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
+            self.action_raise_message(msg_log=message, automatic=automatic)
+        return True
 
     @api.multi
     def _import(self, flag_imp=False, automatic=False):
@@ -463,12 +472,14 @@ class Configure(models.Model):
             raise UserError(_('No macro lines defined. '))
         self.datas_file = b''
 
-        _logger.info("CRON _import")
+        _logger.info("CRON _import Inicia")
         # Busca archivo ftp
         if self.source_connector_id:
             res = self._import_ftp_pre(flag_imp=flag_imp, automatic=automatic)
-            if not res:
+            if res == None:
                 return False
+
+
         if self.source_python_script:
             options = {
                 'headers': self.with_header
@@ -480,7 +491,7 @@ class Configure(models.Model):
                 options['quoting'] = self.quoting or OPTIONS['quoting']
                 options['separator'] = self.separator or OPTIONS['separator']
             import_data, import_fields = self._convert_import_data(options)
-            _logger.info("CRON: import_data %s "%(import_data))
+            # _logger.info("CRON: import_data %s "%(import_data))
             # import_data = self._parse_import_data(import_data, import_fields, options)
             lendatas = len(import_data)
             if not lendatas:
@@ -490,8 +501,22 @@ class Configure(models.Model):
             res = self._import_ftp_post(flag_imp=False, automatic=automatic)
             if res and self.source_type == 'ftp':
                 imprt = self.source_connector_id.with_context(imprt=self)
-                imprt._move_ftp_filename(self.source_ftp_write_control, automatic=automatic)
+                imprt._move_ftp_filename(self.source_ftp_filename, automatic=automatic)
             return {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         data = {'val':{}}
         meta = {

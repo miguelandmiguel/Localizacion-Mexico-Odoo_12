@@ -45,6 +45,9 @@
             </field>
         </record>
 
+        <!--
+        , 'invisible' : ['|', ('source_type', 'not in', ['ftp']), ('source_ftp_re', '=', True)]
+        -->
 
         <record id="view_connection_tool_configure_form" model="ir.ui.view">
             <field name="name">Connection Tool Configure Form</field>
@@ -85,9 +88,7 @@
                                         <field name="source_ftp_refilename" attrs="{
                                                 'required': [('source_ftp_re', '=', True)], 
                                                 'invisible' : ['|', ('source_type', 'not in', ['ftp']), ('source_ftp_re', '=', False)]}"/>
-                                        <field name="source_ftp_filename" attrs="{
-                                                'required': [('source_ftp_re', '=', False)], 
-                                                'invisible' : ['|', ('source_type', 'not in', ['ftp']), ('source_ftp_re', '=', True)]}"/>
+                                        <field name="source_ftp_filename" attrs="{'required': [('source_ftp_re', '=', False)]}"/>
 
                                     </group>
                                 </group>

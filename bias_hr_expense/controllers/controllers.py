@@ -70,7 +70,6 @@ def copy_filelike_to_filelike(src, dst, bufsize=16384):
 
 
 class Binary(attach.Binary):
-    
     @route()
     @serialize_exception
     def upload_attachment(self, callback, model, id, ufile):
@@ -84,7 +83,7 @@ class Binary(attach.Binary):
             model_id = Model.browse(int(id))
             files = request.httprequest.files.copy()
             for ufile_tmp in files.getlist('ufile'):
-                if ufile_tmp.content_type == 'text/xml':                    
+                if ufile_tmp.content_type == 'text/xml':
                     filename = ufile_tmp.filename
                     if request.httprequest.user_agent.browser == 'safari':
                         filename = unicodedata.normalize('NFD', ufile_tmp.filename)

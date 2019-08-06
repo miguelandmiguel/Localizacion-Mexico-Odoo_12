@@ -33,8 +33,6 @@ class IrAttachment(models.Model):
         if not self:
             return True
         self.check('unlink')
-
-        print("self--- ", self.res_model)
         for expense_attachment in self.filtered(lambda object: object.res_model== 'hr.expense'):
             if expense_attachment.name.endswith('.xml'):
                 cfdi = base64.decodestring(expense_attachment.datas)
