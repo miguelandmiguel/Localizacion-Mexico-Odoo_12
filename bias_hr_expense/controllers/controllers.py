@@ -79,7 +79,7 @@ class Binary(attach.Binary):
                     win.jQuery(win).trigger(%s, %s);
                     </script>"""
             args = []
-            Model = request.env[model]
+            Model = request.env[model].with_context(widget_attach=False)
             model_id = Model.browse(int(id))
             files = request.httprequest.files.copy()
             for ufile_tmp in files.getlist('ufile'):

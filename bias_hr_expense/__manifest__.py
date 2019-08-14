@@ -10,11 +10,12 @@
     'author': "OpenBias",
     'website': "http://www.bias.com.mx",
     'category': 'Uncategorized',
-    'version': '0.1',
-    'depends': ['hr_expense', 'web', 'base'],
+    'version': '1.1',
+    'depends': ['account', 'hr_expense', 'web', 'base'],
     'data': [
         # 'security/ir.model.access.csv',
         'views/hr_expense_views.xml',
+        'views/res_config_settings_views.xml'
     ],
     # 'demo': [
     #     'demo/demo.xml',
