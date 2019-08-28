@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+import shutil
+import base64
 import pysftp
 from ftplib import FTP
 import re
@@ -12,12 +13,15 @@ except ImportError:
     from io import StringIO
 
 import logging
-
-from odoo import api, fields, models
+import threading
+from odoo import api, fields, models, registry, _, SUPERUSER_ID
 from odoo.exceptions import AccessError, UserError
 from odoo.tools.translate import _
 
 _logger = logging.getLogger(__name__)
+
+OPTIONS = {'headers': True, 'quoting': '"', 'separator': ',', 'encoding': 'utf-8'}
+FIELD_TYPES = [(key, key) for key in sorted(fields.Field.by_type)]
 
 class OdooFTP():
     def __init__(self, host='', port=21, username='', password='', path='', path_done='', security=False):
@@ -51,6 +55,46 @@ class OdooFTP():
             self.ftp.login(self.username, self.password)
             self.ftp.cwd(self.path)
             return self.ftp
+
+    def _getFTPData(self, imprt):
+        if self.security:
+            return self._getSFTPData(imprt)
+        else:
+            print("--0000000")
+        return ''
+
+    def _getSFTPData(self, imprt):
+        self.ftp = self.get_connection()
+        self.ftp.chdir(self.path)
+
+        # Archivo de Control
+        exists = self.ftp.exists(imprt.source_ftp_write_control)
+        if exists:
+            logging.info("CRON _import Security %s - Existe archivo Control %s "%(self.security, imprt.source_ftp_write_control) )
+            return None
+        output = StringIO()
+        print("imprt.source_ftp_write_control", imprt.source_ftp_write_control)
+        self.ftp.putfo(output, imprt.source_ftp_write_control)
+        logging.info("CRON _import Security %s - File Control %s "%(self.security, imprt.source_ftp_write_control) )
+
+        directory = "/tmp/tmpsftp%s"%(imprt.id)
+        regex = re.compile(imprt.source_ftp_refilename)
+        # Busca archivo en el servidor
+        file_ftp = ''
+        listdir = self.ftp.listdir()
+        for line in listdir:
+            validate = regex.match(line) and True or False
+            if validate:
+                self.ftp.get(line, directory+'/'+line)
+                logging.info("CRON _import Security %s - File Transer %s "%(self.security, line))
+                file_ftp += line+'|'
+        if not file_ftp:
+            return None
+        logging.info("CRON _import Security %s - Files %s "%(self.security, file_ftp) )
+        # imprt.source_ftp_filenamedatas = file_ftp
+
+        self.ftp.close()
+        return True
 
     def _get_dirfile(self, file_re):
         self.ftp = self.get_connection()
@@ -131,7 +175,9 @@ class OdooFTP():
         self.ftp = self.get_connection()
         if self.security:
             self.ftp.chdir(self.path)
-            self.ftp.remove(filename)
+            res = self.ftp.exists(filename)
+            if res:
+                self.ftp.remove(filename)
             self.ftp.close()
         else:
             if filename in self.ftp.nlst():
@@ -143,6 +189,9 @@ class OdooFTP():
     def get_file_move(self, filename):
         self.ftp = self.get_connection()
         if self.security:
+            self.ftp.chdir(self.path_done)
+            if self.ftp.exists(filename):
+                self.ftp.remove(filename)
             self.ftp.chdir(self.path)
             self.ftp.rename(filename, self.path_done+'/'+filename)
             self.ftp.close()
@@ -179,10 +228,6 @@ class Conector(models.Model):
             result.append((rec.id, "[%s] %s" % (rec.type, rec.name or '')))
         return result
 
-
-    # 
-    # FTP
-    #
     def getFTP(self, imprt):
         ftp = OdooFTP(
             host=self.host,
@@ -194,6 +239,12 @@ class Conector(models.Model):
             security=self.security
         )
         return ftp
+
+    def getFTData(self):
+        imprt = self._context.get('imprt') or False
+        ftp = self.getFTP(imprt)
+        res = ftp._getFTPData(imprt)
+        return res
 
     def _get_ftp_dirfile(self, filename='', automatic=False):
         imprt = self._context.get('imprt') or False
@@ -236,9 +287,58 @@ class Conector(models.Model):
     def _move_ftp_filename(self, filename='', automatic=False):
         imprt = self._context.get('imprt') or False
         ftp = self.getFTP(imprt)
-        print("filenamefilename", filename)
         ftp.get_file_move(filename)
         return True
+
+
+
+
+
+
+
+
+        """
+
+
+
+            if files != 'done':
+                _logger.info("CRON: import_data %s "%(files))
+                info = open(directory+'/'+files, "r")
+                # Model.with_env(new_env).datas_file = base64.b64encode(info.read().encode("utf-8"))
+                # Model.with_env(new_env).source_ftp_filename = files
+                Model.write({
+                    'datas_file': base64.b64encode(info.read().encode("utf-8")),
+                    'source_ftp_filename': files
+                })
+                if new_cr:
+                    new_cr.commit()
+                    new_cr.close()
+                if Model.source_python_script:
+                    options = {
+                        'headers': Model.with_header
+                    }
+                    if Model.type == 'csv':
+                        if not Model.quoting and Model.separator:
+                            raise UserError(_("Set Quoting and Separator fields before load CSV File."))
+                        options = OPTIONS
+                        options['quoting'] = Model.quoting or OPTIONS['quoting']
+                        options['separator'] = Model.separator or OPTIONS['separator']
+                    import_data, import_fields = Model._convert_import_data(options)
+                    print("import_data", import_data)
+                    lendatas = len(import_data)
+                    if not lendatas:
+                        return None
+                    res = Model.get_source_python_script(import_data, import_fields, flag_imp=flag_imp, automatic=automatic)
+                    print("ressss", res)
+                    if res == True:
+                        shutil.move(directory+'/'+files, directory+'/done/'+files)
+                        new_imprt._move_ftp_filename(files, automatic=automatic)
+
+            if new_cr:
+                new_cr.commit()
+                new_cr.close()
+        return True
+        """
 
 
 

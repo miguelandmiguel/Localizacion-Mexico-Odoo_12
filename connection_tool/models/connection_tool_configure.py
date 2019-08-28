@@ -1,25 +1,21 @@
 # -*- coding: utf-8 -*-
 
+import shutil
 from ftplib import FTP
-
 try:
     from itertools import ifilter as filter
 except ImportError:
     pass
-
 try:
     from itertools import imap
 except ImportError:
     imap=map
-
-
 import io
 from io import BytesIO
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
-
 try:
     import xlrd
     try:
@@ -28,13 +24,11 @@ try:
         xlsx = None
 except ImportError:
     xlrd = xlsx = None
-
 from tempfile import TemporaryFile
 import base64
 import codecs
 import collections
 import unicodedata
-
 import chardet
 import datetime
 import itertools
@@ -44,13 +38,10 @@ import operator
 import os
 import re
 import requests
-
+import threading
 from dateutil.relativedelta import relativedelta
-import logging
 import time
-
-
-from odoo import api, fields, models
+from odoo import api, fields, models, registry, _, SUPERUSER_ID
 from odoo.exceptions import AccessError, UserError
 from odoo.tools.translate import _
 from odoo.tools.mimetypes import guess_mimetype
@@ -64,7 +55,6 @@ try:
 except ImportError:
     _logger.debug('Can not import xlsxwriter`.')
 
-
 FIELDS_RECURSION_LIMIT = 2
 ERROR_PREVIEW_BYTES = 200
 DEFAULT_IMAGE_TIMEOUT = 3
@@ -72,14 +62,12 @@ DEFAULT_IMAGE_MAXBYTES = 10 * 1024 * 1024
 DEFAULT_IMAGE_REGEX = r"(?:http|https)://.*(?:png|jpe?g|tiff?|gif|bmp)"
 DEFAULT_IMAGE_CHUNK_SIZE = 32768
 IMAGE_FIELDS = ["icon", "image", "logo", "picture"]
-
 BOM_MAP = {
     'utf-16le': codecs.BOM_UTF16_LE,
     'utf-16be': codecs.BOM_UTF16_BE,
     'utf-32le': codecs.BOM_UTF32_LE,
     'utf-32be': codecs.BOM_UTF32_BE,
 }
-
 try:
     import xlrd
     try:
@@ -88,8 +76,6 @@ try:
         xlsx = None
 except ImportError:
     xlrd = xlsx = None
-
-
 try:
     from . import odf_ods_reader
 except ImportError:
@@ -173,8 +159,6 @@ OUTPUT_DESTINATION = [
 OPTIONS = {'headers': True, 'quoting': '"', 'separator': ',', 'encoding': 'utf-8'}
 FIELD_TYPES = [(key, key) for key in sorted(fields.Field.by_type)]
 
-
-
 class Configure(models.Model):
     _name = 'connection_tool.configure'
     _inherit = ['mail.thread']
@@ -195,7 +179,6 @@ class Configure(models.Model):
     source_ftp_read_control = fields.Char('Read Control Filename')
     source_ftp_write_control = fields.Char('Write Control Filename')
     source_python_script = fields.Text("Python Script")
-
     recurring_import = fields.Boolean('Recurring Import?')
     recurring_next_date = fields.Datetime('Date of Next Process')
     recurring_interval = fields.Integer('Repeat Every', help="Repeat every (Days/Week/Month/Year)")
@@ -208,12 +191,12 @@ class Configure(models.Model):
         ('yearly', 'Year(s)'),
     ], string='Recurrency', help="Import automatically repeat at specified interval")
 
+    source_ftp_filenamedatas = fields.Text(string='Import Filename')
+
 
     # No hay
     register_to_process = fields.Integer('Register to Process', default=1)
-
-
-    
+   
     quoting = fields.Char('Quoting', size=8, default="\"")
     separator = fields.Char('Separator', size=8, default="|")
     with_header = fields.Boolean(string='With Header?', default=1)
@@ -270,7 +253,8 @@ class Configure(models.Model):
 
     def _cron_connection_tool(self):
         current_date =  time.strftime('%Y-%m-%d %H:%M:%S')
-        imprt_ids = self.sudo().search([('recurring_next_date','<=', current_date), ('recurring_import','=', True)])
+        where = [('recurring_next_date','<=', current_date), ('recurring_import','=', True)]
+        imprt_ids = self.sudo().search([('recurring_import','=', True)])
         _logger.info("CRON imprt_ids %s %s "%(current_date, imprt_ids) )
         for imprt_id in imprt_ids:
             imprt_id.sudo()._recurring_connection_tool(automatic=True)
@@ -284,6 +268,7 @@ class Configure(models.Model):
         _logger.info("CRON Recurrent Date %s"%current_date )
         try:
             self.button_import(automatic=automatic) # Run Import
+            """
             next_date = datetime.datetime.strptime(current_date, "%Y-%m-%d %H:%M:%S")
             interval = self.recurring_interval
             if self.recurring_rule_type == 'minutely':
@@ -301,7 +286,7 @@ class Configure(models.Model):
             self.write({
                 'recurring_next_date': new_date.strftime('%Y-%m-%d %H:%M:%S')
             })
-
+            """
         except Exception as e:
             if automatic:
                 self._cr.rollback()
@@ -309,7 +294,6 @@ class Configure(models.Model):
                 _logger.debug("Sending recurring import configuration error notification to uid %s", self._uid)
             else:
                 raise
-
         _logger.info("CRON: Termina proceso")
         return True
 
@@ -361,15 +345,33 @@ class Configure(models.Model):
             for field in import_fields:
                 data_tmp.append( data[field] )
             values.append(data_tmp)
-        return keys, import_fields, values 
+        return keys, import_fields, values
 
 
+    def get_source_create(self, use_new_cursor=False, model=False, vals={}, ctx={}, related_id=False, field_related=False):
+        model_id = False
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))  # TDE FIXME
+        if related_id and field_related:
+            vals[ field_related ] = related_id
+        if ctx:
+            base_model = self.env[model].with_context(**ctx).sudo()
+            model_id = base_model.with_context(**ctx).create( vals )
+        else:
+            base_model = self.env[model].sudo()
+            model_id = base_model.create( vals )
 
+        if use_new_cursor:
+            cr.commit()
+            cr.close()
+        return model_id
 
-
-    @api.multi
-    def get_source_python_script(self, import_data, import_fields, flag_imp=False, automatic=False):
-        self.ensure_one()
+    def get_source_python_script(self, use_new_cursor, id_cursor, import_data, flag_imp=False, automatic=False):
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))  # TDE FIXME
+        Model = self.env['connection_tool.configure'].browse(id_cursor)
         localdict = {
             'this':self, 
             're': re,
@@ -379,191 +381,192 @@ class Configure(models.Model):
             '_logger': _logger,
             'UserError': UserError,
             'import_data': import_data,
-            'import_fields': import_fields
+            'import_fields': []
         }
-        if self.source_python_script:
+        if Model.source_python_script:
             try:
-                safe_eval(self.source_python_script, localdict, mode='exec', nocopy=True)
+                safe_eval(Model.source_python_script, localdict, mode='exec', nocopy=True)
             except Exception as e:
                 raise UserError(_('%s in macro')%(e))
         result = localdict.get('result',False)
         if result:
             header = result.get('header') or []
             body = result.get('body') or []
-            for values in body:
-                if self.output_destination == 'this_database':
-                    base_model = self.env[self.model_id.model].with_context(import_file=True, name_create_enabled_fields={})
-                    b = body[values].get('lines') or []
-                    import_result = base_model.load(header, b)
-                    _logger.info("import_result %s"%values)
-                    self.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)  
+            for ext_id in body:
+                if Model.output_destination == 'this_database':
+                    """
+                    for data in body:
+                        model = body[data].get('model') or ''
+                        model_line = body[data].get('model_line') or ''
+                        field_related = body[data].get('field_related') or ''
+                        fields = body[data].get('fields') or {}
+                        line_ids = body[data].get('line_ids') or []
+                        ctx = body[data].get('contex') or {}
+                        model_id = Model.get_source_create(use_new_cursor=use_new_cursor, model=model, vals=fields, ctx=ctx, related_id=False, field_related=False)
+                        _logger.info("import Model %s %s"%(model, model_id.id))
+                        if use_new_cursor:
+                            cr.commit()
+                        if model_id:
+                            for line in line_ids:
+                                modelline_id = Model.get_source_create(use_new_cursor=use_new_cursor, model=model_line, vals=line, ctx=ctx, related_id=model_id.id, field_related=field_related)
+                                _logger.info("import Model Line %s %s"%(model_line, modelline_id.id))
+                                if use_new_cursor:
+                                    cr.commit()
+                    """
+                    ctx = {'import_file': True, 'name_create_enabled_fields': {}, 'check_move_validity': False}
+                    base_model = self.env[Model.model_id.model].with_context(**ctx).sudo()
+                    b = body[ext_id].get('lines') or []
+                    import_result = base_model.with_context(**ctx).load(header, b)
+                    Model.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)
+                    cr.commit()
+        if use_new_cursor:
+            cr.commit()
+            cr.close()
+        return True        
+
+    @api.model
+    def _import_ftp_pre_threading_api_datas(self, use_new_cursor=False, new_id=False, files=False, directory=False, imprt=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+            Model = self.env['connection_tool.configure'].browse(new_id)
+            imprt = Model.source_connector_id.with_context(imprt=Model, directory=directory)
+            if files != 'done':
+                _logger.info("CRON: import_data %s "%(files))
+                info = open(directory+'/'+files, "r")
+                Model.write({
+                    'datas_file': base64.b64encode(info.read().encode("utf-8")),
+                    'source_ftp_filename': files
+                })
+                self._cr.commit()
+                if Model.source_python_script:
+                    options = {
+                        'headers': Model.with_header
+                    }
+                    if Model.type == 'csv':
+                        if not Model.quoting and Model.separator:
+                            raise UserError(_("Set Quoting and Separator fields before load CSV File."))
+                        options = OPTIONS
+                        options['quoting'] = Model.quoting or OPTIONS['quoting']
+                        options['separator'] = Model.separator or OPTIONS['separator']
+                    import_data = Model._convert_import_data(options)
+                    lendatas = len(import_data)
+                    if not lendatas:
+                        return None
+                    res = Model.get_source_python_script(use_new_cursor, Model.id, import_data, flag_imp=False, automatic=True)
+                    if res == True:
+                        shutil.move(directory+'/'+files, directory+'/done/'+files)
+                        imprt._move_ftp_filename(files, automatic=True)
+            if use_new_cursor:
+                cr.commit()
+        finally:
+            if use_new_cursor:
+                try:
+                    cr.commit()
+                    cr.close()
+                except Exception:
+                    pass
         return True
 
+    @api.model
+    def _import_ftp_pre_threading_api(self, use_new_cursor=False, new_id=False, flag_imp=False, automatic=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+            Model = self.env['connection_tool.configure'].browse(new_id)
+            # Crea si no existe directorio
+            directory = "/tmp/tmpsftp%s"%(Model.id)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            if os.listdir(directory):
+                return None
+            if not os.path.exists(directory+'/done'):
+                os.makedirs(directory+'/done')
+            imprt = Model.source_connector_id.with_context(imprt=Model, directory=directory)
+            res = imprt.getFTData()
+            if res == None:
+                return res
+            pairs = []
+            for files in os.listdir(directory):
+                if files == 'done':
+                    continue
+                location = os.path.join(directory, files)
+                size = os.path.getsize(location)
+                pairs.append((size, files))
+            pairs.sort(key=lambda s: s[0])
+            for dir_files in pairs:
+                files = dir_files[1]
+                if files == 'done':
+                    continue
+                Model._import_ftp_pre_threading_api_datas(use_new_cursor=Model._cr.dbname, new_id=Model.id, files=files, directory=directory, imprt=imprt)
+            imprt._delete_ftp_filename(Model.source_ftp_write_control, automatic=automatic)
+            try:
+                shutil.rmtree(directory)
+            except:
+                pass
+        finally:
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return True
+
+
+    def _import_ftp_pre_threading(self, new_id, flag_imp, automatic):
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['connection_tool.configure'].browse(new_id)._import_ftp_pre_threading_api(use_new_cursor=self._cr.dbname, new_id=new_id, flag_imp=flag_imp, automatic=automatic)
+            new_cr.close()
+        return True
 
     @api.multi
     def _import_ftp_pre(self, flag_imp=False, automatic=False):
         self.ensure_one()
-        message = ""
-        _logger.info("CRON: ftp_pre")
         try:
-            if self.source_type == 'ftp':
-                self.source_ftp_filename = ''
-
-                imprt = self.source_connector_id.with_context(imprt=self)
-
-                # 01 Busca archivo
-                res = imprt._get_ftp_dirfile(filename=self.source_ftp_refilename, automatic=automatic)
-                if res == None:
-                    return res
-
-                # 02 Busca archivo de Control
-                if self.source_ftp_write_control:
-                    if imprt._get_ftp_check_filename_exist(filename=self.source_ftp_write_control, automatic=automatic):
-                        return None
-                """
-                if not imprt._get_ftp_check_filename_exist(filename=self.source_ftp_filename, automatic=automatic):
-                    return ''
-                """
-                # 03 Crea archivo de control
-                self.source_ftp_write_control and imprt._push_to_ftp(self.source_ftp_write_control, automatic=automatic)
-
-                # 04 Crea archivo de control
-                remote_file = imprt._read_ftp_filename(self.source_ftp_filename, automatic=automatic)
-                if remote_file == None:
-                    return res
-                self.datas_file =  base64.b64encode(remote_file)
-                _logger.info("CRON: ftp_pre_fil64")
-        except ValueError as e:
-            message = str(e)
-        except Exception as e:
-            message = str(e)
-        if message:
-            self.datas_file = b''
-            message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
-            _logger.info("Error -- %s "%message )
-            self.action_raise_message(msg_log=message, automatic=automatic)
+            message = ""
+            _logger.info("CRON: Inicia FTP")
+            threaded_calculation = threading.Thread(target=self._import_ftp_pre_threading, args=(self.id, flag_imp, automatic), name=self.id, daemon=True)
+            threaded_calculation.start()
+            # threaded_calculation.join()
+            _logger.info(' CRON: Finaliza Thread')
+            imprt = self.source_connector_id.with_context(imprt=self)
+            imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
+        finally:
+            try:
+                shutil.rmtree(directory)
+            except:
+                pass
         return True
 
-    @api.multi
-    def _import_ftp_post(self, flag_imp=False, automatic=False):    
-        self.ensure_one()
-        message = ""
-        try:
-            if self.source_type == 'ftp':
-                imprt = self.source_connector_id.with_context(imprt=self)
-                if imprt._get_ftp_check_filename_exist(filename=self.source_ftp_write_control, automatic=automatic):
-                    imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
-        except ValueError as e:
-            message = str(e)
-        except Exception as e:
-            message = str(e)
-        if message:
-            message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
-            self.action_raise_message(msg_log=message, automatic=automatic)
-        return True
+
 
     @api.multi
     def _import(self, flag_imp=False, automatic=False):
         self.ensure_one()
-        self._cr.execute('SAVEPOINT import')
-        
         context = self._context
-        if not self.macro_ids:
-            raise UserError(_('No macro lines defined. '))
         self.datas_file = b''
-
+        self.source_ftp_filename = ''
         _logger.info("CRON _import Inicia")
-        # Busca archivo ftp
-        if self.source_connector_id:
-            res = self._import_ftp_pre(flag_imp=flag_imp, automatic=automatic)
-            if res == None:
-                return False
-
-
-        if self.source_python_script:
-            options = {
-                'headers': self.with_header
-            }
-            if self.type == 'csv':
-                if not self.quoting and self.separator:
-                    raise UserError(_("Set Quoting and Separator fields before load CSV File."))
-                options = OPTIONS
-                options['quoting'] = self.quoting or OPTIONS['quoting']
-                options['separator'] = self.separator or OPTIONS['separator']
-            import_data, import_fields = self._convert_import_data(options)
-            # _logger.info("CRON: import_data %s "%(import_data))
-            # import_data = self._parse_import_data(import_data, import_fields, options)
-            lendatas = len(import_data)
-            if not lendatas:
-                return {}
-            res = self.get_source_python_script(import_data, import_fields, flag_imp=flag_imp, automatic=automatic)
-
-            res = self._import_ftp_post(flag_imp=False, automatic=automatic)
-            if res and self.source_type == 'ftp':
+        # Inicia proceso FTP
+        if self.source_connector_id and self.source_type == 'ftp':
+            message = ""
+            try:
+                res = self._import_ftp_pre(flag_imp=flag_imp, automatic=automatic)
+                if res == None:
+                    return False
+            except ValueError as e:
+                message = str(e)
+            except Exception as e:
+                message = str(e)
+            if message:
                 imprt = self.source_connector_id.with_context(imprt=self)
-                imprt._move_ftp_filename(self.source_ftp_filename, automatic=automatic)
-            return {}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        data = {'val':{}}
-        meta = {
-            'global':{'LINE_IDS':[], 'LINE_IDS_INDEX':0, 'global_debit': 0.0, 'global_credit': 0.0, 'len_datas': 0},
-            'model_id':False,
-            'model_list':[],
-            'register_id':{},
-            'first_index':False,
-            'relative_index':0,
-            'register_counter':{},
-            'row_value':{},
-            'val':{'register_id':False, 'register':False, 'parent_register_id':False, 'parent_register':False, 'parent_model':False, 'lines': []}
-        }
-        csv_data = []
-
-        data, meta = self.process_macro(data, meta, automatic)
-        if not data['val']:
-            return {}
-        for model in meta['model_list']:
-            if not data['val'].get(model,False) or not data['val'][model].keys():
-                continue
-            keys, import_fields, values = self._get_values(meta['val']['lines'])
-            if flag_imp:
-                if self.output_destination == 'this_database':
-                    base_model = self.env[model].with_context(import_file=True, name_create_enabled_fields={})
-                    import_result = base_model.load(import_fields, values)
-                    _logger.info("import_result %s"%import_result)
-                    self.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)
-
-            if self.output_type: 
-                if self.output_type in ('xlsx'):
-                    file_data = BytesIO()
-                    workbook = xlsxwriter.Workbook(file_data, {'in_memory': True})
-                    worksheet = workbook.add_worksheet( self.model_id.name )
-                    worksheet.write_row('A1', import_fields)
-                    row = 2
-                    for v in values:
-                        worksheet.write_row('A%s'%row, v)
-                        row += 1
-                    workbook.close()
-                    file_data.seek(0)
-                    self.export_file = base64.b64encode(file_data.getvalue())
-
-        res = self._import_ftp_post(flag_imp=False, automatic=automatic)
-        if res and self.source_type == 'ftp':
-            imprt = self.source_connector_id.with_context(imprt=self)
-            imprt._move_ftp_filename(self.source_ftp_write_control, automatic=automatic)
+                imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
+                _logger.info("Errors: %s "%message )
+        return True
 
 
     def raise_message(self, import_result, flag_imp=False, automatic=False):
@@ -572,234 +575,16 @@ class Configure(models.Model):
             messages = ''
             for msg in import_result['messages']:
                 messages += '%s \n'%(str( msg.get('message') or '' )) 
-            self._import_ftp_post(flag_imp=False, automatic=automatic)
             raise UserError(_('%s')%messages)
         return True
 
 
-    def process_macro(self, data, meta, automatic=False):
-        def cell(import_fields, import_data, macro, data, meta={}, automatic=False):
-            val = row_value = row = table = db_field = False
-            index = 0
-            #if macro.row_type == 'relative' or macro.import_id.type in ('csv','ftp'):
-            if macro.row_type == 'relative' or macro.import_id.type != 'file':
-                index = meta['relative_index']
-            row, col = get_row_col(macro.row, macro.col, index)
-            if not self.with_header:
-                row -= 1
-            if index >= len(import_data):
-                return '/*EOF*/', meta                                      # CHECK END OF FILE
-            for i, row_value in enumerate(import_data):# get row_value
-                if i >= index :
-                    break
-            val = row_value[col]
-            return self.run_python(macro, meta, val, row_value=meta['row_value'], row=(row or index or meta['relative_index']), row_data=row_value, automatic=automatic)
-
-
-        self.ensure_one()
-        context = self._context
-
-        options = {
-            'headers': self.with_header
-        }
-        if self.type == 'csv':
-            if not self.quoting and self.separator:
-                raise UserError(_("Set Quoting and Separator fields before load CSV File."))
-            options = OPTIONS
-            options['quoting'] = self.quoting or OPTIONS['quoting']
-            options['separator'] = self.separator or OPTIONS['separator']
-        import_data, import_fields = self._convert_import_data(options)
-        # import_data = self._parse_import_data(import_data, import_fields, options)
-        lendatas = len(import_data)
-
-        meta['global']['len_datas'] = len(import_data)
-
-        meta['relative_index'] = meta['first_index'] = sheet_id = 0
-        # Define initial metadata Models
-        meta['model_id'] = self.model_id.model or self.name
-        if not meta['model_id'] in meta['model_list']:
-            meta['model_list'].append(meta['model_id'])
-
-        # Process Registry Macros
-        type_registry = ('register_id','register','line','next_index','jump','check')
-        macro_register = [(x.sequence, x) for x in self.macro_ids if x.type in type_registry and not x.disable]
-        i = len(macro_register)
-        
-        model = meta['model_id']
-        while i >= 1:
-            if model and not data['val'].get(model,False):
-                data['val'][model] = {}
-            macro = macro_register[-i][1]
-            # Read cell or registry value
-            val, meta = cell(import_fields, import_data, macro, data, meta, automatic)
-            if val == '/*EOF*/':
-                break
-
-            if macro.type == 'register_id':
-                if model == meta['model_id']:
-                    processed = len(data['val'][meta['model_id']].keys())
-                if (self.register_to_process > 0) and ((self.register_to_process) <= processed):
-                    break
-                if data['val'][model].get(val,False):
-                    dup_indx = 1
-                    while data['val'][model].get(val+'-'+str(dup_indx),False):
-                        dup_indx += 1
-                    val = val+'-'+str(dup_indx)
-                data['val'][model][val] = {'id':val}
-                meta['register_id'][model] = val        # Register_id
-                meta['val']['register_id'] = val
-                meta['val']['register'] = val and data['val'][model][meta['val']['register_id']]
-
-            # Process Macro Type ** Register **
-            elif macro.type == 'register':
-                subfix = ''
-                if macro.field_id and macro.field_id.ttype in ('many2one','many2many','one2many'):
-                    return_type = macro.return_type
-                    subfix = (return_type == 'db' and '/.id') or (return_type == 'external' and '/id') or (return_type == 'name' and '')
-                    val = (macro.return_type == 'db' and str(val)) or val
-                key = macro.field_name and (macro.field_name + subfix) or 'column_%s'%macro.sequence
-                if not meta['register_id'].get(model,False):
-                    if automatic:
-                        self._cr.rollback()
-                        _logger.exception(_('Define "Register ID" before macro "%s", sequence = %s .')%(macro.name, macro.sequence))
-                    else:
-                        raise UserError(_('Define "Register ID" before macro "%s", sequence = %s .')%(macro.name, macro.sequence))
-                reg_id = meta['register_id'][model]
-                if val == '/*NOT PROCESS*/':
-                    val = data['val'][model][reg_id].get(key,False)
-                data['val'][model][reg_id].update({key:val})
-                meta['val']['register'].update({key:val})
-
-            # Process Macro Type ** Line Object **
-            elif macro.type == 'line':
-                if macro.field_id and macro.field_id.ttype != 'one2many':
-                    if automatic:
-                        self._cr.rollback()
-                        _logger.exception(_('Field shuld be one2many not %s in Macro %s.')%(macro.field_id.ttype,macro.name))
-                    else:
-                        raise UserError(_('Field shuld be one2many not %s in Macro %s.')%(macro.field_id.ttype,macro.name))
-                meta['val']['parent_register_id'] = meta['val']['register_id']
-                meta['val']['parent_model'] = meta['model_id']
-                meta['val']['parent_register'] = meta['val']['register']
-                meta['model_id'] = macro.field_id and macro.field_id.relation or imprt.name
-                if macro.field_id and not macro.field_id.relation in meta['model_list']:
-                    meta['model_list'].append(macro.field_id.relation)
-
-            elif macro.type == 'next_index': 
-                # IF iteraiting in object lines
-
-                reg_id = meta['register_id'][model]
-                line_dict = data['val'][model][reg_id]
-                for ldict in line_dict:
-                    if line_dict[ldict].startswith("vacio"):
-                        line_dict[ldict] = ""
-
-                if self.model_id.model == 'account.move':
-                    if line_dict.get("line_ids/credit", "0.0") != "0.0" and line_dict.get("line_ids/debit", "0.0") != "0.0":
-                        line_dict_tmp = line_dict.copy()
-                        line_dict_tmp["line_ids/credit"] = "0.0"
-                        line_dict["line_ids/debit"] = "0.0"
-                        meta['val']['lines'].append(line_dict_tmp)
-
-
-                meta['val']['lines'].append(line_dict)
-                
-
-                if meta['global']['LINE_IDS']:
-                    meta['global']['LINE_IDS_INDEX'] -= 1
-                    if meta['global']['LINE_IDS_INDEX'] == 0:
-                        meta['relative_index'] += 1
-                        meta['model_id'] = meta['val']['parent_model']
-                        meta['global']['/*END OF LINES*/'] = True
-                        meta['global']['LINE_IDS'] = []
-                        meta['global']['LINE_IDS_INDEX'] = 0
-                # IF val == integer
-                elif isinstance(val, int):
-                    meta['relative_index'] += val
-                # IF val == '/*END OF LINES*/, integer'
-                elif isinstance(val, (str)) and val.split(',')[0] == '/*END OF LINES*/':
-                    meta['global']['/*END OF LINES*/'] = True
-                    next_index = int(val.split(',')[1])
-                    meta['relative_index'] += next_index
-                    meta['model_id'] = meta['val']['parent_model']
-                else:
-                    if automatic:
-                        self._cr.rollback()
-                        _logger.exception(_('Can process Macro sequence %s with value "%s".')%(macro.sequence, val))
-                    else:
-                        raise UserError(_('Can process Macro sequence %s with value "%s".')%(macro.sequence, val))
-
-            # Process Macro Type ** Check **
-            elif macro.type == 'check':
-                if isinstance(val, str):
-                    res = val.split(',')
-                    if res[0] == 'OK':
-                        if len(res) > 1:
-                            ix = len(macro_register)
-                            for m in macro_register:
-                                if val == m[0]:
-                                    i = ix 
-                                    break
-                                ix -= 1
-                        pass
-                    elif res[0] == 'PASS':
-                        pass
-                    elif res[0] == 'JUMP' and len(res) == 3:
-                        meta['global'].update(eval(res[1]))
-                        meta['relative_index'] += int(res[2])
-                    elif res[0] == 'JUMP_AND_CHECK_AGAIN' and len(res) == 3:
-                        meta['global'].update(eval(res[1]))
-                        meta['relative_index'] += int(res[2])
-                        i += 1
-                    elif res[0] == 'NEXT_ROW' and len(res) == 2:
-                        meta['global'].update(eval(res[1]))
-                        meta['relative_index'] += 1
-                    elif res[0] == 'PREVIUS_ROW' and len(res) == 2:
-                        meta['global'].update(eval(res[1]))
-                        meta['relative_index'] -= 1
-                    elif res[0] == 'NEXT_AND_CHECK_AGAIN':
-                        meta['relative_index'] += 1
-                        i += 1
-                    elif res[0] == 'PREVIUS_AND_CHECK_AGAIN':
-                        meta['relative_index'] -= 1
-                        i += 1
-                    else:
-                        if automatic:
-                            self._cr.rollback()
-                            _logger.exception(_('Can not process Check in Macro sequence %s with value "%s" in row %s, valid values are "OK[,macro]", "PASS", "NEXT_ROW,{key:value}", "PREVIUS_ROW,{key:value}", "NEXT_AND_CHECK_AGAIN", "PREVIUS_AND_CHECK_AGAIN".')%(macro.sequence, val, meta['relative_index']))
-                        else:
-                            raise UserError(_('Can not process Check in Macro sequence %s with value "%s" in row %s, valid values are "OK[,macro]", "PASS", "NEXT_ROW,{key:value}", "PREVIUS_ROW,{key:value}", "NEXT_AND_CHECK_AGAIN", "PREVIUS_AND_CHECK_AGAIN".')%(macro.sequence, val, meta['relative_index']))
-
-            # Process Macro Type ** Jump to Macro **
-            elif macro.type == 'jump':
-                meta['global']['/*END OF LINES*/'] = False
-                if isinstance(val, int):
-                    ix = len(macro_register)
-                    for m in macro_register:
-                        if val == m[0]:
-                            i = ix
-                            break
-                        ix -= 1
-                    continue
-                else:
-                    if automatic:
-                        self._cr.rollback()
-                        _logger.exception(_('Result must be integer in macro sequence %s, the actual result value is %s, row = %s ')%(macro.sequence, val, meta['relative_index']))
-                    else:
-                        raise UserError(_('Result must be integer in macro sequence %s, the actual result value is %s, row = %s ')%(macro.sequence, val, meta['relative_index']))
-            i -= 1
-        return data, meta
-
-
-
     @api.model
     def _convert_import_data(self, options):
-        import_fields = [x.field_id.name for x in self.macro_ids if x.type in ('register') and not x.disable]
+        import_fields = [] # [x.field_id.name for x in self.macro_ids if x.type in ('register') and not x.disable]
         rows_to_import = self._read_file(options)
         data = list(itertools.islice(rows_to_import, 0, None))
-        return data, import_fields
-
-
+        return data
 
     @api.multi
     def _parse_import_data(self, data, import_fields, options):
@@ -1601,8 +1386,7 @@ class ResConfigSettings(models.TransientModel):
         if self.account_import_id != self.company_id.account_import_id:
             self.company_id.account_import_id = self.account_import_id
 
-    
-
+   
     account_import_id = fields.Many2one('account.account', compute='_get_account_import_id', inverse='_set_account_import_id', required=False,
         string='Adjustment Account (import)', help="Adjustment Account (import).")
 

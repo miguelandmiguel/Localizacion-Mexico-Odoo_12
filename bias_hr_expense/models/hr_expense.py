@@ -109,6 +109,20 @@ class HrExpense(models.Model):
         certificate = cfdi.get('noCertificado', cfdi.get('NoCertificado'))
 
         # Valido RFC Emisor
+        partner_id_vat = ''
+        partner_id = self.env['res.partner'].search([('vat', '=', rfc_emisor)], limit=1)
+        if not partner_id:
+            if self.unit_amount > (company_id.amount_supplier or 0.0):
+                message_post = u"""
+                    <span style="color:red;">
+                        <b>NO SE PUDO CARGAR EL XML </b>
+                    </span><br/>
+                    <span>El Importe del XML %s es mayor al permitido "%s"</span><br />"""%(self.unit_amount, company_id.amount_supplier)
+                self.message_post(body='%s'%message_post )
+                return {'type': 'out', 'message': 'El Importe del XML "%s" es mayor al permitido "%s" '%(self.unit_amount, company_id.amount_supplier)  }
+
+
+
 
         # Valido RFC Receptor
         if company_id.vat != rfc_receptor:
