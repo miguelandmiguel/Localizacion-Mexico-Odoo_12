@@ -475,15 +475,17 @@ class Configure(models.Model):
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            Model = self.env['connection_tool.configure'].browse(new_id)
+            
             # Crea si no existe directorio
-            directory = "/tmp/tmpsftp%s"%(Model.id)
+            directory = "/tmp/tmpsftp%s"%(new_id)
             if not os.path.exists(directory):
                 os.makedirs(directory)
             if os.listdir(directory):
                 return None
             if not os.path.exists(directory+'/done'):
                 os.makedirs(directory+'/done')
+
+            Model = self.env['connection_tool.configure'].browse(new_id)
             imprt = Model.source_connector_id.with_context(imprt=Model, directory=directory)
             res = imprt.getFTData()
             if res == None:

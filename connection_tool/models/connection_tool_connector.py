@@ -73,7 +73,6 @@ class OdooFTP():
             logging.info("CRON _import Security %s - Existe archivo Control %s "%(self.security, imprt.source_ftp_write_control) )
             return None
         output = StringIO()
-        print("imprt.source_ftp_write_control", imprt.source_ftp_write_control)
         self.ftp.putfo(output, imprt.source_ftp_write_control)
         logging.info("CRON _import Security %s - File Control %s "%(self.security, imprt.source_ftp_write_control) )
 
@@ -88,7 +87,7 @@ class OdooFTP():
                 self.ftp.get(line, directory+'/'+line)
                 logging.info("CRON _import Security %s - File Transer %s "%(self.security, line))
                 file_ftp += line+'|'
-        if not file_ftp:
+        if file_ftp == '':
             return None
         logging.info("CRON _import Security %s - Files %s "%(self.security, file_ftp) )
         # imprt.source_ftp_filenamedatas = file_ftp
