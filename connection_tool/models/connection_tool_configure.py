@@ -159,6 +159,25 @@ OUTPUT_DESTINATION = [
 OPTIONS = {'headers': True, 'quoting': '"', 'separator': ',', 'encoding': 'utf-8'}
 FIELD_TYPES = [(key, key) for key in sorted(fields.Field.by_type)]
 
+
+class AccountMove(models.Model):
+    _inherit = "account.move"
+
+    @api.multi
+    def assert_balanced(self):
+        if not self.ids:
+            return True
+        ctx = self._context
+        print("ctxxxxxxxxx", ctx)
+        if ctx.get('ConnectionTool', False) == True:
+            return True
+        else:
+            return super(AccountMove, self).assert_balanced()
+        return True
+
+
+
+
 class Configure(models.Model):
     _name = 'connection_tool.configure'
     _inherit = ['mail.thread']
@@ -195,8 +214,7 @@ class Configure(models.Model):
 
 
     # No hay
-    register_to_process = fields.Integer('Register to Process', default=1)
-   
+    register_to_process = fields.Integer('Register to Process', default=1)   
     quoting = fields.Char('Quoting', size=8, default="\"")
     separator = fields.Char('Separator', size=8, default="|")
     with_header = fields.Boolean(string='With Header?', default=1)
@@ -367,10 +385,18 @@ class Configure(models.Model):
             cr.close()
         return model_id
 
+
+    def split_objects(self, in_row, objects):
+        res = list(chunks(objects, in_row))
+        return res
+
     def get_source_python_script(self, use_new_cursor, id_cursor, import_data, flag_imp=False, automatic=False):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))  # TDE FIXME
+
+        _logger.info("CRON: Inicia Python Script %s "%(id_cursor))
+
         Model = self.env['connection_tool.configure'].browse(id_cursor)
         localdict = {
             'this':self, 
@@ -389,6 +415,7 @@ class Configure(models.Model):
             except Exception as e:
                 raise UserError(_('%s in macro')%(e))
         result = localdict.get('result',False)
+        _logger.info("CRON: Fin Python Script %s "%(id_cursor))
         if result:
             header = result.get('header') or []
             body = result.get('body') or []
@@ -413,12 +440,29 @@ class Configure(models.Model):
                                 if use_new_cursor:
                                     cr.commit()
                     """
-                    ctx = {'import_file': True, 'name_create_enabled_fields': {}, 'check_move_validity': False}
+                    ctx = {'import_file': True, 'name_create_enabled_fields': {}, 'check_move_validity': False, 'ConnectionTool': True}
                     base_model = self.env[Model.model_id.model].with_context(**ctx).sudo()
-                    b = body[ext_id].get('lines') or []
+                    body_noprefetch = body[ext_id].get('lines') or []
+                    headerLoad = body_noprefetch[0]
+                    print("headerLoadheaderLoadheaderLoad", headerLoad)
+                    while body_noprefetch:
+                        bodypoints = body_noprefetch[:500]
+                        body_noprefetch = body_noprefetch[500:]
+                        if bodypoints[0][0] == '':
+                            bodypoints[0][0] = headerLoad[0]
+                            bodypoints[0][1] = headerLoad[1]
+                            bodypoints[0][2] = headerLoad[2]
+                            bodypoints[0][3] = headerLoad[3]
+                            bodypoints[0][4] = headerLoad[4]
+                            bodypoints[0][5] = headerLoad[5]
+                        import_result = base_model.with_context(**ctx).load(header, bodypoints)
+                        Model.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)
+                        cr.commit()
+                    """
                     import_result = base_model.with_context(**ctx).load(header, b)
                     Model.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)
                     cr.commit()
+                    """
         if use_new_cursor:
             cr.commit()
             cr.close()
@@ -480,7 +524,11 @@ class Configure(models.Model):
             directory = "/tmp/tmpsftp%s"%(new_id)
             if not os.path.exists(directory):
                 os.makedirs(directory)
-            if os.listdir(directory):
+
+            dd = os.listdir(directory)
+            if (len(dd) == 0) or (len(dd) == 1 and dd[0] == 'done'):
+                pass
+            else:
                 return None
             if not os.path.exists(directory+'/done'):
                 os.makedirs(directory+'/done')
@@ -530,11 +578,11 @@ class Configure(models.Model):
         self.ensure_one()
         try:
             message = ""
-            _logger.info("CRON: Inicia FTP")
+            _logger.info("CRON: Inicia Thread FTP")
             threaded_calculation = threading.Thread(target=self._import_ftp_pre_threading, args=(self.id, flag_imp, automatic), name=self.id, daemon=True)
             threaded_calculation.start()
             # threaded_calculation.join()
-            _logger.info(' CRON: Finaliza Thread')
+            _logger.info(' CRON: Finaliza Thread FTP')
             imprt = self.source_connector_id.with_context(imprt=self)
             imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
         finally:
@@ -552,7 +600,7 @@ class Configure(models.Model):
         context = self._context
         self.datas_file = b''
         self.source_ftp_filename = ''
-        _logger.info("CRON _import Inicia")
+        _logger.info("_import Inicia")
         # Inicia proceso FTP
         if self.source_connector_id and self.source_type == 'ftp':
             message = ""
@@ -568,6 +616,7 @@ class Configure(models.Model):
                 imprt = self.source_connector_id.with_context(imprt=self)
                 imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
                 _logger.info("Errors: %s "%message )
+        _logger.info("_import Fin")
         return True
 
 
