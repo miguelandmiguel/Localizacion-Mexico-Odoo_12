@@ -48,6 +48,7 @@ from odoo.tools.mimetypes import guess_mimetype
 from odoo.tools.safe_eval import safe_eval
 from odoo.tools import config, DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT, pycompat
 
+
 _logger = logging.getLogger(__name__)
 
 try:
@@ -156,7 +157,16 @@ OUTPUT_DESTINATION = [
     ('local', 'Local Directory'),
     ('xml-rpc', 'XML-RPC'),
 ]
-OPTIONS = {'headers': True, 'quoting': '"', 'separator': ',', 'encoding': 'utf-8'}
+OPTIONS = {
+    'headers': True, 'advanced': True, 'keep_matches': False, 
+    'name_create_enabled_fields': {}, 'encoding': 'utf-8', 'separator': ',', 
+    'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': '', 
+    'float_thousand_separator': ',', 
+    'float_decimal_separator': '.'
+}
+
+{'headers': True, 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': ''}
+
 FIELD_TYPES = [(key, key) for key in sorted(fields.Field.by_type)]
 
 
@@ -168,7 +178,6 @@ class AccountMove(models.Model):
         if not self.ids:
             return True
         ctx = self._context
-        print("ctxxxxxxxxx", ctx)
         if ctx.get('ConnectionTool', False) == True:
             return True
         else:
@@ -386,11 +395,7 @@ class Configure(models.Model):
         return model_id
 
 
-    def split_objects(self, in_row, objects):
-        res = list(chunks(objects, in_row))
-        return res
-
-    def get_source_python_script(self, use_new_cursor, id_cursor, import_data, flag_imp=False, automatic=False):
+    def get_source_python_script_old(self, use_new_cursor, id_cursor, import_data, flag_imp=False, automatic=False):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))  # TDE FIXME
@@ -439,15 +444,40 @@ class Configure(models.Model):
                                 _logger.info("import Model Line %s %s"%(model_line, modelline_id.id))
                                 if use_new_cursor:
                                     cr.commit()
+
+
+                    if body[ext_id].get('fields'):
+                        ctx = {'import_file': True, 'name_create_enabled_fields': {}, 'check_move_validity': False, 'ConnectionTool': True}
+                        fields = body[ext_id].get('fields') or {}
+                        model = body[ext_id].get('model') or ''
+                        base_model = self.env[model].with_context(**ctx).sudo()
+                        import_result = base_model.with_context(**ctx).load(list(fields.keys()), [list(fields.values())])
+                        _logger.info("Import Poliza %s "%import_result )
+                        cr.commit()
+                    if body[ext_id].get('line_ids'):
+                        
+                        base_model = self.env[model].with_context(**ctx).sudo()
+                        body_noprefetch = body[ext_id].get('line_ids') or []
+                        _logger.info( "len Body %s "%( len(body_noprefetch) ) )
+                        while body_noprefetch:
+                            bodypoints = body_noprefetch[:500]
+                            body_noprefetch = body_noprefetch[500:]
+                            model = body[ext_id].get('model_line') or ''
+                            print("modelmodelmodel", len(bodypoints))
+                            base_model = self.env[model].with_context(**ctx).sudo()
+                            import_result = base_model.with_context(**ctx).load(header, bodypoints)
+                            print("import_resultimport_result", import_result)
+                            _logger.info("CRON: Import IDs: %s -- indx: %s - %s"%(import_result, len(bodypoints), len(body_noprefetch)) )
+                            # cr.commit()
+
+
                     """
-                    ctx = {'import_file': True, 'name_create_enabled_fields': {}, 'check_move_validity': False, 'ConnectionTool': True}
-                    base_model = self.env[Model.model_id.model].with_context(**ctx).sudo()
                     body_noprefetch = body[ext_id].get('lines') or []
                     headerLoad = body_noprefetch[0]
-                    print("headerLoadheaderLoadheaderLoad", headerLoad)
+                    indx = 0
                     while body_noprefetch:
-                        bodypoints = body_noprefetch[:500]
-                        body_noprefetch = body_noprefetch[500:]
+                        bodypoints = body_noprefetch[:3000]
+                        body_noprefetch = body_noprefetch[3000:]
                         if bodypoints[0][0] == '':
                             bodypoints[0][0] = headerLoad[0]
                             bodypoints[0][1] = headerLoad[1]
@@ -456,7 +486,8 @@ class Configure(models.Model):
                             bodypoints[0][4] = headerLoad[4]
                             bodypoints[0][5] = headerLoad[5]
                         import_result = base_model.with_context(**ctx).load(header, bodypoints)
-                        Model.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)
+                        indx += 1000
+                        _logger.info("CRON: Import IDs: %s -- indx: %s"%(import_result, indx) )
                         cr.commit()
                     """
                     import_result = base_model.with_context(**ctx).load(header, b)
@@ -469,7 +500,7 @@ class Configure(models.Model):
         return True        
 
     @api.model
-    def _import_ftp_pre_threading_api_datas(self, use_new_cursor=False, new_id=False, files=False, directory=False, imprt=False):
+    def _import_ftp_pre_threading_api_datas_old(self, use_new_cursor=False, new_id=False, files=False, directory=False, imprt=False):
         try:
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
@@ -514,7 +545,7 @@ class Configure(models.Model):
         return True
 
     @api.model
-    def _import_ftp_pre_threading_api(self, use_new_cursor=False, new_id=False, flag_imp=False, automatic=False):
+    def _import_ftp_pre_threading_api_old(self, use_new_cursor=False, new_id=False, flag_imp=False, automatic=False):
         try:
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
@@ -565,7 +596,7 @@ class Configure(models.Model):
         return True
 
 
-    def _import_ftp_pre_threading(self, new_id, flag_imp, automatic):
+    def _import_ftp_pre_threading_old(self, new_id, flag_imp, automatic):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
@@ -574,7 +605,7 @@ class Configure(models.Model):
         return True
 
     @api.multi
-    def _import_ftp_pre(self, flag_imp=False, automatic=False):
+    def _import_ftp_pre_old(self, flag_imp=False, automatic=False):
         self.ensure_one()
         try:
             message = ""
@@ -594,26 +625,219 @@ class Configure(models.Model):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @api.multi
+    def get_source_python_script(self, use_new_cursor=False, files=False, import_data=[], options={}, flag_imp=False, automatic=False):
+        self.ensure_one()
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))  # TDE FIXME
+
+        _logger.info("CRON: Inicia Python Script %s "%(self.id))
+        Model = self
+        localdict = {
+            'this':self, 
+            're': re,
+            'time': time,
+            'datetime': datetime,
+            'context': dict(self._context),
+            '_logger': _logger,
+            'UserError': UserError,
+            'import_data': import_data,
+            'import_fields': []
+        }
+        if Model.source_python_script:
+            try:
+                safe_eval(Model.source_python_script, localdict, mode='exec', nocopy=True)
+            except Exception as e:
+                raise UserError(_('%s in macro')%(e))
+        result = localdict.get('result',False)
+        _logger.info("CRON: Fin Python Script %s "%(self.id))
+        if result:
+            # options['header'] = False
+            header = result.get('header') or []
+            body = result.get('body') or []
+            for ext_id in body:
+                if Model.output_destination == 'this_database':
+                    body_noprefetch = body[ext_id].get('lines') or []
+                    output = io.BytesIO()
+                    writer = pycompat.csv_writer(output, quoting=1)
+                    writer.writerow(header)
+                    for noprefetch in body_noprefetch:
+                        writer.writerow(noprefetch)
+                    import_wizard = self.env['base_import.import'].sudo().create({
+                        'res_model': self.model_id.model,
+                        'file_name': '%s.csv'%(ext_id),
+                        'file': output.getvalue(),
+                        'file_type': 'text/csv',
+                    })
+                    print("import_wizardimport_wizardimport_wizard", import_wizard)
+                    _logger.info("FILE IMPORT %s "%files )
+                    results = import_wizard.with_context(ConnectionTool=True).sudo().do(header, [], {'headers': True, 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': ''}, False)
+                    print("resultsresultsresults", results)
+                    _logger.info("FILE IMPORT %s "%files )
+                    if use_new_cursor:
+                        cr.commit()
+        return True
+
+    @api.multi
+    def _import_ftp_threading_api_datas(self, files=False, directory=False, imprt=False, use_new_cursor=False, flag_imp=False, automatic=False):
+        self.ensure_one()
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))  # TDE FIXME
+
+        self._cr.execute('SAVEPOINT importftp')
+        _logger.info("FILE IMPORT %s "%files )
+
+        self.source_ftp_filename = files
+        imprt = self.source_connector_id.with_context(imprt=self, directory=directory)
+        cr.commit()
+        if self.source_python_script:
+            options = {
+                'encoding': 'utf-8'
+            }
+            if self.type == 'csv':
+                if not self.quoting and self.separator:
+                    raise UserError(_("Set Quoting and Separator fields before load CSV File."))
+                options = OPTIONS
+                options['quoting'] = self.quoting or OPTIONS['quoting']
+                options['separator'] = self.separator or OPTIONS['separator']
+            info = open(directory+'/'+files, "r")
+            import_data = self._convert_import_data(options, info.read().encode("utf-8"))
+            res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=files, import_data=import_data, options=options, flag_imp=flag_imp, automatic=automatic)
+            _logger.info("FILE IMPORT %s "%files )
+            if res == True:
+                shutil.move(directory+'/'+files, directory+'/done/'+files)
+                imprt._move_ftp_filename(files, automatic=True)
+                if use_new_cursor:
+                    cr.commit()
+
+
+        try:
+            self._cr.execute('RELEASE SAVEPOINT importftp')
+        except psycopg2.InternalError:
+            pass
+
+        if use_new_cursor:
+            cr.commit()
+            cr.close()
+        return True
+
+    @api.multi
+    def _import_ftp_threading(self, use_new_cursor=False, flag_imp=False, automatic=False):
+        self.ensure_one()
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+            # Crea si no existe directorio
+            directory = "/tmp/tmpsftp%s"%(self.id)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            dd = os.listdir(directory)
+            if (len(dd) == 0) or (len(dd) == 1 and dd[0] == 'done'):
+                pass
+            else:
+                return None
+            if not os.path.exists(directory+'/done'):
+                os.makedirs(directory+'/done')
+            imprt = self.source_connector_id.with_context(imprt=self, directory=directory)
+            res = imprt.getFTData()
+            if res == None:
+                return res
+            pairs = []
+            for files in os.listdir(directory):
+                if files == 'done':
+                    continue
+                location = os.path.join(directory, files)
+                size = os.path.getsize(location)
+                pairs.append((size, files))
+            pairs.sort(key=lambda s: s[0])
+            for dir_files in pairs:
+                files = dir_files[1]
+                if files == 'done':
+                    continue
+                self._import_ftp_threading_api_datas(files=files, directory=directory, imprt=imprt, use_new_cursor=use_new_cursor, flag_imp=flag_imp, automatic=automatic)
+            imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
+        finally:
+            try:
+                shutil.rmtree(directory)
+            except:
+                pass
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return True
+
+    @api.multi
+    def _import_ftp(self, flag_imp=False, automatic=False):
+        self.ensure_one()
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self._import_ftp_threading(use_new_cursor=self._cr.dbname, flag_imp=flag_imp, automatic=automatic)
+            new_cr.close()
+        return True
+
     @api.multi
     def _import(self, flag_imp=False, automatic=False):
         self.ensure_one()
         context = self._context
         self.datas_file = b''
         self.source_ftp_filename = ''
-        _logger.info("_import Inicia")
         # Inicia proceso FTP
         if self.source_connector_id and self.source_type == 'ftp':
+            _logger.info("_import Inicia")
+            threaded_calculation = threading.Thread(target=self._import_ftp, args=(flag_imp, automatic), name=self.id)
+            threaded_calculation.start()
+            _logger.info(' CRON: Finaliza Thread FTP')
+            return True
+
+
             message = ""
             try:
-                res = self._import_ftp_pre(flag_imp=flag_imp, automatic=automatic)
-                if res == None:
-                    return False
+                threaded_calculation = threading.Thread(target=self._import_ftp, args=(flag_imp, automatic), name=self.id)
+                threaded_calculation.start()
+                _logger.info(' CRON: Finaliza Thread FTP')
             except ValueError as e:
                 message = str(e)
             except Exception as e:
                 message = str(e)
             if message:
-                imprt = self.source_connector_id.with_context(imprt=self)
+                imprt = self.source_connector_id.with_context(imprt=self, directory="/tmp/tmpsftp%s"%(self.id) )
                 imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
                 _logger.info("Errors: %s "%message )
         _logger.info("_import Fin")
@@ -631,9 +855,9 @@ class Configure(models.Model):
 
 
     @api.model
-    def _convert_import_data(self, options):
+    def _convert_import_data(self, options, datas):
         import_fields = [] # [x.field_id.name for x in self.macro_ids if x.type in ('register') and not x.disable]
-        rows_to_import = self._read_file(options)
+        rows_to_import = self._read_file(options, datas)
         data = list(itertools.islice(rows_to_import, 0, None))
         return data
 
@@ -1057,24 +1281,24 @@ class Configure(models.Model):
 
     
     @api.multi
-    def _read_file(self, options):
+    def _read_file(self, options, datas):
         """ Dispatch to specific method to read file content, according to its mimetype or file type
             :param options : dict of reading options (quoting, separator, ...)
         """
         self.ensure_one()
         # guess mimetype from file content
-        mimetype = guess_mimetype(base64.b64decode(self.datas_file) or b'')
+        mimetype = guess_mimetype(datas)
         (file_extension, handler, req) = FILE_TYPE_DICT.get(mimetype, (None, None, None))
         if handler:
             try:
-                return getattr(self, '_read_' + file_extension)(options)
+                return getattr(self, '_read_' + file_extension)(options, datas)
             except Exception:
                 _logger.warn("Failed to read file '%s' (transient id %d) using guessed mimetype %s", self.datas_fname or '<unknown>', self.id, mimetype)
         # try reading with user-provided mimetype
         (file_extension, handler, req) = FILE_TYPE_DICT.get(self.type, (None, None, None))
         if handler:
             try:
-                return getattr(self, '_read_' + file_extension)(options)
+                return getattr(self, '_read_' + file_extension)(options, datas)
             except Exception:
                 _logger.warn("Failed to read file '%s' (transient id %d) using user-provided mimetype %s", self.datas_fname or '<unknown>', self.id, self.type)
         # fallback on file extensions as mime types can be unreliable (e.g.
@@ -1084,7 +1308,7 @@ class Configure(models.Model):
             p, ext = os.path.splitext(self.datas_fname)
             if ext in EXTENSIONS:
                 try:
-                    return getattr(self, '_read_' + ext[1:])(options)
+                    return getattr(self, '_read_' + ext[1:])(options, datas)
                 except Exception:
                     _logger.warn("Failed to read file '%s' (transient id %s) using file extension", self.datas_fname, self.id)
         if req:
@@ -1093,9 +1317,9 @@ class Configure(models.Model):
 
 
     @api.multi
-    def _read_xls(self, options):
+    def _read_xls(self, options, datas):
         """ Read file content, using xlrd lib """
-        book = xlrd.open_workbook(file_contents=base64.b64decode(self.datas_file) or b'')
+        book = xlrd.open_workbook(file_contents=datas)
         return self._read_xls_book(book)
 
     def _read_xls_book(self, book):
@@ -1137,9 +1361,9 @@ class Configure(models.Model):
     _read_xlsx = _read_xls
 
     @api.multi
-    def _read_ods(self, options):
+    def _read_ods(self, options, datas):
         """ Read file content using ODSReader custom lib """
-        doc = odf_ods_reader.ODSReader(file=io.BytesIO(base64.b64decode(self.datas_file) or b''))
+        doc = odf_ods_reader.ODSReader(file=io.BytesIO(datas))
         return (
             row
             for row in doc.getFirstSheet()
@@ -1147,11 +1371,11 @@ class Configure(models.Model):
         )
 
     @api.multi
-    def _read_csv(self, options):
+    def _read_csv(self, options, datas):
         """ Returns a CSV-parsed iterator of all non-empty lines in the file
             :throws csv.Error: if an error is detected during CSV parsing
         """
-        csv_data = base64.b64decode(self.datas_file) or b''
+        csv_data = datas
         if not csv_data:
             return iter([])
         encoding = options.get('encoding')
