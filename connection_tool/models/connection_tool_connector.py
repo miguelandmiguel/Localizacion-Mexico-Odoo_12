@@ -67,33 +67,33 @@ class OdooFTP():
         self.ftp = self.get_connection()
         self.ftp.chdir(self.path)
 
-        # Archivo de Control
-        exists = self.ftp.exists(imprt.source_ftp_write_control)
-        if exists:
-            logging.info("CRON _import Security %s - Existe archivo Control %s "%(self.security, imprt.source_ftp_write_control) )
-            return None
-        output = StringIO()
-        self.ftp.putfo(output, imprt.source_ftp_write_control)
-        logging.info("CRON _import Security %s - File Control %s "%(self.security, imprt.source_ftp_write_control) )
+        try:
+            # Archivo de Control
+            exists = self.ftp.exists(imprt.source_ftp_write_control)
+            if exists:
+                logging.info("CRON Import - Existe archivo Control %s "%(imprt.source_ftp_write_control) )
+                return {'error': "Existe archivo Control %s"%imprt.source_ftp_write_control}
+            
+            listdir = self.ftp.listdir()
+            listdir_files = [line for line in listdir if line.lower().endswith(".dat")  ]
+            if not listdir_files:
+                logging.info("CRON Import - No hay archivos para procesar ")
+                return {'error': "CRON Import - No hay archivos para procesar "}
 
-        directory = "/tmp/tmpsftp%s"%(imprt.id)
-        regex = re.compile(imprt.source_ftp_refilename)
-        # Busca archivo en el servidor
-        file_ftp = ''
-        listdir = self.ftp.listdir()
-        for line in listdir:
-            validate = regex.match(line) and True or False
-            if validate:
+            output = StringIO()
+            self.ftp.putfo(output, imprt.source_ftp_write_control)
+            logging.info("CRON Import.Crear Control %s "%(imprt.source_ftp_write_control) )
+
+            directory = "/tmp/tmpsftp%s"%(imprt.id)
+            for line in listdir_files:
                 self.ftp.get(line, directory+'/'+line)
-                logging.info("CRON _import Security %s - File Transer %s "%(self.security, line))
-                file_ftp += line+'|'
-        if file_ftp == '':
-            return None
-        logging.info("CRON _import Security %s - Files %s "%(self.security, file_ftp) )
-        # imprt.source_ftp_filenamedatas = file_ftp
-
-        self.ftp.close()
-        return True
+                logging.info("CRON Import - File Transer %s "%(line))
+            self.ftp.close()
+        except:
+            if self.ftp.exists(imprt.source_ftp_write_control):
+                self.ftp.remove(imprt.source_ftp_write_control)
+            self.ftp.close()
+        return {}
 
     def _get_dirfile(self, file_re):
         self.ftp = self.get_connection()
@@ -240,10 +240,14 @@ class Conector(models.Model):
         return ftp
 
     def getFTData(self):
-        imprt = self._context.get('imprt') or False
+        imprt_id = self._context.get('imprt_id') or False
+        imprt = self.env['connection_tool.import'].browse(imprt_id)
         ftp = self.getFTP(imprt)
         res = ftp._getFTPData(imprt)
         return res
+
+
+
 
     def _get_ftp_dirfile(self, filename='', automatic=False):
         imprt = self._context.get('imprt') or False
@@ -277,14 +281,16 @@ class Conector(models.Model):
         return info
 
     def _delete_ftp_filename(self, filename='', automatic=False):
-        imprt = self._context.get('imprt') or False
+        imprt_id = self._context.get('imprt_id') or False
+        imprt = self.env['connection_tool.import'].browse(imprt_id)
         ftp = self.getFTP(imprt)
         ftp.get_file_delete(filename)
         return True
 
 
     def _move_ftp_filename(self, filename='', automatic=False):
-        imprt = self._context.get('imprt') or False
+        imprt_id = self._context.get('imprt_id') or False
+        imprt = self.env['connection_tool.import'].browse(imprt_id)
         ftp = self.getFTP(imprt)
         ftp.get_file_move(filename)
         return True

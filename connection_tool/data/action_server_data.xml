@@ -12,11 +12,11 @@ record._cron_connection_tool()
 
 
     <record id="connection_tool_ir_cron" model="ir.cron">
-        <field name="name">CRON: Import Data</field>
-        <field name="model_id" ref="connection_tool.model_connection_tool_configure"/>
+        <field name="name">CRON: Import DAT</field>
+        <field name="model_id" ref="connection_tool.model_connection_tool_import_wiz"/>
         <field name="state">code</field>
-        <field name="code">model._cron_connection_tool()</field>
-        <field name="interval_number">15</field>
+        <field name="code">model.import_calculation()</field>
+        <field name="interval_number">90</field>
         <field name="interval_type">minutes</field>
         <field name="numbercall">-1</field>
         <field name="doall" eval="False"/>

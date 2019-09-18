@@ -1,12 +1,142 @@
 <odoo>
     <data>
 
+
+    <record id="connection_tool_import_wizard_form" model="ir.ui.view">
+        <field name="name">connection_tool_import_wizard_form</field>
+        <field name="model">connection_tool.import.wiz</field>
+        <field name="arch" type="xml">
+            <form string="Parameters">
+                <p>
+                Proceso para importar archivos
+                </p>
+                <footer>
+                    <button name="import_calculation" string="Run Import" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_import_calculation" model="ir.actions.act_window">
+        <field name="name">Run Import</field>
+        <field name="res_model">connection_tool.import.wiz</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem action="action_import_calculation" id="menu_import_compute" parent="base.next_id_6" sequence="135"/>
+
+        <record id="view_connection_tool_import_form" model="ir.ui.view">
+            <field name="name">Connection Tool Import Form</field>
+            <field name="model">connection_tool.import</field>
+            <field name="arch" type="xml">
+                <form string="Connection Tool Import" >
+                    <header>
+                        <button name="button_import" string="Import" type="object" class="oe_highlight" />
+                        <button name="button_test_import" string="Output" type="object" />
+                    </header>
+                    <sheet string="Connection Tool Configure">
+                        <label for="name" class="oe_edit_only" string="Model and Name"/>
+                        <h1>
+                            <field name="model_id" class="oe_inline" placeholder="Model" /> -
+                            <field name="name" class="oe_inline" placeholder="Name" style="width: 6em"/> -
+                        </h1>
+                        <group>
+                            <group>
+                                <field name="recurring_import" string="Recurring" />
+                                <field name="output_destination" />
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Extract >>> ">
+                                <group>
+                                    <group>
+                                        <field name="type"/>
+                                        <field name="quoting" placeholder="Quoting" attrs="{'required': [('type', 'in', ['csv'])], 'invisible' : [('type', 'not in', ['csv'])]}"/>
+                                        <field name="separator" placeholder="Separator" attrs="{'required': [('type', 'in', ['csv'])], 'invisible' : [('type', 'not in', ['csv'])]}"/>
+                                        <field name="with_header" attrs="{'invisible' : [('type', 'not in', ['csv'])]}"/>
+                                    </group>
+                                    <group >
+                                        <field name="source_type" invisible="1"/>
+                                        <field name="source_connector_id"/>
+                                        <field name="source_ftp_path" attrs="{'required': [('source_type', 'in', ['ftp'])], 'invisible' : [('source_type', 'not in', ['ftp'])]}"/>
+                                        <field name="source_ftp_path_done" attrs="{'required': [('source_type', 'in', ['ftp'])], 'invisible' : [('source_type', 'not in', ['ftp'])]}"/>
+                                        <field name="source_ftp_read_control" attrs="{'required': [('source_type', 'in', ['ftp'])], 'invisible' : [('source_type', 'not in', ['ftp'])]}"/>
+                                        <field name="source_ftp_write_control" attrs="{'required': [('source_type', 'in', ['ftp'])], 'invisible' : [('source_type', 'not in', ['ftp'])]}"/>
+                                        <field name="source_ftp_re" attrs="{'required': [('source_type', 'in', ['ftp'])], 'invisible' : [('source_type', 'not in', ['ftp'])]}"/>
+                                        <field name="source_ftp_refilename" attrs="{
+                                                'required': [('source_ftp_re', '=', True)], 
+                                                'invisible' : ['|', ('source_type', 'not in', ['ftp']), ('source_ftp_re', '=', False)]}"/>
+                                        <field name="source_ftp_filename" attrs="{'required': [('source_ftp_re', '=', False)]}"/>
+
+                                    </group>
+                                </group>
+                                <group colspan="4" col="4">
+                                    <field name="source_python_script" 
+                                        widget="ace" options="{'mode': 'python'}" 
+                                        colspan="4"  placeholder="Enter Python code here. Help about Python expression is available in the help tab of this document."/>
+                                </group>
+                            </page>
+                            <page string="Log >>> ">
+                                <group>
+                                    <field name="output_messages" readonly="1" />
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="view_connection_tool_import_tree" model="ir.ui.view">
+            <field name="name">Connection Tool Import Tree</field>
+            <field name="model">connection_tool.import</field>
+            <field name="arch" type="xml">
+                <tree string="Connection Tool import">
+                    <field name="name"/>
+                    <field name="model_id"/>
+                </tree>
+            </field>
+        </record>
+        <record id="action_connection_tool_import" model="ir.actions.act_window">
+            <field name="name">Connection Tool Import</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">connection_tool.import</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem 
+            action="action_connection_tool_import" 
+            id="menu_connection_tool_import" 
+            parent="base.next_id_6"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <record id="view_import_menu_create" model="ir.ui.view">
             <field name="name">Create Menu</field>
             <field name="model">wizard.import.menu.create</field>
             <field name="type">form</field>
             <field name="arch" type="xml">
-                <form string="Create Menu" version="7.0">
+                <form string="Create Menu">
                     <group col="4">
                         <field name="name" colspan="4"/>
                         <field name="menu_id" domain="[('parent_id','&lt;&gt;',False)]" colspan="4"/>
@@ -108,6 +238,11 @@
                                         <label for="headers" colspan="2"/>
                                         <field name="headers" nolabel="1" colspan="4" />
                                     </group>
+                                </group>
+                            </page>
+                            <page string="Log >>> ">
+                                <group>
+                                    <field name="output_messages" readonly="1" />
                                 </group>
                             </page>
                             <page string="Transform >>> ">

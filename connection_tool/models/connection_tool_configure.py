@@ -170,19 +170,7 @@ OPTIONS = {
 FIELD_TYPES = [(key, key) for key in sorted(fields.Field.by_type)]
 
 
-class AccountMove(models.Model):
-    _inherit = "account.move"
 
-    @api.multi
-    def assert_balanced(self):
-        if not self.ids:
-            return True
-        ctx = self._context
-        if ctx.get('ConnectionTool', False) == True:
-            return True
-        else:
-            return super(AccountMove, self).assert_balanced()
-        return True
 
 
 
@@ -220,6 +208,7 @@ class Configure(models.Model):
     ], string='Recurrency', help="Import automatically repeat at specified interval")
 
     source_ftp_filenamedatas = fields.Text(string='Import Filename')
+    output_messages = fields.Html('Log...')
 
 
     # No hay
@@ -395,250 +384,6 @@ class Configure(models.Model):
         return model_id
 
 
-    def get_source_python_script_old(self, use_new_cursor, id_cursor, import_data, flag_imp=False, automatic=False):
-        if use_new_cursor:
-            cr = registry(self._cr.dbname).cursor()
-            self = self.with_env(self.env(cr=cr))  # TDE FIXME
-
-        _logger.info("CRON: Inicia Python Script %s "%(id_cursor))
-
-        Model = self.env['connection_tool.configure'].browse(id_cursor)
-        localdict = {
-            'this':self, 
-            're': re,
-            'time': time,
-            'datetime': datetime,
-            'context': dict(self._context),
-            '_logger': _logger,
-            'UserError': UserError,
-            'import_data': import_data,
-            'import_fields': []
-        }
-        if Model.source_python_script:
-            try:
-                safe_eval(Model.source_python_script, localdict, mode='exec', nocopy=True)
-            except Exception as e:
-                raise UserError(_('%s in macro')%(e))
-        result = localdict.get('result',False)
-        _logger.info("CRON: Fin Python Script %s "%(id_cursor))
-        if result:
-            header = result.get('header') or []
-            body = result.get('body') or []
-            for ext_id in body:
-                if Model.output_destination == 'this_database':
-                    """
-                    for data in body:
-                        model = body[data].get('model') or ''
-                        model_line = body[data].get('model_line') or ''
-                        field_related = body[data].get('field_related') or ''
-                        fields = body[data].get('fields') or {}
-                        line_ids = body[data].get('line_ids') or []
-                        ctx = body[data].get('contex') or {}
-                        model_id = Model.get_source_create(use_new_cursor=use_new_cursor, model=model, vals=fields, ctx=ctx, related_id=False, field_related=False)
-                        _logger.info("import Model %s %s"%(model, model_id.id))
-                        if use_new_cursor:
-                            cr.commit()
-                        if model_id:
-                            for line in line_ids:
-                                modelline_id = Model.get_source_create(use_new_cursor=use_new_cursor, model=model_line, vals=line, ctx=ctx, related_id=model_id.id, field_related=field_related)
-                                _logger.info("import Model Line %s %s"%(model_line, modelline_id.id))
-                                if use_new_cursor:
-                                    cr.commit()
-
-
-                    if body[ext_id].get('fields'):
-                        ctx = {'import_file': True, 'name_create_enabled_fields': {}, 'check_move_validity': False, 'ConnectionTool': True}
-                        fields = body[ext_id].get('fields') or {}
-                        model = body[ext_id].get('model') or ''
-                        base_model = self.env[model].with_context(**ctx).sudo()
-                        import_result = base_model.with_context(**ctx).load(list(fields.keys()), [list(fields.values())])
-                        _logger.info("Import Poliza %s "%import_result )
-                        cr.commit()
-                    if body[ext_id].get('line_ids'):
-                        
-                        base_model = self.env[model].with_context(**ctx).sudo()
-                        body_noprefetch = body[ext_id].get('line_ids') or []
-                        _logger.info( "len Body %s "%( len(body_noprefetch) ) )
-                        while body_noprefetch:
-                            bodypoints = body_noprefetch[:500]
-                            body_noprefetch = body_noprefetch[500:]
-                            model = body[ext_id].get('model_line') or ''
-                            print("modelmodelmodel", len(bodypoints))
-                            base_model = self.env[model].with_context(**ctx).sudo()
-                            import_result = base_model.with_context(**ctx).load(header, bodypoints)
-                            print("import_resultimport_result", import_result)
-                            _logger.info("CRON: Import IDs: %s -- indx: %s - %s"%(import_result, len(bodypoints), len(body_noprefetch)) )
-                            # cr.commit()
-
-
-                    """
-                    body_noprefetch = body[ext_id].get('lines') or []
-                    headerLoad = body_noprefetch[0]
-                    indx = 0
-                    while body_noprefetch:
-                        bodypoints = body_noprefetch[:3000]
-                        body_noprefetch = body_noprefetch[3000:]
-                        if bodypoints[0][0] == '':
-                            bodypoints[0][0] = headerLoad[0]
-                            bodypoints[0][1] = headerLoad[1]
-                            bodypoints[0][2] = headerLoad[2]
-                            bodypoints[0][3] = headerLoad[3]
-                            bodypoints[0][4] = headerLoad[4]
-                            bodypoints[0][5] = headerLoad[5]
-                        import_result = base_model.with_context(**ctx).load(header, bodypoints)
-                        indx += 1000
-                        _logger.info("CRON: Import IDs: %s -- indx: %s"%(import_result, indx) )
-                        cr.commit()
-                    """
-                    import_result = base_model.with_context(**ctx).load(header, b)
-                    Model.raise_message(import_result, flag_imp=flag_imp, automatic=automatic)
-                    cr.commit()
-                    """
-        if use_new_cursor:
-            cr.commit()
-            cr.close()
-        return True        
-
-    @api.model
-    def _import_ftp_pre_threading_api_datas_old(self, use_new_cursor=False, new_id=False, files=False, directory=False, imprt=False):
-        try:
-            if use_new_cursor:
-                cr = registry(self._cr.dbname).cursor()
-                self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            Model = self.env['connection_tool.configure'].browse(new_id)
-            imprt = Model.source_connector_id.with_context(imprt=Model, directory=directory)
-            if files != 'done':
-                _logger.info("CRON: import_data %s "%(files))
-                info = open(directory+'/'+files, "r")
-                Model.write({
-                    'datas_file': base64.b64encode(info.read().encode("utf-8")),
-                    'source_ftp_filename': files
-                })
-                self._cr.commit()
-                if Model.source_python_script:
-                    options = {
-                        'headers': Model.with_header
-                    }
-                    if Model.type == 'csv':
-                        if not Model.quoting and Model.separator:
-                            raise UserError(_("Set Quoting and Separator fields before load CSV File."))
-                        options = OPTIONS
-                        options['quoting'] = Model.quoting or OPTIONS['quoting']
-                        options['separator'] = Model.separator or OPTIONS['separator']
-                    import_data = Model._convert_import_data(options)
-                    lendatas = len(import_data)
-                    if not lendatas:
-                        return None
-                    res = Model.get_source_python_script(use_new_cursor, Model.id, import_data, flag_imp=False, automatic=True)
-                    if res == True:
-                        shutil.move(directory+'/'+files, directory+'/done/'+files)
-                        imprt._move_ftp_filename(files, automatic=True)
-            if use_new_cursor:
-                cr.commit()
-        finally:
-            if use_new_cursor:
-                try:
-                    cr.commit()
-                    cr.close()
-                except Exception:
-                    pass
-        return True
-
-    @api.model
-    def _import_ftp_pre_threading_api_old(self, use_new_cursor=False, new_id=False, flag_imp=False, automatic=False):
-        try:
-            if use_new_cursor:
-                cr = registry(self._cr.dbname).cursor()
-                self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            
-            # Crea si no existe directorio
-            directory = "/tmp/tmpsftp%s"%(new_id)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-
-            dd = os.listdir(directory)
-            if (len(dd) == 0) or (len(dd) == 1 and dd[0] == 'done'):
-                pass
-            else:
-                return None
-            if not os.path.exists(directory+'/done'):
-                os.makedirs(directory+'/done')
-
-            Model = self.env['connection_tool.configure'].browse(new_id)
-            imprt = Model.source_connector_id.with_context(imprt=Model, directory=directory)
-            res = imprt.getFTData()
-            if res == None:
-                return res
-            pairs = []
-            for files in os.listdir(directory):
-                if files == 'done':
-                    continue
-                location = os.path.join(directory, files)
-                size = os.path.getsize(location)
-                pairs.append((size, files))
-            pairs.sort(key=lambda s: s[0])
-            for dir_files in pairs:
-                files = dir_files[1]
-                if files == 'done':
-                    continue
-                Model._import_ftp_pre_threading_api_datas(use_new_cursor=Model._cr.dbname, new_id=Model.id, files=files, directory=directory, imprt=imprt)
-            imprt._delete_ftp_filename(Model.source_ftp_write_control, automatic=automatic)
-            try:
-                shutil.rmtree(directory)
-            except:
-                pass
-        finally:
-            if use_new_cursor:
-                try:
-                    self._cr.close()
-                except Exception:
-                    pass
-        return True
-
-
-    def _import_ftp_pre_threading_old(self, new_id, flag_imp, automatic):
-        with api.Environment.manage():
-            new_cr = self.pool.cursor()
-            self = self.with_env(self.env(cr=new_cr))
-            self.env['connection_tool.configure'].browse(new_id)._import_ftp_pre_threading_api(use_new_cursor=self._cr.dbname, new_id=new_id, flag_imp=flag_imp, automatic=automatic)
-            new_cr.close()
-        return True
-
-    @api.multi
-    def _import_ftp_pre_old(self, flag_imp=False, automatic=False):
-        self.ensure_one()
-        try:
-            message = ""
-            _logger.info("CRON: Inicia Thread FTP")
-            threaded_calculation = threading.Thread(target=self._import_ftp_pre_threading, args=(self.id, flag_imp, automatic), name=self.id, daemon=True)
-            threaded_calculation.start()
-            # threaded_calculation.join()
-            _logger.info(' CRON: Finaliza Thread FTP')
-            imprt = self.source_connector_id.with_context(imprt=self)
-            imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
-        finally:
-            try:
-                shutil.rmtree(directory)
-            except:
-                pass
-        return True
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -662,7 +407,7 @@ class Configure(models.Model):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))  # TDE FIXME
-
+        print(import_data)
         _logger.info("CRON: Inicia Python Script %s "%(self.id))
         Model = self
         localdict = {
@@ -706,6 +451,7 @@ class Configure(models.Model):
                     results = import_wizard.with_context(ConnectionTool=True).sudo().do(header, [], {'headers': True, 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': ''}, False)
                     print("resultsresultsresults", results)
                     _logger.info("FILE IMPORT %s "%files )
+                    _logger.info("FILE result %s "%results )
                     if use_new_cursor:
                         cr.commit()
         return True
@@ -754,9 +500,25 @@ class Configure(models.Model):
             cr.close()
         return True
 
+
+
+
+
+
+
+
     @api.multi
-    def _import_ftp_threading(self, use_new_cursor=False, flag_imp=False, automatic=False):
+    def _import_ftp_threading_old(self, use_new_cursor=False, flag_imp=False, automatic=False):
         self.ensure_one()
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))  # TDE FIXME
+
+        msg = "<h6><b>Inicia: </b> %s </h6><hr />"%(datetime.datetime.now())
+        self.setMessageLog(use_new_cursor=use_new_cursor, msg=msg)
+        _logger.info("Inicia FTP")
+
+        message = ""
         try:
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
@@ -789,59 +551,132 @@ class Configure(models.Model):
                 if files == 'done':
                     continue
                 self._import_ftp_threading_api_datas(files=files, directory=directory, imprt=imprt, use_new_cursor=use_new_cursor, flag_imp=flag_imp, automatic=automatic)
+
             imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
-        finally:
+
+        except ValueError as e:
+            message = str(e)
+        except Exception as e:
+            message = str(e)
+
+        if message:
+            message = message.replace("(u'", "").replace("', '')", "").replace("('", "").replace("', None)", "")
+            self.setMessageLog(use_new_cursor=use_new_cursor, msg="<p>%s</p>"%message )
+
+        try:
+            shutil.rmtree(directory)
+        except:
+            pass
+        msg = "<h6><b>Termina: </b> %s </h6><hr />"%(datetime.datetime.now())
+        self.setMessageLog(use_new_cursor=use_new_cursor, msg=msg)
+        _logger.info("Termina FTP")
+        if use_new_cursor:
             try:
-                shutil.rmtree(directory)
-            except:
+                self._cr.close()
+            except Exception:
                 pass
+        return True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @api.model
+    def setMessageLog(self, use_new_cursor=False, msg=False, res_id=False):
+        self._cr.execute('SAVEPOINT importmsgftp')
+        Model = self.env['connection_tool.configure'].sudo().browse(res_id)
+        message = ""
+        if Model.output_messages:
+            message = Model.output_messages
+        print("message", message)
+        Model.output_messages = message + msg
+
+        try:
+            self._cr.execute('RELEASE SAVEPOINT importmsgftp')
+        except psycopg2.InternalError:
+            pass
+
+        if use_new_cursor:
+            self._cr.commit()
+
+        return {}
+
+
+
+
+
+    
+    @api.model
+    def _run_scheduler_import(self, use_new_cursor=False, flag_imp=False, automatic=False, res_id=False):
+        msg = "<h6><b>Inicia: </b> %s </h6><hr />"%(datetime.datetime.now())
+        self.setMessageLog(use_new_cursor=use_new_cursor, msg=msg, res_id=res_id)
+        _logger.info("Inicia FTP")
+
+
+        msg = "<h6><b>Termina: </b> %s </h6><hr />"%(datetime.datetime.now())
+        self.setMessageLog(use_new_cursor=use_new_cursor, msg=msg, res_id=res_id)
+        _logger.info("Termina FTP")
+        if use_new_cursor:
+            self._cr.commit()
+        return {}
+
+
+
+
+    @api.model
+    def _import_ftp_threading(self, use_new_cursor=False, flag_imp=False, automatic=False, res_id=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+            self._run_scheduler_import(use_new_cursor=use_new_cursor, flag_imp=flag_imp, automatic=automatic, res_id=res_id)
+        finally:
             if use_new_cursor:
                 try:
                     self._cr.close()
                 except Exception:
                     pass
-        return True
-
-    @api.multi
-    def _import_ftp(self, flag_imp=False, automatic=False):
-        self.ensure_one()
+        return {}
+    def _import_ftp(self, flag_imp=False, automatic=False, res_id=False):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
-            self._import_ftp_threading(use_new_cursor=self._cr.dbname, flag_imp=flag_imp, automatic=automatic)
+            self._import_ftp_threading(use_new_cursor=self._cr.dbname, flag_imp=flag_imp, automatic=automatic, res_id=res_id)
             new_cr.close()
-        return True
-
+            return {}
     @api.multi
     def _import(self, flag_imp=False, automatic=False):
         self.ensure_one()
         context = self._context
         self.datas_file = b''
         self.source_ftp_filename = ''
+        self.output_messages = ''
         # Inicia proceso FTP
         if self.source_connector_id and self.source_type == 'ftp':
-            _logger.info("_import Inicia")
-            threaded_calculation = threading.Thread(target=self._import_ftp, args=(flag_imp, automatic), name=self.id)
+            threaded_calculation = threading.Thread(target=self._import_ftp, args=(flag_imp, automatic, self.id))
             threaded_calculation.start()
-            _logger.info(' CRON: Finaliza Thread FTP')
             return True
 
 
-            message = ""
-            try:
-                threaded_calculation = threading.Thread(target=self._import_ftp, args=(flag_imp, automatic), name=self.id)
-                threaded_calculation.start()
-                _logger.info(' CRON: Finaliza Thread FTP')
-            except ValueError as e:
-                message = str(e)
-            except Exception as e:
-                message = str(e)
-            if message:
-                imprt = self.source_connector_id.with_context(imprt=self, directory="/tmp/tmpsftp%s"%(self.id) )
-                imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=automatic)
-                _logger.info("Errors: %s "%message )
-        _logger.info("_import Fin")
-        return True
+
+
+
+
+
+
+
+
+
+
 
 
     def raise_message(self, import_result, flag_imp=False, automatic=False):
