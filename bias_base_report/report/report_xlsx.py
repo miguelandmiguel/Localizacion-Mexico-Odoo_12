@@ -13,7 +13,7 @@ except ImportError:
 
 class ReportXlsxAbstract(models.AbstractModel):
     _name = 'report.report_xlsx.abstract'
-    _description = ' '
+    _description = 'Abstract XLSX Report'
 
     def _get_objs_for_report(self, docids, data):
         """
@@ -54,3 +54,4 @@ class ReportXlsxAbstract(models.AbstractModel):
 
     def generate_xlsx_report(self, workbook, data, objs):
         raise NotImplementedError()
+

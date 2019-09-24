@@ -47,7 +47,7 @@ from odoo.tools.translate import _
 from odoo.tools.mimetypes import guess_mimetype
 from odoo.tools.safe_eval import safe_eval
 from odoo.tools import config, DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT, pycompat
-
+import csv
 
 _logger = logging.getLogger(__name__)
 
@@ -247,7 +247,6 @@ class Configure(models.Model):
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-
             self._run_import_files(use_new_cursor=use_new_cursor)
         finally:
             if use_new_cursor:
@@ -257,6 +256,12 @@ class Configure(models.Model):
                     pass
         return {}
 
+    def getCsvFile(self, path):
+        tmp_list = []
+        with open(path, 'r') as f:
+            reader = csv.reader(f, delimiter=',')
+            tmp_list = list(reader)
+        return tmp_list
 
     @api.model
     def _run_import_files(self, use_new_cursor=False):
@@ -278,12 +283,11 @@ class Configure(models.Model):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))
-
         directory = "/tmp/tmpsftp%s"%(self.id)
         if not os.path.exists(directory):
             os.makedirs(directory)
         dd = os.listdir(directory)
-        if (len(dd) == 0) or (len(dd) == 1 and dd[0] == 'done'):
+        if (len(dd) == 0) or (len(dd) == 3 and dd[0] in ['done', 'csv', 'import']):
             pass
         else:
             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Procesando archivos previos</span><br />")
@@ -293,6 +297,10 @@ class Configure(models.Model):
             return None
         if not os.path.exists(directory+'/done'):
             os.makedirs(directory+'/done')
+        if not os.path.exists(directory+'/csv'):
+            os.makedirs(directory+'/csv')
+        if not os.path.exists(directory+'/import'):
+            os.makedirs(directory+'/import')
 
         imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
         res = imprt.getFTData()
@@ -311,7 +319,7 @@ class Configure(models.Model):
 
         pairs = []
         for files in os.listdir(directory):
-            if files == 'done':
+            if files in ['done', 'csv', 'import']:
                 continue
             location = os.path.join(directory, files)
             size = os.path.getsize(location)
@@ -319,13 +327,12 @@ class Configure(models.Model):
         pairs.sort(key=lambda s: s[0])
         for dir_files in pairs:
             files = dir_files[1]
-            if files == 'done':
+            if files in ['done', 'csv', 'import']:
                 continue
             self.import_files_datas(use_new_cursor=use_new_cursor, files=files, directory=directory, imprt=imprt)
         if use_new_cursor:
             cr.commit()
             cr.close()
-
         try:
             shutil.rmtree(directory)
         except:
@@ -354,24 +361,27 @@ class Configure(models.Model):
                 options['separator'] = self.separator or OPTIONS['separator']
             info = open(directory+'/'+files, "r")
             import_data = self._convert_import_data(options, info.read().encode("utf-8"))
+            res = None
             try:
                 res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=files, import_data=import_data, options=options)
-            except:
+            except Exception as e:
+                self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
                 imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
-
         if use_new_cursor:
             cr.commit()
             cr.close()
-
 
     @api.model
     def get_source_python_script(self, use_new_cursor=False, files=False, import_data=False, options=False):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))
-
         localdict = {
-            'this':self, 
+            'this':self,
+            'file_name': files.replace(".dat", ".csv").replace(".DAT", ".csv"),
+            'directory': "/tmp/tmpsftp%s"%(self.id),
+            'csv': csv,
+            'open': open,
             're': re,
             'time': time,
             'datetime': datetime,
@@ -381,7 +391,6 @@ class Configure(models.Model):
             'import_data': import_data,
             'import_fields': []
         }
-
         if self.source_python_script:
             try:
                 safe_eval(self.source_python_script, localdict, mode='exec', nocopy=True)
@@ -392,44 +401,43 @@ class Configure(models.Model):
                     cr.close()
             result = localdict.get('result',False)
             if result:
-                # options['header'] = False
                 header = result.get('header') or []
                 body = result.get('body') or []
                 for ext_id in body:
                     if self.output_destination == 'this_database':
-                        msg="<span>Archivo: <b>%s</b> </span><br /><span>External ID: %s</span><br />"%(files, ext_id)
-                        self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
-                        body_noprefetch = body[ext_id].get('lines') or []
-                        output = io.BytesIO()
-                        writer = pycompat.csv_writer(output, quoting=1)
-                        writer.writerow(header)
-                        for noprefetch in body_noprefetch:
-                            writer.writerow(noprefetch)
-                        import_wizard = self.env['base_import.import'].sudo().create({
-                            'res_model': self.model_id.model,
-                            'file_name': '%s.csv'%(ext_id),
-                            'file': output.getvalue(),
-                            'file_type': 'text/csv',
-                        })
-                        _logger.info("FILE IMPORT %s "%files )
-                        results = import_wizard.with_context(ConnectionTool=True).sudo().do(header, [], {'headers': True, 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': ''}, False)
-                        _logger.info("FILE IMPORT %s "%files )
-                        _logger.info("FILE result %s "%results )
-                        print("results", files, results )
-                        if results.get("ids"):
-                            msg="<span>Database ID: %s</span><br />"%(results['ids'])
-                            directory = "/tmp/tmpsftp%s"%(self.id)
-                            imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
-                            shutil.move(directory+'/'+files, directory+'/done/'+files)
-                            imprt._move_ftp_filename(files, automatic=True)
+                        try:
+                            msg="<span>Archivo: <b>%s</b> </span><br /><span>External ID: %s</span><br />"%(files, ext_id)
+                            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
+                            file_ext_id = "/tmp/tmpsftp%s/import/%s.csv"%(self.id, ext_id)
+                            output = io.BytesIO()
+                            writer = pycompat.csv_writer(output, quoting=1)
+                            with open(file_ext_id, 'r') as f:
+                                reader = csv.reader(f, delimiter=',')
+                                for tmp_list in list(reader):
+                                    writer.writerow(tmp_list)
+                            import_wizard = self.env['base_import.import'].sudo().create({
+                                'res_model': self.model_id.model,
+                                'file_name': '%s.csv'%(ext_id),
+                                'file': output.getvalue(),
+                                'file_type': 'text/csv',
+                            })
+                            results = import_wizard.with_context(ConnectionTool=True).sudo().do(header, [], {'headers': True, 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': ''}, False)
+                            if results.get("ids"):
+                                msg="<span>Database ID: %s</span><br />"%(results['ids'])
+                                directory = "/tmp/tmpsftp%s"%(self.id)
+                                imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                                shutil.move(directory+'/'+files, directory+'/done/'+files)
+                                imprt._move_ftp_filename(files, automatic=True)
 
-                        else:
-                            msg="<span>Error: %s</span> "%(results['messages'])
-                        self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
-
-
+                            else:
+                                msg="<span>Error: %s</span> "%(results['messages'])
+                            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
+                        except Exception as e:
+                            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
+                            if use_new_cursor:
+                                cr.commit()
+                                cr.close()
         self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<hr />")
-
         if use_new_cursor:
             cr.commit()
             cr.close()
