@@ -11,15 +11,8 @@ class ReportXlsx(models.AbstractModel):
     def __init__(self, pool, cr):
         self.sheet_header = None
 
-    def get_workbook_options(self):
-        return {'constant_memory': True}
-
     def generate_xlsx_report(self, workbook, data, objects):
         report = objects
-        print("report.xlsx_datas", eval(report.xlsx_datas))
-        print("report.xlsx_columns", report.xlsx_columns)
-        print("report.xlsx_formats", report.xlsx_formats)
-        
         company_id = self.env.user.company_id        
         name = report.name
         header = report.with_header
@@ -75,7 +68,6 @@ class ReportXlsx(models.AbstractModel):
             for i, d in enumerate(body):
                 datas_list.append(list(d))
             datas_list = zip(*datas_list)
-
             for i, d in enumerate(datas_list):
                 try:
                     formato = workbook_format.get(formats[i], 'string_left')
