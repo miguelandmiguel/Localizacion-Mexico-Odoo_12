@@ -287,7 +287,7 @@ class Configure(models.Model):
         if not os.path.exists(directory):
             os.makedirs(directory)
         dd = os.listdir(directory)
-        if (len(dd) == 0) or (len(dd) == 3 and dd[0] in ['done', 'csv', 'import']):
+        if (len(dd) == 0) or (len(dd) == 3 and dd[0] in ['done', 'csv', 'tmpimport', 'import']):
             pass
         else:
             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Procesando archivos previos</span><br />")
@@ -299,6 +299,8 @@ class Configure(models.Model):
             os.makedirs(directory+'/done')
         if not os.path.exists(directory+'/csv'):
             os.makedirs(directory+'/csv')
+        if not os.path.exists(directory+'/tmpimport'):
+            os.makedirs(directory+'/tmpimport')
         if not os.path.exists(directory+'/import'):
             os.makedirs(directory+'/import')
 
@@ -319,7 +321,7 @@ class Configure(models.Model):
 
         pairs = []
         for files in os.listdir(directory):
-            if files in ['done', 'csv', 'import']:
+            if files in ['done', 'csv', 'tmpimport', 'import']:
                 continue
             location = os.path.join(directory, files)
             size = os.path.getsize(location)
@@ -327,7 +329,7 @@ class Configure(models.Model):
         pairs.sort(key=lambda s: s[0])
         for dir_files in pairs:
             files = dir_files[1]
-            if files in ['done', 'csv', 'import']:
+            if files in ['done', 'csv', 'tmpimport', 'import']:
                 continue
             self.import_files_datas(use_new_cursor=use_new_cursor, files=files, directory=directory, imprt=imprt)
         if use_new_cursor:
@@ -403,8 +405,11 @@ class Configure(models.Model):
             if result:
                 header = result.get('header') or []
                 body = result.get('body') or []
+                fileTmp = {}
+                procesados = True
                 for ext_id in body:
                     if self.output_destination == 'this_database':
+                        fileTmp[ext_id] = None
                         try:
                             msg="<span>Archivo: <b>%s</b> </span><br /><span>External ID: %s</span><br />"%(files, ext_id)
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
@@ -423,13 +428,14 @@ class Configure(models.Model):
                             })
                             results = import_wizard.with_context(ConnectionTool=True).sudo().do(header, [], {'headers': True, 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': ''}, False)
                             if results.get("ids"):
+                                fileTmp[ext_id] = results['ids']
                                 msg="<span>Database ID: %s</span><br />"%(results['ids'])
-                                directory = "/tmp/tmpsftp%s"%(self.id)
-                                imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
-                                shutil.move(directory+'/'+files, directory+'/done/'+files)
-                                imprt._move_ftp_filename(files, automatic=True)
-
+                                # directory = "/tmp/tmpsftp%s"%(self.id)
+                                # imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                                # shutil.move(directory+'/'+files, directory+'/done/'+files)
+                                # imprt._move_ftp_filename(files, automatic=True)
                             else:
+                                procesados = False
                                 msg="<span>Error: %s</span> "%(results['messages'])
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
                         except Exception as e:
@@ -437,6 +443,12 @@ class Configure(models.Model):
                             if use_new_cursor:
                                 cr.commit()
                                 cr.close()
+                if procesados:
+                    directory = "/tmp/tmpsftp%s"%(self.id)
+                    imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                    shutil.move(directory+'/'+files, directory+'/done/'+files)
+                    imprt._move_ftp_filename(files, automatic=True)
+
         self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<hr />")
         if use_new_cursor:
             cr.commit()
