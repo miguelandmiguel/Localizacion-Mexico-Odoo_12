@@ -24,6 +24,7 @@ try:
         xlsx = None
 except ImportError:
     xlrd = xlsx = None
+
 from tempfile import TemporaryFile
 import base64
 import codecs
@@ -50,6 +51,11 @@ from odoo.tools import config, DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETI
 import csv
 
 _logger = logging.getLogger(__name__)
+
+try:
+    import mimetypes
+except ImportError:
+    _logger.debug('Can not import mimetypes')
 
 try:
     import xlsxwriter
@@ -83,6 +89,7 @@ except ImportError:
     odf_ods_reader = None
 
 FILE_TYPE_DICT = {
+    'text/plain': ('csv', True, None),
     'text/csv': ('csv', True, None),
     'application/octet-stream': ('csv', True, None),
     'application/vnd.ms-excel': ('xls', xlrd, 'xlrd'),
@@ -124,16 +131,6 @@ def get_row_col(row, column, index):
                 i += 1
     return row+index, col
 
-TYPE_SELECTION = [
-    ('first_index','Define First Index'),
-    ('register_id','Register ID'),
-    ('register','Register'),
-    ('line','Line of Register'),
-    ('next_index','Next Index'),
-    ('check','Check'),
-    ('jump','Jump To Sequence'),
-    ('python','Python'),
-]
 IMPORT_TYPE = [
     ('csv','Import CSV File'),
     ('file','Import XLS File'),
@@ -141,13 +138,6 @@ IMPORT_TYPE = [
     ('ftp','FTP'),
     ('wizard','Wizard'),
     ('xml-rpc','XML RPC')
-]
-OUTPUT_TYPE = [
-    ('csv', 'CSV'),
-    ('xlsx', 'Excel (xlsx)'),
-    ('csv_meta', 'CSV with Metadata'),
-    ('text', 'Text'),
-    ('text_columns', 'Text with Columns Header'),
 ]
 OUTPUT_DESTINATION = [
     ('field', 'None'),
@@ -185,25 +175,123 @@ class AccountMove(models.Model):
             return super(AccountMove, self).assert_balanced()
         return True
 
+class ResCompany(models.Model):
+    _inherit = 'res.company'
+
+    account_import_id = fields.Many2one('account.account', string='Adjustment Account (import)')
+
+
+class ResConfigSettings(models.TransientModel):
+    _inherit = 'res.config.settings'
+
+    @api.one
+    @api.depends('company_id')
+    def _get_account_import_id(self):
+        self.account_import_id = self.company_id.account_import_id
+
+    @api.one
+    def _set_account_import_id(self):
+        if self.account_import_id != self.company_id.account_import_id:
+            self.company_id.account_import_id = self.account_import_id
+
+   
+    account_import_id = fields.Many2one('account.account', compute='_get_account_import_id', inverse='_set_account_import_id', required=False,
+        string='Adjustment Account (import)', help="Adjustment Account (import).")
+
+
+class WizardImportMenuCreate(models.TransientModel):
+    """Credit Notes"""
+
+    _name = "wizard.import.menu.create"
+    _description = "wizard.import.menu.create"
+
+    menu_id = fields.Many2one('ir.ui.menu', 'Parent Menu', required=True)
+    name = fields.Char(string='Menu Name', size=64, required=True)
+    sequence = fields.Integer(string='Sequence')
+    group_ids = fields.Many2many('res.groups', 'menuimport_group_rel', 'menu_id', 'group_id', 'Groups')
+
+    @api.multi
+    def menu_create(self):
+        ModelData = self.env['ir.model.data']
+        ActWindow = self.env['ir.actions.act_window']
+        IrMenu = self.env['ir.ui.menu']
+        Configure = self.env['connection_tool.import']
+        model_data_id = self.env.ref('connection_tool.connection_tool_import_wizard_form')
+        import_id = self._context.get('import_id')
+        vals = {
+            'name': self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'connection_tool.import.wiz',
+            'view_type': 'form',
+            'context': "{'import_id': %d}" % (import_id),
+            'view_mode': 'tree,form',
+            'view_id': model_data_id.id,
+            'target': 'new',
+            'auto_refresh':1
+        }
+        action_id = ActWindow.sudo().create(vals)
+        menu_id = IrMenu.sudo().create({
+            'name': self.name,
+            'parent_id': self.menu_id.id,
+            'action': 'ir.actions.act_window,%d' % (action_id.id,),
+            'icon': 'STOCK_INDENT',
+            'sequence': self.sequence,
+            'groups_id': self.group_ids and [(6, False, [x.id for x in self.group_ids])] or False,
+        })
+        Configure.sudo().browse([import_id]).write({
+            'ref_menu_ir_act_window': action_id.id,
+            'ref_ir_menu': menu_id.id,
+        })
+        return {'type':'ir.actions.act_window_close'}
+
+    @api.multi
+    def unlink_menu(self):
+        try:
+            if self.ref_menu_ir_act_window:
+                self.env['ir.actions.act_window'].sudo().browse([self.ref_menu_ir_act_window.id]).unlink()
+            if self.ref_ir_menu:
+                self.env['ir.ui.menu'].sudo().browse([self.ref_ir_menu.id]).unlink()
+        except:
+            raise UserError(_("Deletion of the action record failed."))
+        return True
+
 
 class ConnectionToolImportWiz(models.TransientModel):
     _name = 'connection_tool.import.wiz'
     _description = 'Run Import Manually'
 
-    def _import_calculation_files(self):
+    datas_fname = fields.Char('Filename')
+    datas_file = fields.Binary('File', help="File to check and/or import, raw binary (not base64)")
+
+    def import_calculation(self):
+        import_id = self._context.get('import_id')
+        threaded_calculation = threading.Thread(target=self._import_calculation_files, args=(import_id, False))
+        threaded_calculation.start()
+        return {'type': 'ir.actions.act_window_close'}
+
+    def _import_calculation_files(self, import_id, import_wiz):
         with api.Environment.manage():
             # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
-            self.env['connection_tool.import'].run_import(use_new_cursor=self._cr.dbname)
+            self.env['connection_tool.import'].run_import(use_new_cursor=self._cr.dbname, import_id=import_id, import_wiz=import_wiz)
             new_cr.close()
             return {}
 
-    def import_calculation(self):
-        threaded_calculation = threading.Thread(target=self._import_calculation_files, args=())
+    def import_calculation_wiz(self):
+        import_id = self._context.get('import_id')
+        threaded_calculation = threading.Thread(target=self._import_calculation_files_wiz, args=(import_id, self.id))
         threaded_calculation.start()
         return {'type': 'ir.actions.act_window_close'}
 
+    def _import_calculation_files_wiz(self, import_id, import_wiz):
+        with api.Environment.manage():
+            # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['connection_tool.import'].run_import_wiz(use_new_cursor=self._cr.dbname, import_id=import_id, import_wiz=import_wiz)
+            new_cr.close()
+            return {}
 
 class Configure(models.Model):
     _name = 'connection_tool.import'
@@ -234,20 +322,97 @@ class Configure(models.Model):
     with_header = fields.Boolean(string='With Header?', default=1)
     datas_fname = fields.Char('Filename')
     datas_file = fields.Binary('File', help="File to check and/or import, raw binary (not base64)")
+    import_from_wizard = fields.Boolean("Import From Wizard?")
     headers = fields.Html('Headers')
+
+    ref_ir_act_window = fields.Many2one('ir.actions.act_window', 'Sidebar Action', readonly=True,
+             help="Sidebar action to make this template available on records of the related document model")
+    ref_ir_value = fields.Many2one('ir.values', 'Sidebar Button', readonly=True, help="Sidebar button to open the sidebar action")
+    ref_ir_menu = fields.Many2one('ir.ui.menu', 'Leftbar Menu', readonly=True, help="Leftbar menu to open the leftbar menu action")
+    ref_menu_ir_act_window = fields.Many2one('ir.actions.act_window', 'Leftbar Menu Action', readonly=True,
+             help="This is the action linked to leftbar menu.")
 
 
     @api.multi
     def button_import(self):
-        print("button")
+        wiz_id = self.env['connection_tool.import.wiz'].with_context(import_id=self.id).create({})
+        wiz_id.import_calculation()
+        return {'type': 'ir.actions.act_window_close'}
 
+
+    # wizard
     @api.model
-    def run_import(self, use_new_cursor=False):
+    def run_import_wiz(self, use_new_cursor=False, import_id=False, import_wiz=False):
         try:
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            self._run_import_files(use_new_cursor=use_new_cursor)
+            self._run_import_files_wiz(use_new_cursor=use_new_cursor, import_id=import_id, import_wiz=import_wiz)
+        finally:
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return {}
+    @api.model
+    def _run_import_files_wiz(self, use_new_cursor=False, import_id=False, import_wiz=False):
+        where = [('recurring_import','=', True), ('id', '=', import_id)]
+        for imprt in self.sudo().search(where):
+            directory = "/tmp/tmpsftpwiz%simport%s"%(import_wiz, imprt.id)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            if not os.path.exists(directory+'/done'):
+                os.makedirs(directory+'/done')
+            if not os.path.exists(directory+'/csv'):
+                os.makedirs(directory+'/csv')
+            if not os.path.exists(directory+'/tmpimport'):
+                os.makedirs(directory+'/tmpimport')
+            if not os.path.exists(directory+'/import'):
+                os.makedirs(directory+'/import')
+            if not os.path.exists(directory+'/wiz'):
+                os.makedirs(directory+'/wiz')
+
+            wizard_id = self.env['connection_tool.import.wiz'].browse(import_wiz)
+
+            # Escribe datos
+            wiz_file = base64.decodestring(wizard_id.datas_file)
+            wiz_filename = '%s/%s'%(directory, wizard_id.datas_fname)
+            print("---wiz_filename", wiz_filename)
+            new_file = open(wiz_filename, 'wb')
+            new_file.write(wiz_file)
+            new_file.close()
+
+            mimetype, encoding = mimetypes.guess_type(wiz_filename)
+            (file_extension, handler, req) = FILE_TYPE_DICT.get(mimetype, (None, None, None))
+
+            rows_to_import=None
+            options = OPTIONS
+            options['quoting'] = imprt.quoting or OPTIONS['quoting']
+            options['separator'] = imprt.separator or OPTIONS['separator']
+            datas = open(wiz_filename, 'rb').read()
+            if handler:
+                try:
+                    rows_to_import=getattr(imprt, '_read_' + file_extension)(options, datas)
+                except Exception:
+                    _logger.warn("Failed to read file '%s' (transient id %d) using guessed mimetype %s", wizard_id.datas_fname or '<unknown>', wizard_id.id, mimetype)
+
+            data = list(itertools.islice(rows_to_import, 0, None))
+            imprt.get_source_python_script(use_new_cursor=use_new_cursor, files=wizard_id.datas_fname, import_data=data, options=options, import_wiz=directory)
+            if use_new_cursor:
+                self._cr.commit()
+
+        if use_new_cursor:
+            self._cr.commit()
+
+
+    @api.model
+    def run_import(self, use_new_cursor=False, import_id=False, import_wiz=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+            self._run_import_files(use_new_cursor=use_new_cursor, import_id=import_id, import_wiz=import_wiz)
         finally:
             if use_new_cursor:
                 try:
@@ -264,12 +429,15 @@ class Configure(models.Model):
         return tmp_list
 
     @api.model
-    def _run_import_files(self, use_new_cursor=False):
-        for imprt in self.sudo().search([('recurring_import','=', True)]):
+    def _run_import_files(self, use_new_cursor=False, import_id=False, import_wiz=False):
+        where = [('recurring_import','=', True)]
+        if import_id:
+            where += [('id', '=', import_id)]
+        for imprt in self.sudo().search(where):
             imprt.sudo()._run_import_files_log_init(use_new_cursor=use_new_cursor)
             msg = "<span><b>Inicia Proceso:</b> %s</span><hr/>"%(time.strftime('%Y-%m-%d %H:%M:%S'))
             imprt.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
-            imprt.import_files(use_new_cursor=use_new_cursor)
+            imprt.import_files(use_new_cursor=use_new_cursor, import_wiz=import_wiz)
             if use_new_cursor:
                 self._cr.commit()
             msg = "<span><b>Termina Proceso:</b> %s</span><hr/>"%(time.strftime('%Y-%m-%d %H:%M:%S'))
@@ -279,11 +447,13 @@ class Configure(models.Model):
 
 
     @api.model
-    def import_files(self, use_new_cursor=False):
+    def import_files(self, use_new_cursor=False, import_wiz=False):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))
         directory = "/tmp/tmpsftp%s"%(self.id)
+        if import_wiz:
+            directory = "/tmp/tmpsftp_wiz%s"%(self.id)
         if not os.path.exists(directory):
             os.makedirs(directory)
         dd = os.listdir(directory)
@@ -304,20 +474,29 @@ class Configure(models.Model):
         if not os.path.exists(directory+'/import'):
             os.makedirs(directory+'/import')
 
-        imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
-        res = imprt.getFTData()
-        if res == None:
-            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>No existe archivo para procesar</span><br />")
-            if use_new_cursor:
-                cr.commit()
-                cr.close()
-            return res
-        elif res and res.get('error'):
-            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s</span><br/>"%res.get('error'))
-            if use_new_cursor:
-                cr.commit()
-                cr.close()
-            return res
+        imprt = None
+        if import_wiz:
+            wiz_id = self.env['connection_tool.import.wiz'].browse(import_wiz)
+            wiz_file = base64.decodestring(wiz_id.datas_file)
+            wiz_filename = '%s/%s'%(directory, wiz_id.datas_fname)
+            new_file = open(wiz_filename, 'wb')
+            new_file.write(wiz_file)
+            new_file.close()
+        else:
+            imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+            res = imprt.getFTData()
+            if res == None:
+                self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>No existe archivo para procesar</span><br />")
+                if use_new_cursor:
+                    cr.commit()
+                    cr.close()
+                return res
+            elif res and res.get('error'):
+                self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s</span><br/>"%res.get('error'))
+                if use_new_cursor:
+                    cr.commit()
+                    cr.close()
+                return res
 
         pairs = []
         for files in os.listdir(directory):
@@ -331,7 +510,7 @@ class Configure(models.Model):
             files = dir_files[1]
             if files in ['done', 'csv', 'tmpimport', 'import']:
                 continue
-            self.import_files_datas(use_new_cursor=use_new_cursor, files=files, directory=directory, imprt=imprt)
+            self.import_files_datas(use_new_cursor=use_new_cursor, files=files, directory=directory, imprt=imprt, import_wiz=import_wiz)
         if use_new_cursor:
             cr.commit()
             cr.close()
@@ -339,16 +518,17 @@ class Configure(models.Model):
             shutil.rmtree(directory)
         except:
             pass
-        imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+        if import_wiz == False:
+            imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
 
     @api.model
-    def import_files_datas(self, use_new_cursor=False, files=False, directory=False, imprt=False):
+    def import_files_datas(self, use_new_cursor=False, files=False, directory=False, imprt=False, import_wiz=False):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))
 
         self.source_ftp_filename = files
-        imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+        
         if use_new_cursor:
             cr.commit()
         if self.source_python_script:
@@ -365,23 +545,28 @@ class Configure(models.Model):
             import_data = self._convert_import_data(options, info.read().encode("utf-8"))
             res = None
             try:
-                res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=files, import_data=import_data, options=options)
+                res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=files, import_data=import_data, options=options, import_wiz=import_wiz)
             except Exception as e:
                 self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
-                imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+                if import_wiz == False:
+                    imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                    imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
         if use_new_cursor:
             cr.commit()
             cr.close()
 
     @api.model
-    def get_source_python_script(self, use_new_cursor=False, files=False, import_data=False, options=False):
+    def get_source_python_script(self, use_new_cursor=False, files=False, import_data=False, options=False, import_wiz=False):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))
+        directory = "/tmp/tmpsftp%s"%(self.id)
+        if import_wiz:
+            directory = import_wiz
         localdict = {
             'this':self,
-            'file_name': files.replace(".dat", ".csv").replace(".DAT", ".csv"),
-            'directory': "/tmp/tmpsftp%s"%(self.id),
+            'file_name': files,
+            'directory': directory,
             'csv': csv,
             'open': open,
             're': re,
@@ -402,6 +587,7 @@ class Configure(models.Model):
                     cr.commit()
                     cr.close()
             result = localdict.get('result',False)
+            print("-----------result", result)
             if result:
                 header = result.get('header') or []
                 body = result.get('body') or []
@@ -413,7 +599,7 @@ class Configure(models.Model):
                         try:
                             msg="<span>Archivo: <b>%s</b> </span><br /><span>External ID: %s</span><br />"%(files, ext_id)
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
-                            file_ext_id = "/tmp/tmpsftp%s/import/%s.csv"%(self.id, ext_id)
+                            file_ext_id = "%s/import/%s.csv"%(directory, ext_id)
                             output = io.BytesIO()
                             writer = pycompat.csv_writer(output, quoting=1)
                             with open(file_ext_id, 'r') as f:
@@ -430,10 +616,6 @@ class Configure(models.Model):
                             if results.get("ids"):
                                 fileTmp[ext_id] = results['ids']
                                 msg="<span>Database ID: %s</span><br />"%(results['ids'])
-                                # directory = "/tmp/tmpsftp%s"%(self.id)
-                                # imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
-                                # shutil.move(directory+'/'+files, directory+'/done/'+files)
-                                # imprt._move_ftp_filename(files, automatic=True)
                             else:
                                 procesados = False
                                 msg="<span>Error: %s</span> "%(results['messages'])
@@ -444,17 +626,15 @@ class Configure(models.Model):
                                 cr.commit()
                                 cr.close()
                 if procesados:
-                    directory = "/tmp/tmpsftp%s"%(self.id)
-                    imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                    if import_wiz == False:
+                        imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)                    
+                        imprt._move_ftp_filename(files, automatic=True)
                     shutil.move(directory+'/'+files, directory+'/done/'+files)
-                    imprt._move_ftp_filename(files, automatic=True)
 
         self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<hr />")
         if use_new_cursor:
             cr.commit()
             cr.close()
-
-
 
     @api.model
     def _run_import_files_log_init(self, use_new_cursor=False):
@@ -503,6 +683,7 @@ class Configure(models.Model):
         self.ensure_one()
         # guess mimetype from file content
         mimetype = guess_mimetype(datas)
+        print("mimetypemimetypemimetype", mimetype)
         (file_extension, handler, req) = FILE_TYPE_DICT.get(mimetype, (None, None, None))
         if handler:
             try:
@@ -632,3 +813,6 @@ class Configure(models.Model):
             row for row in csv_iterator
             if any(x for x in row if x.strip())
         )
+
+
+

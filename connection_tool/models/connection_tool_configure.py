@@ -1477,28 +1477,6 @@ class Macro(models.Model):
     
   
 
-class ResCompany(models.Model):
-    _inherit = 'res.company'
-
-    account_import_id = fields.Many2one('account.account', string='Adjustment Account (import)')
-
-
-class ResConfigSettings(models.TransientModel):
-    _inherit = 'res.config.settings'
-
-    @api.one
-    @api.depends('company_id')
-    def _get_account_import_id(self):
-        self.account_import_id = self.company_id.account_import_id
-
-    @api.one
-    def _set_account_import_id(self):
-        if self.account_import_id != self.company_id.account_import_id:
-            self.company_id.account_import_id = self.account_import_id
-
-   
-    account_import_id = fields.Many2one('account.account', compute='_get_account_import_id', inverse='_set_account_import_id', required=False,
-        string='Adjustment Account (import)', help="Adjustment Account (import).")
 
 
 
