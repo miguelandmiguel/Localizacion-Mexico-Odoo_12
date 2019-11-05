@@ -378,7 +378,6 @@ class Configure(models.Model):
             # Escribe datos
             wiz_file = base64.decodestring(wizard_id.datas_file)
             wiz_filename = '%s/%s'%(directory, wizard_id.datas_fname)
-            print("---wiz_filename", wiz_filename)
             new_file = open(wiz_filename, 'wb')
             new_file.write(wiz_file)
             new_file.close()
@@ -587,10 +586,10 @@ class Configure(models.Model):
                     cr.commit()
                     cr.close()
             result = localdict.get('result',False)
-            print("-----------result", result)
             if result:
                 header = result.get('header') or []
                 body = result.get('body') or []
+                onchange = result.get('onchange') or {}
                 fileTmp = {}
                 procesados = True
                 for ext_id in body:
@@ -616,6 +615,15 @@ class Configure(models.Model):
                             if results.get("ids"):
                                 fileTmp[ext_id] = results['ids']
                                 msg="<span>Database ID: %s</span><br />"%(results['ids'])
+
+                                if (onchange.get('lines') or ''):
+                                    model_name = self.model_id.model
+                                    model_ids = results['ids']
+                                    model_line = onchange['lines'].get('model') or ''
+                                    related_id = onchange['lines'].get('related_id') or ''
+                                    action_onchange = onchange['lines'].get('onchange') or []
+                                    self.action_onchange_post(model_name=model_name, model_ids=model_ids, model_line=model_line, related_id=related_id, onchange=action_onchange)
+
                             else:
                                 procesados = False
                                 msg="<span>Error: %s</span> "%(results['messages'])
@@ -635,6 +643,19 @@ class Configure(models.Model):
         if use_new_cursor:
             cr.commit()
             cr.close()
+
+
+
+    @api.one
+    def action_onchange_post(self, model_name=False, model_ids=False, model_line=False, related_id=False, onchange=False):
+        ids = self.env[model_name].browse(model_ids)
+        if model_line:
+            for line_id in self.env[model_line].search([(related_id, 'in', ids.ids)]):
+                for action_onchange in onchange:
+                    getattr(line_id, action_onchange)()
+
+
+
 
     @api.model
     def _run_import_files_log_init(self, use_new_cursor=False):
@@ -683,7 +704,6 @@ class Configure(models.Model):
         self.ensure_one()
         # guess mimetype from file content
         mimetype = guess_mimetype(datas)
-        print("mimetypemimetypemimetype", mimetype)
         (file_extension, handler, req) = FILE_TYPE_DICT.get(mimetype, (None, None, None))
         if handler:
             try:
