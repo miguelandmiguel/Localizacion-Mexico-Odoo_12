@@ -49,6 +49,7 @@ from odoo.tools.mimetypes import guess_mimetype
 from odoo.tools.safe_eval import safe_eval
 from odoo.tools import config, DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT, pycompat
 import csv
+from odoo.tools import float_compare, float_is_zero
 
 _logger = logging.getLogger(__name__)
 
@@ -133,6 +134,7 @@ def get_row_col(row, column, index):
 
 IMPORT_TYPE = [
     ('csv','Import CSV File'),
+    ('txt','TXT Espacios'),
     ('file','Import XLS File'),
     ('postgresql','PostgreSQL'),
     ('ftp','FTP'),
@@ -286,7 +288,6 @@ class ConnectionToolImportWiz(models.TransientModel):
 
     def _import_calculation_files_wiz(self, import_id, import_wiz):
         with api.Environment.manage():
-            # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
             self.env['connection_tool.import'].run_import_wiz(use_new_cursor=self._cr.dbname, import_id=import_id, import_wiz=import_wiz)
@@ -336,7 +337,7 @@ class Configure(models.Model):
     @api.multi
     def button_import(self):
         wiz_id = self.env['connection_tool.import.wiz'].with_context(import_id=self.id).create({})
-        wiz_id.import_calculation()
+        wiz_id.with_context(import_id=self.id).import_calculation()
         return {'type': 'ir.actions.act_window_close'}
 
 
@@ -355,9 +356,10 @@ class Configure(models.Model):
                 except Exception:
                     pass
         return {}
+
     @api.model
     def _run_import_files_wiz(self, use_new_cursor=False, import_id=False, import_wiz=False):
-        where = [('recurring_import','=', True), ('id', '=', import_id)]
+        where = [('id', '=', import_id)]
         for imprt in self.sudo().search(where):
             directory = "/tmp/tmpsftpwiz%simport%s"%(import_wiz, imprt.id)
             if not os.path.exists(directory):
@@ -372,7 +374,6 @@ class Configure(models.Model):
                 os.makedirs(directory+'/import')
             if not os.path.exists(directory+'/wiz'):
                 os.makedirs(directory+'/wiz')
-
             wizard_id = self.env['connection_tool.import.wiz'].browse(import_wiz)
 
             # Escribe datos
@@ -382,21 +383,29 @@ class Configure(models.Model):
             new_file.write(wiz_file)
             new_file.close()
 
-            mimetype, encoding = mimetypes.guess_type(wiz_filename)
-            (file_extension, handler, req) = FILE_TYPE_DICT.get(mimetype, (None, None, None))
-
-            rows_to_import=None
+            data = []
             options = OPTIONS
-            options['quoting'] = imprt.quoting or OPTIONS['quoting']
-            options['separator'] = imprt.separator or OPTIONS['separator']
-            datas = open(wiz_filename, 'rb').read()
-            if handler:
-                try:
-                    rows_to_import=getattr(imprt, '_read_' + file_extension)(options, datas)
-                except Exception:
-                    _logger.warn("Failed to read file '%s' (transient id %d) using guessed mimetype %s", wizard_id.datas_fname or '<unknown>', wizard_id.id, mimetype)
-
-            data = list(itertools.islice(rows_to_import, 0, None))
+            if imprt.type == 'csv':
+                mimetype, encoding = mimetypes.guess_type(wiz_filename)
+                (file_extension, handler, req) = FILE_TYPE_DICT.get(mimetype, (None, None, None))
+                rows_to_import=None
+                options['quoting'] = imprt.quoting or OPTIONS['quoting']
+                options['separator'] = imprt.separator or OPTIONS['separator']
+                f = open(wiz_filename, 'rb')
+                datas = f.read()
+                f.close()
+                if handler:
+                    try:
+                        rows_to_import=getattr(imprt, '_read_' + file_extension)(options, datas)
+                    except Exception:
+                        _logger.warn("Failed to read file '%s' (transient id %d) using guessed mimetype %s", wizard_id.datas_fname or '<unknown>', wizard_id.id, mimetype)
+                data = list(itertools.islice(rows_to_import, 0, None))
+            elif imprt.type == 'txt':
+                with open(wiz_filename) as fp:
+                    for line in fp.readlines():
+                        data.append(line)
+                fp.close()
+                # data = wiz_file
             imprt.get_source_python_script(use_new_cursor=use_new_cursor, files=wizard_id.datas_fname, import_data=data, options=options, import_wiz=directory)
             if use_new_cursor:
                 self._cr.commit()
@@ -446,6 +455,13 @@ class Configure(models.Model):
 
 
     @api.model
+    def action_shutil_directory(self, directory):
+        try:
+            shutil.rmtree(directory)
+        except:
+            pass
+
+    @api.model
     def import_files(self, use_new_cursor=False, import_wiz=False):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
@@ -489,12 +505,14 @@ class Configure(models.Model):
                 if use_new_cursor:
                     cr.commit()
                     cr.close()
+                self.action_shutil_directory(directory)
                 return res
             elif res and res.get('error'):
                 self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s</span><br/>"%res.get('error'))
                 if use_new_cursor:
                     cr.commit()
                     cr.close()
+                self.action_shutil_directory(directory)
                 return res
 
         pairs = []
@@ -518,7 +536,8 @@ class Configure(models.Model):
         except:
             pass
         if import_wiz == False:
-            imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+            if self.source_connector_id:
+                imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
 
     @api.model
     def import_files_datas(self, use_new_cursor=False, files=False, directory=False, imprt=False, import_wiz=False):
@@ -563,7 +582,7 @@ class Configure(models.Model):
         if import_wiz:
             directory = import_wiz
         localdict = {
-            'this':self,
+            'this': self,
             'file_name': files,
             'directory': directory,
             'csv': csv,
@@ -835,4 +854,185 @@ class Configure(models.Model):
         )
 
 
+
+    def process_bank_statement_line(self, statement_id):
+        this = self
+
+        LayoutLine = this.env['bank.statement.export.layout.line']
+        statementLines = this.env['account.bank.statement.line']
+        AccountMoveLine = this.env['account.move.line']
+        
+        ctx = dict(self._context, force_price_include=False)
+        for st_line in statementLines.search([('statement_id', '=', statement_id)]):
+            st_line.statement_id._end_balance()
+            folioOdoo = st_line.ref and st_line.ref[:10] or ''
+            account_id = False
+            for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], ['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 'layout_id', 'movel_line_ids', 'partner_id', 'importe']):
+                movel_line_ids = layoutline_id.get('movel_line_ids') and layoutline_id['movel_line_ids'] or []
+                move_lines = AccountMoveLine.browse(movel_line_ids)
+
+                line_residual = st_line.currency_id and st_line.amount_currency or st_line.amount
+                line_currency = st_line.currency_id or st_line.journal_id.currency_id or st_line.company_id.currency_id
+                total_residual = move_lines and sum(aml.currency_id and aml.amount_residual_currency or aml.amount_residual for aml in move_lines) or 0.0
+                balance = total_residual - line_residual
+
+                open_balance_dicts = []
+                counterpart_aml_dicts = []
+                amount_total = abs(line_residual)
+                payment_aml_rec = self.env['account.move.line']
+                for aml in move_lines:
+                    if aml.account_id.internal_type == 'liquidity':
+                        payment_aml_rec |= aml
+                    else:
+                        amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
+                        if amount_total >= abs(amount):
+                            amount_total -= abs(amount)
+                            counterpart_aml_dicts.append({
+                                'name': aml.name if aml.name != '/' else aml.move_id.name,
+                                'debit': amount < 0 and -amount or 0,
+                                'credit': amount > 0 and amount or 0,
+                                'move_line': aml,
+                            })
+
+                        else:
+                            counterpart_aml_dicts.append({
+                                'name': aml.name if aml.name != '/' else aml.move_id.name,
+                                'debit': balance < 0 and -balance or 0,
+                                'credit': balance > 0 and balance or 0,
+                                'move_line': aml,
+                            })
+
+                res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
+
+                return True
+
+
+
+                
+                if float_is_zero(balance, precision_rounding=line_currency.rounding):
+                    print("-------balance", balance)
+
+                line_balance = st_line.amount * (1 if balance > 0.0 else -1)
+                datas = []
+                datas_tmp = {
+                    'partner_id': layoutline_id.get('partner_id') and layoutline_id['partner_id'][0],
+                    'counterpart_aml_dicts': [],
+                    'payment_aml_ids': [],
+                    'new_aml_dicts': []
+                }
+                amountMoveLine = 0.0
+                counterpart_aml_dicts = []
+                payment_aml_rec = self.env['account.move.line']
+                for aml in AccountMoveLine.browse(movel_line_ids):
+                    if aml.account_id.internal_type == 'liquidity':
+                        payment_aml_rec |= aml
+                    else:
+                        amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
+                        counterpart_aml_dicts.append({
+                            'name': aml.name if aml.name != '/' else aml.move_id.name,
+                            'debit': amount < 0 and -amount or 0,
+                            'credit': amount > 0 and amount or 0,
+                            'move_line': aml,
+                        })
+
+                line_residual = statementLine.currency_id and statementLine.amount_currency or statementLine.amount
+                line_currency = statementLine.currency_id or statementLine.journal_id.currency_id or statementLine.company_id.currency_id
+                total_residual = move_lines and sum(aml.currency_id and aml.amount_residual_currency or aml.amount_residual for aml in move_lines) or 0.0
+                total_residual -= sum(aml['debit'] - aml['credit'] for aml in datas_tmp.get('new_aml_dicts'))
+                if float_compare(line_residual, total_residual, precision_rounding=line_currency.rounding) != 0:
+                    balance = total_residual - line_residual
+                    open_balance_dict = {
+                        'name': '%s : %s' % (statementLine.name, _('Open Balance')),
+                        'account_id': balance < 0 and statementLine.partner_id.property_account_payable_id.id or statementLine.partner_id.property_account_receivable_id.id,
+                        'debit': balance > 0 and balance or 0,
+                        'credit': balance < 0 and -balance or 0,
+                    }
+                    datas_tmp['new_aml_dicts'].append(open_balance_dict)
+
+                vals = {
+                   'counterpart_aml_dicts': counterpart_aml_dicts,
+                   'payment_aml_rec': payment_aml_rec,
+                   'new_aml_dicts': [],
+                   'open_balance_dict': open_balance_dict
+                }
+                res = statementLine.with_context(ctx).process_reconciliation(
+                    counterpart_aml_dicts,
+                    payment_aml_rec,
+                    datas_tmp.get('new_aml_dicts', []))
+                print("---------", res)
+        return True
+
+
+    def process_bank_statement(self, directory='', import_data=''):
+        this = self
+        Journal = this.env['account.journal']
+        Layout = this.env['bank.statement.export.layout']
+        LayoutLine = this.env['bank.statement.export.layout.line']
+        bankstatement = this.env['account.bank.statement']
+
+        # ["date","ref","partner_id/.id","name","amount","amount_currency","currency_id","balance"]
+        body = [
+        ]
+        journal_id = False
+        output = io.BytesIO()
+        openBalance = 0.0
+        balance = 0.0
+        for indx, line in enumerate(import_data):
+            nocuenta = line[0:18].replace('/', '-')
+            journal_ids = Journal.search_read([('name', 'ilike', nocuenta)])
+            for journal in journal_ids:
+                journal_id = journal.get("id")
+                if indx == 0:
+                    last_bnk_stmt = bankstatement.search([('journal_id', '=', journal_id)], limit=1)
+                    openBalance = last_bnk_stmt and last_bnk_stmt.balance_end or 0.0
+                fecha = line[130:140].replace('/', '-')
+                referencia = line[93:123]
+                folioBanco = line[28:34]
+                amount = float(line[65:81] or '0.0')
+                tipoOperacion = 1 if (line[64:65] in ['0', '2']) else -1
+                folioOdoo = referencia[:10]
+                partner_id = ''
+                for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], ['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 'layout_id', 'movel_line_ids', 'partner_id', 'importe']):
+                    partner_id = layoutline_id.get('partner_id') and layoutline_id['partner_id'][0] or False
+                    layout_id = layoutline_id.get('layout_id') and layoutline_id['layout_id'][0]
+
+                balance += (openBalance + (amount * tipoOperacion))
+                body_tmp = [
+                    amount * tipoOperacion,
+                    balance if indx == 0 else balance,
+                    fecha,
+                    referencia,
+                    folioBanco,
+                    partner_id
+                ]
+                body.append(body_tmp)
+        external_id = '__export__.bank_stmt_import'
+        writer = pycompat.csv_writer(output, quoting=1)
+        for line in body:
+            externalIdFile = open("%s/import/%s.csv"%(directory,external_id), 'a', newline='')
+            if externalIdFile:
+                wr = csv.writer(externalIdFile, dialect='excel')
+                wr.writerow(line)
+                writer.writerow(line)
+            externalIdFile.close()
+
+        filename = 'import.csv'
+        ctx = dict(this.env.context)
+        ctx['bank_stmt_import'] = True
+        ctx['journal_id'] = journal_id
+        import_wizard = this.env['base_import.import'].with_context(**ctx).sudo().create({
+            'res_model': 'account.bank.statement.line',
+            'file': output.getvalue(),
+            'file_name': filename,
+            'file_type': 'text/csv'
+        })
+        header =  ["amount","balance","date","ref","name","partner_id/.id"]
+        options = {'headers': False, 'advanced': True, 'keep_matches': False, 'name_create_enabled_fields': {'currency_id': False}, 'encoding': 'ascii', 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': '', 'float_thousand_separator': ',', 'float_decimal_separator': '.', 'fields': [], 'bank_stmt_import': True}
+        results = import_wizard.with_context(**ctx).sudo().do(header, [], options, dryrun=False)
+        print("resultsresults", results)
+        for statement in results.get('messages') or []:
+            statement_id = statement.get('statement_id') or False
+            self.process_bank_statement_line(statement_id)
+            # {'ids': [85, 86, 87, 88, 89], 'messages': [{'statement_id': 25, 'type': 'bank_statement'}]}
+        return True
 
