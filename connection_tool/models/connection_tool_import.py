@@ -881,6 +881,8 @@ class Configure(models.Model):
                 amount_total = abs(line_residual)
                 payment_aml_rec = self.env['account.move.line']
                 for aml in move_lines:
+                    if aml.full_reconcile_id:
+                        continue
                     if aml.account_id.internal_type == 'liquidity':
                         payment_aml_rec |= aml
                     else:
@@ -903,63 +905,6 @@ class Configure(models.Model):
                             })
 
                 res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
-
-                return True
-
-
-
-                
-                if float_is_zero(balance, precision_rounding=line_currency.rounding):
-                    print("-------balance", balance)
-
-                line_balance = st_line.amount * (1 if balance > 0.0 else -1)
-                datas = []
-                datas_tmp = {
-                    'partner_id': layoutline_id.get('partner_id') and layoutline_id['partner_id'][0],
-                    'counterpart_aml_dicts': [],
-                    'payment_aml_ids': [],
-                    'new_aml_dicts': []
-                }
-                amountMoveLine = 0.0
-                counterpart_aml_dicts = []
-                payment_aml_rec = self.env['account.move.line']
-                for aml in AccountMoveLine.browse(movel_line_ids):
-                    if aml.account_id.internal_type == 'liquidity':
-                        payment_aml_rec |= aml
-                    else:
-                        amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
-                        counterpart_aml_dicts.append({
-                            'name': aml.name if aml.name != '/' else aml.move_id.name,
-                            'debit': amount < 0 and -amount or 0,
-                            'credit': amount > 0 and amount or 0,
-                            'move_line': aml,
-                        })
-
-                line_residual = statementLine.currency_id and statementLine.amount_currency or statementLine.amount
-                line_currency = statementLine.currency_id or statementLine.journal_id.currency_id or statementLine.company_id.currency_id
-                total_residual = move_lines and sum(aml.currency_id and aml.amount_residual_currency or aml.amount_residual for aml in move_lines) or 0.0
-                total_residual -= sum(aml['debit'] - aml['credit'] for aml in datas_tmp.get('new_aml_dicts'))
-                if float_compare(line_residual, total_residual, precision_rounding=line_currency.rounding) != 0:
-                    balance = total_residual - line_residual
-                    open_balance_dict = {
-                        'name': '%s : %s' % (statementLine.name, _('Open Balance')),
-                        'account_id': balance < 0 and statementLine.partner_id.property_account_payable_id.id or statementLine.partner_id.property_account_receivable_id.id,
-                        'debit': balance > 0 and balance or 0,
-                        'credit': balance < 0 and -balance or 0,
-                    }
-                    datas_tmp['new_aml_dicts'].append(open_balance_dict)
-
-                vals = {
-                   'counterpart_aml_dicts': counterpart_aml_dicts,
-                   'payment_aml_rec': payment_aml_rec,
-                   'new_aml_dicts': [],
-                   'open_balance_dict': open_balance_dict
-                }
-                res = statementLine.with_context(ctx).process_reconciliation(
-                    counterpart_aml_dicts,
-                    payment_aml_rec,
-                    datas_tmp.get('new_aml_dicts', []))
-                print("---------", res)
         return True
 
 
@@ -983,8 +928,8 @@ class Configure(models.Model):
             for journal in journal_ids:
                 journal_id = journal.get("id")
                 if indx == 0:
-                    last_bnk_stmt = bankstatement.search([('journal_id', '=', journal_id)], limit=1)
-                    openBalance = last_bnk_stmt and last_bnk_stmt.balance_end or 0.0
+                    # last_bnk_stmt = bankstatement.search([('journal_id', '=', journal_id)], limit=1)
+                    openBalance = 0.0 # last_bnk_stmt and last_bnk_stmt.balance_end or 0.0
                 fecha = line[130:140].replace('/', '-')
                 referencia = line[93:123]
                 folioBanco = line[28:34]
@@ -1032,7 +977,15 @@ class Configure(models.Model):
         print("resultsresults", results)
         for statement in results.get('messages') or []:
             statement_id = statement.get('statement_id') or False
-            self.process_bank_statement_line(statement_id)
+            try:
+                self.process_bank_statement_line(statement_id)
+            except:
+                try:
+                    shutil.rmtree(directory)
+                except:
+                    pass
+                bankstatement.browse(statement_id).unlink()
+
             # {'ids': [85, 86, 87, 88, 89], 'messages': [{'statement_id': 25, 'type': 'bank_statement'}]}
         return True
 
