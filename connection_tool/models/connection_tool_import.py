@@ -442,14 +442,9 @@ class Configure(models.Model):
         if import_id:
             where += [('id', '=', import_id)]
         for imprt in self.sudo().search(where):
-            imprt.sudo()._run_import_files_log_init(use_new_cursor=use_new_cursor)
-            msg = "<span><b>Inicia Proceso:</b> %s</span><hr/>"%(time.strftime('%Y-%m-%d %H:%M:%S'))
-            imprt.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
             imprt.import_files(use_new_cursor=use_new_cursor, import_wiz=import_wiz)
             if use_new_cursor:
                 self._cr.commit()
-            msg = "<span><b>Termina Proceso:</b> %s</span><hr/>"%(time.strftime('%Y-%m-%d %H:%M:%S'))
-            imprt.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
         if use_new_cursor:
             self._cr.commit()
 
@@ -469,13 +464,20 @@ class Configure(models.Model):
         directory = "/tmp/tmpsftp%s"%(self.id)
         if import_wiz:
             directory = "/tmp/tmpsftp_wiz%s"%(self.id)
+
+        if os.path.exists(directory):
+            if use_new_cursor:
+                cr.commit()
+                cr.close()
+            return None
+
         if not os.path.exists(directory):
             os.makedirs(directory)
         dd = os.listdir(directory)
         if (len(dd) == 0) or (len(dd) == 3 and dd[0] in ['done', 'csv', 'tmpimport', 'import']):
             pass
         else:
-            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Procesando archivos previos</span><br />")
+            # self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Procesando archivos previos</span><br />")
             if use_new_cursor:
                 cr.commit()
                 cr.close()
@@ -499,6 +501,11 @@ class Configure(models.Model):
             new_file.close()
         else:
             imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+            
+            self.sudo()._run_import_files_log_init(use_new_cursor=use_new_cursor)
+            msg = "<span><b>Inicia Proceso:</b> %s</span><hr/>"%(time.strftime('%Y-%m-%d %H:%M:%S'))
+            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
+          
             res = imprt.getFTData()
             if res == None:
                 self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>No existe archivo para procesar</span><br />")
@@ -538,6 +545,11 @@ class Configure(models.Model):
         if import_wiz == False:
             if self.source_connector_id:
                 imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+
+        msg = "<span><b>Termina Proceso:</b> %s</span><hr/>"%(time.strftime('%Y-%m-%d %H:%M:%S'))
+        imprt.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
+        return True
+
 
     @api.model
     def import_files_datas(self, use_new_cursor=False, files=False, directory=False, imprt=False, import_wiz=False):
