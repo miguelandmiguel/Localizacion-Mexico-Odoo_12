@@ -218,7 +218,6 @@ class Conector(models.Model):
             ('ws','XML-RPC')
         ], string='Conecction Type', default="ftp")
 
-
     @api.multi
     def name_get(self):
         result = []

@@ -456,6 +456,23 @@ class Configure(models.Model):
         except:
             pass
 
+    @api.multi
+    def button_clear_import(self):
+        directory = "/tmp/tmpsftp%s"%(self.id)
+        imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+        if self.source_connector_id:
+            print("self.source_ftp_write_controlself.source_ftp_write_controlself.source_ftp_write_control", self.source_ftp_write_control)
+            imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+        if os.path.exists(directory):
+            try:
+                shutil.rmtree(directory)
+            except:
+                pass
+        
+
+        return True
+
+
     @api.model
     def import_files(self, use_new_cursor=False, import_wiz=False):
         if use_new_cursor:
@@ -654,7 +671,6 @@ class Configure(models.Model):
                                     related_id = onchange['lines'].get('related_id') or ''
                                     action_onchange = onchange['lines'].get('onchange') or []
                                     self.action_onchange_post(model_name=model_name, model_ids=model_ids, model_line=model_line, related_id=related_id, onchange=action_onchange)
-
                             else:
                                 procesados = False
                                 msg="<span>Error: %s</span> "%(results['messages'])

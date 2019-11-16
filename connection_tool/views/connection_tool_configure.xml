@@ -71,6 +71,7 @@
                     <header>
                         <button name="button_import" string="Import" type="object" class="oe_highlight" />
                         <button name="button_test_import" string="Output" type="object" />
+                        <button name="button_clear_import" string="Limpiar Temporales" type="object" />
                     </header>
                     <sheet string="Connection Tool Configure">
                         <label for="name" class="oe_edit_only" string="Model and Name"/>
