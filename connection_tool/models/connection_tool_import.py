@@ -468,8 +468,6 @@ class Configure(models.Model):
                 shutil.rmtree(directory)
             except:
                 pass
-        
-
         return True
 
 
@@ -958,6 +956,7 @@ class Configure(models.Model):
                 if indx == 0:
                     # last_bnk_stmt = bankstatement.search([('journal_id', '=', journal_id)], limit=1)
                     openBalance = 0.0 # last_bnk_stmt and last_bnk_stmt.balance_end or 0.0
+                transaccion = line[34:64] 
                 fecha = line[130:140].replace('/', '-')
                 referencia = line[93:123]
                 folioBanco = line[28:34]
@@ -975,6 +974,7 @@ class Configure(models.Model):
                     balance if indx == 0 else balance,
                     fecha,
                     referencia,
+                    transaccion,
                     folioBanco,
                     partner_id
                 ]
@@ -999,7 +999,7 @@ class Configure(models.Model):
             'file_name': filename,
             'file_type': 'text/csv'
         })
-        header =  ["amount","balance","date","ref","name","partner_id/.id"]
+        header =  ["amount","balance","date","ref","note","name","partner_id/.id"]
         options = {'headers': False, 'advanced': True, 'keep_matches': False, 'name_create_enabled_fields': {'currency_id': False}, 'encoding': 'ascii', 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': '', 'float_thousand_separator': ',', 'float_decimal_separator': '.', 'fields': [], 'bank_stmt_import': True}
         results = import_wizard.with_context(**ctx).sudo().do(header, [], options, dryrun=False)
         print("resultsresults", results)
