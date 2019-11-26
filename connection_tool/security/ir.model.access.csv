@@ -1,5 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_connection_tool_import,connection_tool.import,model_connection_tool_import,,1,1,1,1
 access_connection_tool_import_wiz,connection_tool.import_wiz,model_connection_tool_import_wiz,,1,1,1,1
-access_connection_tool_macro,connection_tool.macro,model_connection_tool_macro,,1,1,1,1
 access_connection_tool_connector,connection_tool.connector,model_connection_tool_connector,,1,1,1,1
