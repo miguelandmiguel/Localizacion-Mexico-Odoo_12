@@ -1013,7 +1013,8 @@ class Configure(models.Model):
                 except:
                     pass
                 bankstatement.browse(statement_id).unlink()
-
             # {'ids': [85, 86, 87, 88, 89], 'messages': [{'statement_id': 25, 'type': 'bank_statement'}]}
         return True
+
+
 
