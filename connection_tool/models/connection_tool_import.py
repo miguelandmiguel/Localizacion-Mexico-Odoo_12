@@ -341,6 +341,17 @@ class Configure(models.Model):
         return {'type': 'ir.actions.act_window_close'}
 
 
+    @api.multi
+    def unlink_menu(self):
+        try:
+            if self.ref_menu_ir_act_window:
+                self.env['ir.actions.act_window'].sudo().browse([self.ref_menu_ir_act_window.id]).unlink()
+            if self.ref_ir_menu:
+                self.env['ir.ui.menu'].sudo().browse([self.ref_ir_menu.id]).unlink()
+        except:
+            raise UserError(_("Deletion of the action record failed."))
+        return True
+
     # wizard
     @api.model
     def run_import_wiz(self, use_new_cursor=False, import_id=False, import_wiz=False):
@@ -361,6 +372,11 @@ class Configure(models.Model):
     def _run_import_files_wiz(self, use_new_cursor=False, import_id=False, import_wiz=False):
         where = [('id', '=', import_id)]
         for imprt in self.sudo().search(where):
+            _logger.info("-----------Inicia Proceso Wizard")
+            self.sudo()._run_import_files_log_init(use_new_cursor=use_new_cursor)
+            msg = "<span><b>Inicia Proceso:</b> %s</span><hr/>"%(time.strftime('%Y-%m-%d %H:%M:%S'))
+            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
+
             directory = "/tmp/tmpsftpwiz%simport%s"%(import_wiz, imprt.id)
             if not os.path.exists(directory):
                 os.makedirs(directory)
@@ -413,6 +429,10 @@ class Configure(models.Model):
         if use_new_cursor:
             self._cr.commit()
 
+        try:
+            shutil.rmtree(directory)
+        except:
+            pass
 
     @api.model
     def run_import(self, use_new_cursor=False, import_id=False, import_wiz=False):
@@ -461,7 +481,6 @@ class Configure(models.Model):
         directory = "/tmp/tmpsftp%s"%(self.id)
         imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
         if self.source_connector_id:
-            print("self.source_ftp_write_controlself.source_ftp_write_controlself.source_ftp_write_control", self.source_ftp_write_control)
             imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
         if os.path.exists(directory):
             try:
@@ -492,7 +511,6 @@ class Configure(models.Model):
         if (len(dd) == 0) or (len(dd) == 3 and dd[0] in ['done', 'csv', 'tmpimport', 'import']):
             pass
         else:
-            # self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Procesando archivos previos</span><br />")
             if use_new_cursor:
                 cr.commit()
                 cr.close()
@@ -610,6 +628,7 @@ class Configure(models.Model):
             directory = import_wiz
         localdict = {
             'this': self,
+            'user_id': self.env.context.get('uid') or self.env.uid,
             'file_name': files,
             'directory': directory,
             'csv': csv,
@@ -627,11 +646,14 @@ class Configure(models.Model):
             try:
                 safe_eval(self.source_python_script, localdict, mode='exec', nocopy=True)
             except Exception as e:
+                _logger.info("--- Error en Python Source %s "%(str(e)) )
                 self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
                 if use_new_cursor:
                     cr.commit()
                     cr.close()
+                return None
             result = localdict.get('result',False)
+            _logger.info("----- Result %s "%(result) )
             if result:
                 header = result.get('header') or []
                 body = result.get('body') or []
@@ -674,7 +696,8 @@ class Configure(models.Model):
                                 msg="<span>Error: %s</span> "%(results['messages'])
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
                         except Exception as e:
-                            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
+                            # print("------------eeeeeeeeeee ", str(e))
+                            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Error %s </span><br />"%e)
                             if use_new_cursor:
                                 cr.commit()
                                 cr.close()
@@ -688,8 +711,6 @@ class Configure(models.Model):
         if use_new_cursor:
             cr.commit()
             cr.close()
-
-
 
     @api.one
     def action_onchange_post(self, model_name=False, model_ids=False, model_line=False, related_id=False, onchange=False):
@@ -707,10 +728,10 @@ class Configure(models.Model):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))
-        message = ""
-        if self.output_messages:
-            message = self.output_messages
-        res_id = self.write({
+        # message = ""
+        # if self.output_messages:
+        #     message = self.output_messages
+        self.write({
             "output_messages": ""
         })
         if use_new_cursor:
@@ -1002,7 +1023,6 @@ class Configure(models.Model):
         header =  ["amount","balance","date","ref","note","name","partner_id/.id"]
         options = {'headers': False, 'advanced': True, 'keep_matches': False, 'name_create_enabled_fields': {'currency_id': False}, 'encoding': 'ascii', 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': '', 'float_thousand_separator': ',', 'float_decimal_separator': '.', 'fields': [], 'bank_stmt_import': True}
         results = import_wizard.with_context(**ctx).sudo().do(header, [], options, dryrun=False)
-        print("resultsresults", results)
         for statement in results.get('messages') or []:
             statement_id = statement.get('statement_id') or False
             try:

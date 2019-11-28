@@ -117,7 +117,7 @@
                             </page>
                             <page string="Log >>> ">
                                 <group>
-                                    <field name="output_messages" readonly="1" />
+                                    <field name="output_messages" readonly="0" />
                                 </group>
                             </page>
                             <page string="Advanced">
