@@ -956,6 +956,11 @@ class Configure(models.Model):
 
 
     def process_bank_statement(self, directory='', import_data=''):
+        print("directory", directory)
+        print("import_data", import_data)
+
+        print("mmmmmmm", mmmmmmm)
+
         this = self
         Journal = this.env['account.journal']
         Layout = this.env['bank.statement.export.layout']
