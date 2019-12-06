@@ -182,7 +182,6 @@ class ResCompany(models.Model):
 
     account_import_id = fields.Many2one('account.account', string='Adjustment Account (import)')
 
-
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
@@ -199,6 +198,25 @@ class ResConfigSettings(models.TransientModel):
    
     account_import_id = fields.Many2one('account.account', compute='_get_account_import_id', inverse='_set_account_import_id', required=False,
         string='Adjustment Account (import)', help="Adjustment Account (import).")
+
+
+class AccountBankStatementLine(models.Model):
+    _inherit = "account.bank.statement.line"
+
+    def _prepare_reconciliation_move_line(self, move, amount):
+        res = super(AccountBankStatementLine, self)._prepare_reconciliation_move_line(move, amount)
+        if self._context.get("import_etl"):
+            res["analytic_tag_ids"] = [self._context.get("tag_id")] # [(6, 0, self._context.get("tag_id"))]
+            res["analytic_account_id"] = self._context.get("analytic_id")
+        return res
+
+    @api.multi
+    def _prepare_move_line_for_currency(self, aml_dict, date):
+        self.ensure_one()
+        res = super(AccountBankStatementLine, self)._prepare_move_line_for_currency(aml_dict, date)
+        if self._context.get("import_etl"):
+            aml_dict["analytic_tag_ids"] = [self._context.get("tag_id")] # [(6, 0, self._context.get("tag_id"))]
+            aml_dict["analytic_account_id"] = self._context.get("analytic_id")
 
 
 class WizardImportMenuCreate(models.TransientModel):
@@ -332,6 +350,13 @@ class Configure(models.Model):
     ref_ir_menu = fields.Many2one('ir.ui.menu', 'Leftbar Menu', readonly=True, help="Leftbar menu to open the leftbar menu action")
     ref_menu_ir_act_window = fields.Many2one('ir.actions.act_window', 'Leftbar Menu Action', readonly=True,
              help="This is the action linked to leftbar menu.")
+    
+    export_file_encoding = fields.Selection([
+            ('utf-8', 'UTF-8'),
+            ('iso-8859-1', 'iso-8859-1 (ANSI)'),
+        ], string='Export File Encodig', default='iso-8859-1', help="Export File Encodig")
+
+
 
 
     @api.multi
@@ -415,9 +440,13 @@ class Configure(models.Model):
                         rows_to_import=getattr(imprt, '_read_' + file_extension)(options, datas)
                     except Exception:
                         _logger.warn("Failed to read file '%s' (transient id %d) using guessed mimetype %s", wizard_id.datas_fname or '<unknown>', wizard_id.id, mimetype)
+                print("----rows_to_import", rows_to_import)
+                rows_to_import = rows_to_import or []
                 data = list(itertools.islice(rows_to_import, 0, None))
             elif imprt.type == 'txt':
-                with open(wiz_filename) as fp:
+                print("---------wiz_filenamewiz_filename", wiz_filename)
+                # fp = io.open('wiz_filename')
+                with open(wiz_filename, encoding=imprt.export_file_encoding) as fp:
                     for line in fp.readlines():
                         data.append(line)
                 fp.close()
@@ -640,7 +669,10 @@ class Configure(models.Model):
             '_logger': _logger,
             'UserError': UserError,
             'import_data': import_data,
-            'import_fields': []
+            'import_fields': [],
+            'io': io,
+            'pycompat': pycompat,
+            'shutil': shutil
         }
         if self.source_python_script:
             try:
@@ -905,15 +937,21 @@ class Configure(models.Model):
     def process_bank_statement_line(self, statement_id):
         this = self
 
+        Account = this.env["account.account"]
         LayoutLine = this.env['bank.statement.export.layout.line']
         statementLines = this.env['account.bank.statement.line']
         AccountMoveLine = this.env['account.move.line']
+        Afiliation = this.env["account.bank.afiliation"]
+        AccountAnalytic = this.env["account.analytic.account"]
+        Tag = this.env["account.analytic.tag"]
         
-        ctx = dict(self._context, force_price_include=False)
+        ctx = dict(this._context, force_price_include=False)
         for st_line in statementLines.search([('statement_id', '=', statement_id)]):
             st_line.statement_id._end_balance()
             folioOdoo = st_line.ref and st_line.ref[:10] or ''
             account_id = False
+
+            res = False
             for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], ['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 'layout_id', 'movel_line_ids', 'partner_id', 'importe']):
                 movel_line_ids = layoutline_id.get('movel_line_ids') and layoutline_id['movel_line_ids'] or []
                 move_lines = AccountMoveLine.browse(movel_line_ids)
@@ -952,15 +990,32 @@ class Configure(models.Model):
                             })
 
                 res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
+            if res:
+                continue
+
+
+            codigo = { "V02": "5990100", "V46": "5990100", "V40": "5990100", "V09": "5990100", "V41": "1200004", "V03": "1200004", "V10": "1200004", "W19": "5990100", "W20": "1200004", "W05": "5990100", "W06": "1200004", "W85": "5990100", "W83": "5990100", "W86": "1200004", "C19": "4900101" }
+            transaccion = st_line.note.split("|")
+            codigo_transaccion = transaccion and transaccion[0] or ""
+            if (codigo_transaccion in codigo):
+                for afiliation_id in Afiliation.search_read([("name", "ilike", st_line.name)], fields=["name", "description"], limit=1):
+                    for tag_id in Tag.search_read([("afiliation_id", "=", afiliation_id.get("id"))], fields=["name", "code"]):
+                        for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), ('company_id', '=', st_line.company_id.id)], fields=["name"]):
+                            analytic_id = AccountAnalytic.search([("code", "=", tag_id.get("code"))])
+                            st_line.account_id = account_id.get("id")
+                            ctx = {
+                                "tag_id": tag_id.get("id"),
+                                "analytic_id": analytic_id and analytic_id.id or False,
+                                "import_etl": True
+                            }
+                            st_line.with_context(ctx).fast_counterpart_creation()
+
+
+
         return True
 
 
     def process_bank_statement(self, directory='', import_data=''):
-        print("directory", directory)
-        print("import_data", import_data)
-
-        print("mmmmmmm", mmmmmmm)
-
         this = self
         Journal = this.env['account.journal']
         Layout = this.env['bank.statement.export.layout']
@@ -968,6 +1023,10 @@ class Configure(models.Model):
         bankstatement = this.env['account.bank.statement']
 
         # ["date","ref","partner_id/.id","name","amount","amount_currency","currency_id","balance"]
+        result = {
+            'header': [],
+            'body': []
+        }
         body = [
         ]
         journal_id = False
@@ -976,13 +1035,13 @@ class Configure(models.Model):
         balance = 0.0
         for indx, line in enumerate(import_data):
             nocuenta = line[0:18].replace('/', '-')
-            journal_ids = Journal.search_read([('name', 'ilike', nocuenta)])
+            journal_ids = Journal.search_read([('name', 'ilike', nocuenta)], fields=["name", "company_id"])
             for journal in journal_ids:
                 journal_id = journal.get("id")
                 if indx == 0:
                     # last_bnk_stmt = bankstatement.search([('journal_id', '=', journal_id)], limit=1)
                     openBalance = 0.0 # last_bnk_stmt and last_bnk_stmt.balance_end or 0.0
-                transaccion = line[34:64] 
+                transaccion = "%s|%s"%(line[152:155], line[34:64])  
                 fecha = line[130:140].replace('/', '-')
                 referencia = line[93:123]
                 folioBanco = line[28:34]
@@ -1002,7 +1061,8 @@ class Configure(models.Model):
                     referencia,
                     transaccion,
                     folioBanco,
-                    partner_id
+                    partner_id,
+                    journal.get("company_id") and journal["company_id"][0] or False
                 ]
                 body.append(body_tmp)
         external_id = '__export__.bank_stmt_import'
@@ -1025,19 +1085,20 @@ class Configure(models.Model):
             'file_name': filename,
             'file_type': 'text/csv'
         })
-        header =  ["amount","balance","date","ref","note","name","partner_id/.id"]
+        header =  ["amount","balance","date","ref","note","name","partner_id/.id", "company_id/.id"]
         options = {'headers': False, 'advanced': True, 'keep_matches': False, 'name_create_enabled_fields': {'currency_id': False}, 'encoding': 'ascii', 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': '', 'float_thousand_separator': ',', 'float_decimal_separator': '.', 'fields': [], 'bank_stmt_import': True}
         results = import_wizard.with_context(**ctx).sudo().do(header, [], options, dryrun=False)
         for statement in results.get('messages') or []:
             statement_id = statement.get('statement_id') or False
             try:
-                self.process_bank_statement_line(statement_id)
-            except:
+                this.process_bank_statement_line(statement_id)
+            except err1:
                 try:
                     shutil.rmtree(directory)
-                except:
+                except err:
+                    _logger.info("--- Error %s"%(err) )
                     pass
-                bankstatement.browse(statement_id).unlink()
+                # bankstatement.browse(statement_id).unlink()
             # {'ids': [85, 86, 87, 88, 89], 'messages': [{'statement_id': 25, 'type': 'bank_statement'}]}
         return True
 

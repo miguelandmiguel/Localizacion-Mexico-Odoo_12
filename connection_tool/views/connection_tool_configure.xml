@@ -93,6 +93,7 @@
                                         <field name="quoting" placeholder="Quoting" attrs="{'required': [('type', 'in', ['csv'])], 'invisible' : [('type', 'not in', ['csv'])]}"/>
                                         <field name="separator" placeholder="Separator" attrs="{'required': [('type', 'in', ['csv'])], 'invisible' : [('type', 'not in', ['csv'])]}"/>
                                         <field name="with_header" attrs="{'invisible' : [('type', 'not in', ['csv'])]}"/>
+                                        <field name="export_file_encoding" />
                                     </group>
                                     <group >
                                         <field name="source_type" invisible="1"/>
