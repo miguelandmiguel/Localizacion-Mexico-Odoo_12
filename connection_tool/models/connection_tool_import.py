@@ -396,7 +396,7 @@ class Configure(models.Model):
     @api.model
     def _run_import_files_wiz(self, use_new_cursor=False, import_id=False, import_wiz=False):
         where = [('id', '=', import_id)]
-        for imprt in self.sudo().search(where):
+        for imprt in self.search(where):
             _logger.info("-----------Inicia Proceso Wizard")
             self.sudo()._run_import_files_log_init(use_new_cursor=use_new_cursor)
             msg = "<span><b>Inicia Proceso:</b> %s</span><hr/>"%(time.strftime('%Y-%m-%d %H:%M:%S'))
@@ -451,6 +451,7 @@ class Configure(models.Model):
                         data.append(line)
                 fp.close()
                 # data = wiz_file
+            print("---data", data)
             imprt.get_source_python_script(use_new_cursor=use_new_cursor, files=wizard_id.datas_fname, import_data=data, options=options, import_wiz=directory)
             if use_new_cursor:
                 self._cr.commit()
