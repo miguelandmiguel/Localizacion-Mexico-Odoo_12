@@ -42,7 +42,7 @@ import requests
 import threading
 from dateutil.relativedelta import relativedelta
 import time
-from odoo import api, fields, models, registry, _, SUPERUSER_ID
+from odoo import api, fields, models, registry, _, SUPERUSER_ID, tools
 from odoo.exceptions import AccessError, UserError
 from odoo.tools.translate import _
 from odoo.tools.mimetypes import guess_mimetype
@@ -358,7 +358,6 @@ class Configure(models.Model):
 
 
 
-
     @api.multi
     def button_import(self):
         wiz_id = self.env['connection_tool.import.wiz'].with_context(import_id=self.id).create({})
@@ -638,7 +637,7 @@ class Configure(models.Model):
             import_data = self._convert_import_data(options, info.read().encode("utf-8"))
             res = None
             try:
-                res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=files, import_data=import_data, options=options, import_wiz=import_wiz)
+                res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=files, import_data=import_data, options=options, import_wiz=import_wiz, directory=directory)
             except Exception as e:
                 self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
                 if import_wiz == False:
@@ -649,13 +648,13 @@ class Configure(models.Model):
             cr.close()
 
     @api.model
-    def get_source_python_script(self, use_new_cursor=False, files=False, import_data=False, options=False, import_wiz=False):
+    def get_source_python_script(self, use_new_cursor=False, files=False, import_data=False, options=False, import_wiz=False, directory=False):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))
-        directory = "/tmp/tmpsftp%s"%(self.id)
-        if import_wiz:
-            directory = import_wiz
+        # directory = "/tmp/tmpsftp%s"%(self.id)
+        # if import_wiz:
+        #     directory = import_wiz
         localdict = {
             'this': self,
             'user_id': self.env.context.get('uid') or self.env.uid,
