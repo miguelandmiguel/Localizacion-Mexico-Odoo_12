@@ -66,8 +66,10 @@ class OdooFTP():
                     _logger.info("------- CRON Import: Error %s"%e )
                     if sftp.exists(self.file_ctrl):
                         sftp.remove(self.file_ctrl)
+                    return None
         except Exception as e:
             print("--- error")
+            return None
         return {}
 
 
@@ -149,30 +151,22 @@ class Configure(models.Model):
                             self.import_files_datas(use_new_cursor=use_new_cursor, files=line, directory=directory, imprt=imprt, import_wiz=False)
                             if use_new_cursor:
                                 cr.commit()
-                            self.action_shutil_directory(directory)
                         except Exception as e:
+                            print("--------- error 002", e)
                             # print("------------eeeeeeeeeee ", str(e))
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Error %s </span><br />"%e)
                             if use_new_cursor:
                                 cr.commit()
                                 cr.close()
                             return None
-
-
-                try:
-                    shutil.rmtree(directory)
-                except:
-                    pass
-                if self.source_connector_id:
-                    imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
                 # time.sleep( 360 )
-
             except Exception as e:
+                print("--------- error 001", e)
                 _logger.info("---- CRON Import: Error Error %s"%(e) )
-                return None
-            
+                return None          
 
         except Exception as e:
+            print("--------- error 000", e)
             try:
                 shutil.rmtree(directory)
             except Exception as ee:

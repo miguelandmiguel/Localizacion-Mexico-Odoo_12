@@ -197,7 +197,22 @@ class OdooFTP():
             self.ftp.rename(filename, self.path_done+'/'+filename)
             self.ftp.quit()
         logging.info("CRON _import Security %s - File Delete %s "%(self.security, filename) )
-        return True            
+        return True
+
+    def get_file_move_noprocesados(self, filename):
+        self.ftp = self.get_connection()
+        if self.security:
+            self.ftp.chdir(self.path_done)
+            if self.ftp.exists(filename):
+                self.ftp.remove(filename)
+            self.ftp.chdir(self.path)
+            self.ftp.rename(filename, self.path+'/noprocesados/'+filename)
+            self.ftp.close()
+        else:
+            self.ftp.rename(filename, self.path+'/noprocesados/'+filename)
+            self.ftp.quit()
+        logging.info("CRON _import Security %s - File Delete %s "%(self.security, filename) )
+        return True  
 
 
 
@@ -291,4 +306,11 @@ class Conector(models.Model):
         imprt = self.env['connection_tool.import'].browse(imprt_id)
         ftp = self.getFTP(imprt)
         ftp.get_file_move(filename)
+        return True
+
+    def _move_ftp_filename_noprocesados(self, filename='', automatic=False):
+        imprt_id = self._context.get('imprt_id') or False
+        imprt = self.env['connection_tool.import'].browse(imprt_id)
+        ftp = self.getFTP(imprt)
+        ftp.get_file_move_noprocesados(filename)
         return True

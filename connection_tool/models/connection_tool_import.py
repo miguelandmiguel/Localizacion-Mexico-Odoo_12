@@ -507,7 +507,7 @@ class Configure(models.Model):
 
     @api.multi
     def button_clear_import(self):
-        directory = "/tmp/tmpsftp%s"%(self.id)
+        directory = "/tmp/tmpsftp_import_%s"%(self.id)
         imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
         if self.source_connector_id:
             imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
@@ -643,6 +643,11 @@ class Configure(models.Model):
                 if import_wiz == False:
                     imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
                     imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+                if use_new_cursor:
+                    cr.commit()
+                    cr.close()
+                return None
+
         if use_new_cursor:
             cr.commit()
             cr.close()
@@ -690,6 +695,19 @@ class Configure(models.Model):
                 header = result.get('header') or []
                 body = result.get('body') or []
                 onchange = result.get('onchange') or {}
+                error_proceso = result.get('error_proceso') or False
+                print("-----------", error_proceso)
+                if error_proceso:
+                    if import_wiz == False:
+                        imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                        imprt._move_ftp_filename_noprocesados(files, automatic=True)
+                        imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+                    try:
+                        shutil.rmtree(directory)
+                    except:
+                        pass
+                    return None
+
                 fileTmp = {}
                 procesados = True
                 for ext_id in body:
@@ -705,13 +723,16 @@ class Configure(models.Model):
                                 reader = csv.reader(f, delimiter=',')
                                 for tmp_list in list(reader):
                                     writer.writerow(tmp_list)
+                            dtas_csv = output.getvalue()
+                            print("---dtas_csv", dtas_csv)
                             import_wizard = self.env['base_import.import'].sudo().create({
                                 'res_model': self.model_id.model,
                                 'file_name': '%s.csv'%(ext_id),
-                                'file': output.getvalue(),
+                                'file': dtas_csv,
                                 'file_type': 'text/csv',
                             })
                             results = import_wizard.with_context(ConnectionTool=True).sudo().do(header, [], {'headers': True, 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': ''}, False)
+                            _logger.info("---------  Result Importa Data %s "%results)
                             if results.get("ids"):
                                 fileTmp[ext_id] = results['ids']
                                 msg="<span>Database ID: %s</span><br />"%(results['ids'])
@@ -730,14 +751,29 @@ class Configure(models.Model):
                         except Exception as e:
                             # print("------------eeeeeeeeeee ", str(e))
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Error %s </span><br />"%e)
+                            imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                            imprt._move_ftp_filename(files, automatic=True)
+                            imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
                             if use_new_cursor:
                                 cr.commit()
                                 cr.close()
+                            return None
+                _logger.info("---------  Result Importa Data procesados %s "%procesados)
                 if procesados:
                     if import_wiz == False:
-                        imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)                    
+                        imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
                         imprt._move_ftp_filename(files, automatic=True)
-                    shutil.move(directory+'/'+files, directory+'/done/'+files)
+                        imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+                    # shutil.move(directory+'/'+files, directory+'/done/'+files)
+                    try:
+                        shutil.rmtree(directory)
+                    except:
+                        pass
+                    if use_new_cursor:
+                        cr.commit()
+                        cr.close()
+                    return None
+
 
         self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<hr />")
         if use_new_cursor:
