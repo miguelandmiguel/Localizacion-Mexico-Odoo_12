@@ -677,7 +677,8 @@ class Configure(models.Model):
             'import_fields': [],
             'io': io,
             'pycompat': pycompat,
-            'shutil': shutil
+            'shutil': shutil,
+            'use_new_cursor': use_new_cursor
         }
         if self.source_python_script:
             try:
