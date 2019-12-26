@@ -4,7 +4,9 @@ import time
 import os
 import pysftp
 import csv
-
+import threading
+import base64
+import codecs, itertools, shutil
 try:
     from StringIO import StringIO
 except ImportError:
@@ -20,6 +22,58 @@ from odoo.osv import expression
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT, float_compare, float_round
 
 from odoo.exceptions import UserError
+
+try:
+    import mimetypes
+except ImportError:
+    _logger.debug('Can not import mimetypes')
+
+
+FIELDS_RECURSION_LIMIT = 2
+ERROR_PREVIEW_BYTES = 200
+DEFAULT_IMAGE_TIMEOUT = 3
+DEFAULT_IMAGE_MAXBYTES = 10 * 1024 * 1024
+DEFAULT_IMAGE_REGEX = r"(?:http|https)://.*(?:png|jpe?g|tiff?|gif|bmp)"
+DEFAULT_IMAGE_CHUNK_SIZE = 32768
+IMAGE_FIELDS = ["icon", "image", "logo", "picture"]
+BOM_MAP = {
+    'utf-16le': codecs.BOM_UTF16_LE,
+    'utf-16be': codecs.BOM_UTF16_BE,
+    'utf-32le': codecs.BOM_UTF32_LE,
+    'utf-32be': codecs.BOM_UTF32_BE,
+}
+try:
+    import xlrd
+    try:
+        from xlrd import xlsx
+    except ImportError:
+        xlsx = None
+except ImportError:
+    xlrd = xlsx = None
+try:
+    from . import odf_ods_reader
+except ImportError:
+    odf_ods_reader = None
+
+FILE_TYPE_DICT = {
+    'text/plain': ('csv', True, None),
+    'text/csv': ('csv', True, None),
+    'application/octet-stream': ('csv', True, None),
+    'application/vnd.ms-excel': ('xls', xlrd, 'xlrd'),
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ('xlsx', xlsx, 'xlrd >= 1.0.0'),
+    'application/vnd.oasis.opendocument.spreadsheet': ('ods', odf_ods_reader, 'odfpy')
+}
+EXTENSIONS = {
+    '.' + ext: handler
+    for mime, (ext, handler, req) in FILE_TYPE_DICT.items()
+}
+OPTIONS = {
+    'headers': True, 'advanced': True, 'keep_matches': False, 
+    'name_create_enabled_fields': {}, 'encoding': 'utf-8', 'separator': ',', 
+    'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': '', 
+    'float_thousand_separator': ',', 
+    'float_decimal_separator': '.'
+}
 
 import logging
 _logger = logging.getLogger(__name__)
@@ -75,16 +129,85 @@ class OdooFTP():
 
 
 
+class ConnectionToolImportWiz(models.TransientModel):
+    _inherit = 'connection_tool.import.wiz'
+    _description = 'Run Import Manually'
+
+    def _procure_calculation_filesdata(self):
+        with api.Environment.manage():
+            # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+
+            _logger.info("------- Start %s " % time.ctime() )
+            import_ctx_id = self._context.get("import_id")
+            imprt = self.env['connection_tool.import'].browse(import_ctx_id)
+            csv_path = "/tmp/wizard_tmpsftp_import_%s"%(self.id)
+            if not os.path.exists(csv_path):
+                os.makedirs(csv_path)
+                subdirectory = ['done', 'csv', 'tmpimport', 'import', 'wiz']
+                for folder in subdirectory:
+                    if not os.path.exists(csv_path+'/'+folder):
+                        os.makedirs(csv_path+'/'+folder)
+
+                wiz_file = base64.decodestring(self.datas_file)
+                wiz_filename = '%s/%s'%(csv_path, self.datas_fname)
+                new_file = open(wiz_filename, 'wb')
+                new_file.write(wiz_file)
+                new_file.close()
+            data = []
+            options = OPTIONS
+            if imprt.type == 'csv':
+                mimetype, encoding = mimetypes.guess_type(wiz_filename)
+                (file_extension, handler, req) = FILE_TYPE_DICT.get(mimetype, (None, None, None))
+                rows_to_import=None
+                options['quoting'] = imprt.quoting or OPTIONS['quoting']
+                options['separator'] = imprt.separator or OPTIONS['separator']
+                f = open(wiz_filename, 'rb')
+                datas = f.read()
+                f.close()
+                if handler:
+                    try:
+                        rows_to_import=getattr(imprt, '_read_' + file_extension)(options, datas)
+                    except Exception:
+                        _logger.warn("Failed to read file '%s' (transient id %d) using guessed mimetype %s", self.datas_fname or '<unknown>', self.id, mimetype)
+                rows_to_import = rows_to_import or []
+                externalIdFile = open("%s/wiz/%s.csv"%(csv_path, 'import_data'), 'a', encoding="utf-8", newline='')
+                row_datas = list(itertools.islice(rows_to_import, 0, None))
+                for row in row_datas:
+                    wr = csv.writer(externalIdFile, dialect='excel', delimiter ='|')
+                    wr.writerow(row)
+                externalIdFile.close()
+
+                res = imprt.get_source_python_script(use_new_cursor=True, files='import_data.csv', import_data=[], options=options, import_wiz=False, directory=csv_path)
+            elif imprt.type == 'txt':
+                # fp = io.open('wiz_filename')
+                with open(wiz_filename, encoding=imprt.export_file_encoding) as fp:
+                    for line in fp.readlines():
+                        data.append(line)
+                fp.close()
+                res = imprt.get_source_python_script(use_new_cursor=True, files=self.datas_fname, import_data=data, options=options, import_wiz=False, directory=csv_path)
+                # data = wiz_file
+            print("---data", data)
+            try:
+                print("---csv_path", csv_path)
+                # shutil.rmtree(csv_path)
+            except:
+                pass
+
+            new_cr.close()
+            return {}
+
+
+    def import_calculation_wiz(self):
+        threaded_calculation = threading.Thread(target=self._procure_calculation_filesdata, args=())
+        threaded_calculation.start()
+        return {'type': 'ir.actions.act_window_close'}
+
 
 
 class Configure(models.Model):
     _inherit = 'connection_tool.import'
-
-    #####################
-    #
-    # Ejecuta procesos
-    #
-    #####################
 
     def getFTPSource(self):
         imprt = self.source_connector_id
@@ -147,12 +270,10 @@ class Configure(models.Model):
                 for line in os.listdir(directory):
                     if line.lower().endswith(".dat"):
                         res = None
-                        res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=line, import_data=[], options=options, import_wiz=False, directory=directory)
-                        print("---res", res)
                         try:
-                            
-                            print("---res", res)
+                            res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=line, import_data=[], options=options, import_wiz=False, directory=directory)
                         except Exception as e:
+                            _logger.info("------- Error Python ", e)
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
                             imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
                             imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
@@ -165,22 +286,8 @@ class Configure(models.Model):
                             if use_new_cursor:
                                 cr.commit()
                                 cr.close()
+                            break
                             return None
-
-                        """
-                        try:
-                            self.import_files_datas(use_new_cursor=use_new_cursor, files=line, directory=directory, imprt=imprt, import_wiz=False)
-                            if use_new_cursor:
-                                cr.commit()
-                        except Exception as e:
-                            print("--------- error 002", e)
-                            # print("------------eeeeeeeeeee ", str(e))
-                            self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Error %s </span><br />"%e)
-                            if use_new_cursor:
-                                cr.commit()
-                                cr.close()
-                            return None
-                        """
                 # time.sleep( 360 )
             except Exception as e:
                 print("--------- error 001", e)
@@ -245,8 +352,9 @@ class Configure(models.Model):
     @api.multi
     def run_loaddata_filesdat(self, use_new_cursor=False, csv_path=False, csv_header=""):
         # name, debit, credit, balance, debit_cash_basis, credit_cash_basis, balance_cash_basis, company_currency_id, account_id, move_id, ref, reconciled, journal_id, date_maturity, date, analytic_account_id, company_id, user_type_id, analytic_tag3_id, analytic_tag4_id, analytic_tag5_id, analytic_tag6_id
-        _logger.info("------- Start %s " % time.ctime() )
+        _logger.info("------- Start Copy %s " % time.ctime() )
         csv_file = open(csv_path, 'r', encoding="utf-8")
+        print("-----------csv_file", csv_file)
         res = self._cr.copy_expert(
             """COPY account_move_line(%s)
                FROM STDIN WITH DELIMITER '|' """%csv_header, csv_file)
@@ -260,6 +368,7 @@ class Configure(models.Model):
 
         csv_path = directory
         csv_file = file_name
+
         Journal = this.env['account.journal'].sudo()
         Analytic = this.env['account.analytic.tag'].sudo()
         AccountAnalytic = this.env['account.analytic.account'].sudo()
@@ -349,19 +458,7 @@ class Configure(models.Model):
         if fileTmp != None:
             fileTmp.close()
         resultFile.close()
-        """
-        dictFile = {
-            'FRDGLIMPPOL20190417110050LAKIN05DIC19': {
-                'file_name': 'FRDGLIMPPOL20190417110050', 
-                'file_dir': '/tmp/mdm_tmpsftp_import_6/tmpimport/FRDGLIMPPOL20190417110050LAKIN05DIC19.csv', 
-                'journal_name': 'LAKIN', 
-                'journal_id': '51', 
-                'cia_code': '01', 
-                'cia_id': 1, 
-                'nolines': 4
-            }
-        }
-        """
+
         result = {
             'header': [],
             'body': [],
@@ -394,7 +491,7 @@ class Configure(models.Model):
                         cta_code = row_data and row_data[9] or ''
                         tag3 = row_data and row_data[10].zfill(4) or '0000'          # Localidad
                         tag4 = row_data and row_data[11].zfill(4) or '0000'          # Centro de Costos
-                        tag5 = row_data and row_data[12].zfill(4) or '00'            # Interco
+                        tag5 = row_data and row_data[12].zfill(2) or '00'            # Interco
                         tag6 = row_data and row_data[13].zfill(4) or '0000'          # Futuro
                         cargos = float(row_data and row_data[14] or '0.0')
                         abonos = float(row_data and row_data[15] or '0.0')
@@ -421,6 +518,7 @@ class Configure(models.Model):
                         analitica = 'C%s'%(tag4) if tag3 == '0000' else 'L%s'%(tag3)
                         tag3_id = AnalyticIds.get('L%s'%(tag3)) or {}
                         tag4_id = AnalyticIds.get('C%s'%(tag4)) or {}
+                        tag5_id = AnalyticIds.get('I%s'%(tag5)) or {}
                         tag6_id = AnalyticIds.get('F%s'%(tag6)) or {}
                         analitic_id = AccountAnalyticIds.get(analitica) or {}
 
@@ -434,7 +532,7 @@ class Configure(models.Model):
                         result_linecredit = '%s'%credit
                         result_linetag3 = '%s'%(tag3_id.get('id') or '\\N')
                         result_linetag4 = '%s'%(tag4_id.get('id') or '\\N')
-                        result_linetag5 = '%s'%(tag5_data.get( tag5 ) or '\\N')
+                        result_linetag5 = '%s'%(tag5_id.get('id') or '\\N')
                         result_linetag6 = '%s'%(tag6_id.get('id') or '\\N')
                         result_lineanalityc = '%s'%(analitic_id.get('id') or '\\N')
                         result_user_type_id = UserTypeIds.get( result_lineaccount_id.get('id') ) or '\\N'
@@ -463,6 +561,7 @@ class Configure(models.Model):
                             if res.get('ids'):
                                 dict_datas[external_id]["db_id"] = res['ids'][0]
                                 move_id = res['ids'][0]
+                                _logger.info("------- Move ID %s"%move_id )
                         dict_datas[external_id]['debit'] += debit
                         dict_datas[external_id]['credit'] += credit
                         lines_tmp = [
@@ -500,13 +599,21 @@ class Configure(models.Model):
             for external_id in dict_datas:
                 global_debit = dict_datas[external_id]['debit']
                 global_credit = dict_datas[external_id]['credit']
+                _logger.info("-------db_id  %s -- Debit %s Credit %s"%(dict_datas[external_id]['db_id'], global_debit, global_credit)  )
                 if global_debit != global_credit:
                     if global_debit > global_credit:
                         credit = round(abs(global_credit - global_debit), 2)
                         debit = 0.0
+
+                        global_credit += credit
+                        global_debit += debit
                     else:
                         debit = round(abs(global_debit - global_credit), 2)
                         credit = 0.0
+
+                        global_credit += credit
+                        global_debit += debit
+
                     line = dict_datas[external_id]['lines']
                     line_tmp = list(line)
                     line_tmp[0] = 'Ajuste Poliza'
@@ -534,33 +641,5 @@ class Configure(models.Model):
                 csv_path_file = "%s/import/%s.csv"%(csv_path, external_id)
                 csv_header = "name, debit, credit, balance, debit_cash_basis, credit_cash_basis, balance_cash_basis, company_currency_id, account_id, move_id, ref, reconciled, journal_id, date_maturity, date, analytic_account_id, company_id, user_type_id, analytic_tag3_id, analytic_tag4_id, analytic_tag5_id, analytic_tag6_id, partner_id"
                 this.run_loaddata_filesdat(use_new_cursor=use_new_cursor, csv_path=csv_path_file, csv_header=csv_header)
-
-
-
-
-
-
-    """
-    name, 
-    debit, 
-    credit, 
-    balance, 
-    debit_cash_basis, 
-    credit_cash_basis, 
-    balance_cash_basis, 
-    company_currency_id, 
-    account_id, 
-    move_id, 
-    ref, 
-    reconciled, 
-    journal_id, 
-    date_maturity, 
-    date, 
-    analytic_account_id, 
-    company_id, 
-    user_type_id, 
-    analytic_tag3_id, 
-    analytic_tag4_id, 
-    analytic_tag5_id, 
-    analytic_tag6_id
-    """
+                _logger.info("-------db_id  %s -- Debit %s Credit %s"%(dict_datas[external_id]['db_id'], global_debit, global_credit)  )
+                AccountMove.browse( dict_datas[external_id]['db_id'] ).write({'amount': global_debit})

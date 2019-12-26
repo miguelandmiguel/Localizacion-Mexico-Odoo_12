@@ -298,7 +298,7 @@ class ConnectionToolImportWiz(models.TransientModel):
             new_cr.close()
             return {}
 
-    def import_calculation_wiz(self):
+    def import_calculation_wiz_old(self):
         import_id = self._context.get('import_id')
         threaded_calculation = threading.Thread(target=self._import_calculation_files_wiz, args=(import_id, self.id))
         threaded_calculation.start()
@@ -678,7 +678,8 @@ class Configure(models.Model):
             'io': io,
             'pycompat': pycompat,
             'shutil': shutil,
-            'use_new_cursor': use_new_cursor
+            'use_new_cursor': use_new_cursor,
+            'next': next
         }
         if self.source_python_script:
             try:
@@ -697,9 +698,9 @@ class Configure(models.Model):
                 body = result.get('body') or []
                 onchange = result.get('onchange') or {}
                 error_proceso = result.get('error_proceso') or False
-                print("-----------", error_proceso)
+                _logger.info("----------- Error en Proceso %s "%(error_proceso) )
                 if error_proceso:
-                    if import_wiz == False:
+                    if source_connector_id:
                         imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
                         imprt._move_ftp_filename_noprocesados(files, automatic=True)
                         imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
@@ -725,7 +726,6 @@ class Configure(models.Model):
                                 for tmp_list in list(reader):
                                     writer.writerow(tmp_list)
                             dtas_csv = output.getvalue()
-                            print("---dtas_csv", dtas_csv)
                             import_wizard = self.env['base_import.import'].sudo().create({
                                 'res_model': self.model_id.model,
                                 'file_name': '%s.csv'%(ext_id),
@@ -752,16 +752,17 @@ class Configure(models.Model):
                         except Exception as e:
                             # print("------------eeeeeeeeeee ", str(e))
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Error %s </span><br />"%e)
-                            imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
-                            imprt._move_ftp_filename(files, automatic=True)
-                            imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+                            if self.source_connector_id:
+                                imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                                imprt._move_ftp_filename(files, automatic=True)
+                                imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
                             if use_new_cursor:
                                 cr.commit()
                                 cr.close()
                             return None
                 _logger.info("---------  Result Importa Data procesados %s "%procesados)
                 if procesados:
-                    if import_wiz == False:
+                    if self.source_connector_id:
                         imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
                         imprt._move_ftp_filename(files, automatic=True)
                         imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
@@ -774,7 +775,6 @@ class Configure(models.Model):
                         cr.commit()
                         cr.close()
                     return None
-
 
         self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<hr />")
         if use_new_cursor:
@@ -1127,9 +1127,10 @@ class Configure(models.Model):
         results = import_wizard.with_context(**ctx).sudo().do(header, [], options, dryrun=False)
         for statement in results.get('messages') or []:
             statement_id = statement.get('statement_id') or False
+            print("-----statement_id", statement_id)
             try:
                 this.process_bank_statement_line(statement_id)
-            except err1:
+            except:
                 try:
                     shutil.rmtree(directory)
                 except err:
