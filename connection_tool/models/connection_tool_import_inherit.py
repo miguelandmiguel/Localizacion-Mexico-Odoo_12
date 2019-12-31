@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import time
+import time, datetime
 import os
 import pysftp
 import csv
@@ -14,14 +14,15 @@ except ImportError:
 
 from collections import namedtuple, OrderedDict, defaultdict
 from dateutil.relativedelta import relativedelta
-from odoo.tools.misc import split_every
 from psycopg2 import OperationalError
 
+import odoo
+from odoo.tools.misc import split_every
 from odoo import api, fields, models, registry, SUPERUSER_ID, _
 from odoo.osv import expression
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT, float_compare, float_round
-
-from odoo.exceptions import UserError
+from odoo.exceptions import MissingError, UserError, ValidationError, AccessError
+from odoo.tools.safe_eval import safe_eval, test_python_expr
 
 try:
     import mimetypes
@@ -181,7 +182,6 @@ class ConnectionToolImportWiz(models.TransientModel):
 
                 res = imprt.get_source_python_script(use_new_cursor=True, files='import_data.csv', import_data=[], options=options, import_wiz=False, directory=csv_path)
             elif imprt.type == 'txt':
-                # fp = io.open('wiz_filename')
                 with open(wiz_filename, encoding=imprt.export_file_encoding) as fp:
                     for line in fp.readlines():
                         data.append(line)
@@ -191,7 +191,7 @@ class ConnectionToolImportWiz(models.TransientModel):
             print("---data", data)
             try:
                 print("---csv_path", csv_path)
-                # shutil.rmtree(csv_path)
+                shutil.rmtree(csv_path)
             except:
                 pass
 
@@ -199,14 +199,55 @@ class ConnectionToolImportWiz(models.TransientModel):
             return {}
 
 
-    def import_calculation_wiz(self):
+    def import_calculation_wiz_old(self):
         threaded_calculation = threading.Thread(target=self._procure_calculation_filesdata, args=())
         threaded_calculation.start()
         return {'type': 'ir.actions.act_window_close'}
 
 
 
-class Configure(models.Model):
+
+
+
+
+
+
+
+
+
+
+
+
+    def import_calculation_wiz(self):
+        import_ctx_id = self._context.get("import_id")
+        imprt = self.env['connection_tool.import'].browse(import_ctx_id)
+        if imprt.type == 'csv':
+            csv_file = 'import_data.csv'
+        elif imprt.type == 'txt':
+            csv_file = self.datas_fname
+        csv_path = imprt.getCsvPath(is_wizard=self.id, datas_file=self.datas_file, datas_fname=self.datas_fname)
+        datas = imprt.setFileCsvPath(is_wizard=self.id, csv_path=csv_path, datas_fname=self.datas_fname, imprt=imprt)
+        print("----datas", datas)
+        ctx = {
+            'is_wizard': True,
+            'csv_file': csv_file,
+            'csv_path': csv_path,
+            'import_data': datas
+        }
+        res = imprt.with_context(**ctx).run()
+        if res:
+            try:
+                shutil.rmtree(csv_path)
+            except Exception as ee:
+                pass
+
+
+
+
+
+
+
+class ConnectionToolImport(models.Model):
     _inherit = 'connection_tool.import'
 
     def getFTPSource(self):
@@ -223,6 +264,186 @@ class Configure(models.Model):
             import_id=self.id
         )
         return ftp
+
+
+    def setFileCsvPath(self, is_wizard=False, csv_path=False, datas_fname=False, imprt=False):
+        wiz_filename = '%s/%s'%(csv_path, datas_fname)
+        data = []
+        options = OPTIONS
+        if imprt.type == 'csv':
+            mimetype, encoding = mimetypes.guess_type(wiz_filename)
+            (file_extension, handler, req) = FILE_TYPE_DICT.get(mimetype, (None, None, None))
+            rows_to_import=None
+            options['quoting'] = imprt.quoting or OPTIONS['quoting']
+            options['separator'] = imprt.separator or OPTIONS['separator']
+            f = open(wiz_filename, 'rb')
+            datas = f.read()
+            f.close()
+            if handler:
+                try:
+                    rows_to_import=getattr(imprt, '_read_' + file_extension)(options, datas)
+                except Exception:
+                    _logger.warn("Failed to read file '%s' (transient id %d) using guessed mimetype %s", datas_fname or '<unknown>', is_wizard, mimetype)
+            rows_to_import = rows_to_import or []
+            externalIdFile = open("%s/wiz/%s.csv"%(csv_path, 'import_data'), 'a', encoding="utf-8", newline='')
+            row_datas = list(itertools.islice(rows_to_import, 0, None))
+            for row in row_datas:
+                wr = csv.writer(externalIdFile, dialect='excel', delimiter ='|')
+                wr.writerow(row)
+            externalIdFile.close()
+        elif imprt.type == 'txt':
+            with open(wiz_filename, encoding=imprt.export_file_encoding) as fp:
+                for line in fp.readlines():
+                    data.append(line)
+            fp.close()
+        return data
+
+    def getCsvPath(self, is_wizard=False, datas_file=False, datas_fname=False):
+        if is_wizard:
+            csv_path = "/tmp/wizard_tmpsftp_import_%s"%(is_wizard)
+        else:
+            csv_path = "/tmp/tmpsftp_import_%s"%(self.id)
+        if not os.path.exists(csv_path):
+            os.makedirs(csv_path)
+            subdirectory = ['done', 'csv', 'tmpimport', 'import', 'wiz']
+            for folder in subdirectory:
+                if not os.path.exists(csv_path+'/'+folder):
+                    os.makedirs(csv_path+'/'+folder)
+
+            wiz_file = base64.decodestring(datas_file)
+            wiz_filename = '%s/%s'%(csv_path, datas_fname)
+            new_file = open(wiz_filename, 'wb')
+            new_file.write(wiz_file)
+            new_file.close()
+        return csv_path
+
+    @api.model
+    def run_action_code_multi(self, action, eval_context=None):
+        safe_eval(action.sudo().source_python_script.strip(), eval_context, mode="exec", nocopy=True)
+        if 'result' in eval_context:
+            return eval_context['result']
+
+    @api.model
+    def _get_eval_context(self, action=None):
+
+        def processBankStatement(directory=False, import_data=False):
+            return self.process_bank_statement(directory=directory, import_data=import_data)
+
+        def sendMsgChannel(body=""):
+            users = self.env.ref('base.user_admin')
+            ch_obj = self.env['mail.channel']
+            ch_partner = self.env['mail.channel.partner']
+            if users:
+                for user in users:
+                    ch_name = user.name+', '+self.env.user.name
+                    ch = ch_obj.sudo().search([('name', 'ilike', str(ch_name))])
+                    if not ch:
+                        ch = ch_obj.sudo().search([('name', 'ilike', str(self.env.user.name+', '+user.name))])
+                    if not ch:
+                        ch = ch_obj.sudo().create({
+                            'name': user.name+', '+self.env.user.name,
+                            'channel_type': 'chat',
+                            'public': 'private'
+                        })
+                        ch_partner.sudo().create({
+                            'partner_id': users.partner_id.id,
+                            'channel_id': ch.id,
+                        })
+                        ch_partner.sudo().create({
+                            'partner_id': self.env.user.partner_id.id,
+                            'channel_id': ch.id,
+                            'fold_state': 'open',
+                            'is_minimized': False,
+                        })
+                ch.message_post(
+                    attachment_ids=[],
+                    body=body,
+                    content_subtype='html',
+                    message_type='comment',
+                    partner_ids=[],
+                    subtype='mail.mt_comment',
+                    email_from=self.env.user.partner_id.email,
+                    author_id=self.env.user.partner_id.id
+                )
+
+        def runCopySQLCSV(csv_path, csv_header):
+            _logger.info("------- Start Copy %s " % time.ctime() )
+            csv_file = open(csv_path, 'r', encoding="utf-8")
+            res = self._cr.copy_expert(
+                """COPY account_move_line(%s)
+                   FROM STDIN WITH DELIMITER '|' """%csv_header, csv_file)
+            _logger.info("------- End Copy %s " % time.ctime() )
+
+        def loadDataCSV(csv_path, header):
+            csvfile = open(csv_path, 'r', encoding="utf-8")
+            reader = csv.reader(csvfile, dialect='excel', delimiter='|')
+            if header==False:
+                header = next(reader)
+            reader = list(reader)
+            csvfile.close()
+            return reader
+
+        def log(message, level="info"):
+            with self.pool.cursor() as cr:
+                cr.execute("""
+                    INSERT INTO ir_logging(create_date, create_uid, type, dbname, name, level, message, path, line, func)
+                    VALUES (NOW() at time zone 'UTC', %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (self.env.uid, 'server', self._cr.dbname, __name__, level, message, "action", action.id, action.name))
+
+        eval_context = {}
+        model_name = action.model_id.sudo().model
+        model = self.env[model_name]
+        eval_context.update({
+            'csv': csv,
+            'open': open,
+            'time': time,
+            'datetime': datetime,
+            '_logger': _logger,
+            'next': next,
+            'env': self.env,
+            'model': model,
+            'Warning': odoo.exceptions.Warning,
+            'log': log,
+            'loadDataCSV': loadDataCSV,
+            'runCopySQLCSV': runCopySQLCSV,
+            'sendMsgChannel': sendMsgChannel,
+            'processBankStatement': processBankStatement,
+            'layout_id': action.id,
+
+        })
+        return eval_context
+
+
+    @api.one
+    def run(self):
+        ctx = dict(self.env.context)
+        res = False
+        eval_context = self._get_eval_context(self)
+        eval_context['is_wizard'] = ctx.get('is_wizard') or False
+        eval_context['csv_file'] = ctx.get('csv_file') or ''
+        eval_context['csv_path'] = ctx.get('csv_path') or ''
+        eval_context['import_data'] = ctx.get('import_data') or ''
+        run_self = self.with_context(eval_context['env'].context)
+        func = getattr(run_self, 'run_action_%s_multi' % 'code')
+        res = func(self, eval_context=eval_context)
+        print("---------- res", res)
+        return res
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def _run_action_datasetl(self, use_new_cursor=False):
         if use_new_cursor:
@@ -333,11 +554,9 @@ class Configure(models.Model):
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-
             _logger.info("------- Inicia Proceso RUN ")
             self._run_import_datasetl(use_new_cursor=use_new_cursor, company_id=company_id)
             _logger.info("------- Fin Proceso RUN ")
-
         finally:
             if use_new_cursor:
                 _logger.info("------- Finally Inicia Proceso RUN ")
@@ -351,295 +570,71 @@ class Configure(models.Model):
 
     @api.multi
     def run_loaddata_filesdat(self, use_new_cursor=False, csv_path=False, csv_header=""):
-        # name, debit, credit, balance, debit_cash_basis, credit_cash_basis, balance_cash_basis, company_currency_id, account_id, move_id, ref, reconciled, journal_id, date_maturity, date, analytic_account_id, company_id, user_type_id, analytic_tag3_id, analytic_tag4_id, analytic_tag5_id, analytic_tag6_id
         _logger.info("------- Start Copy %s " % time.ctime() )
         csv_file = open(csv_path, 'r', encoding="utf-8")
-        print("-----------csv_file", csv_file)
         res = self._cr.copy_expert(
             """COPY account_move_line(%s)
                FROM STDIN WITH DELIMITER '|' """%csv_header, csv_file)
-        _logger.info("------- End %s " % time.ctime() )
+        _logger.info("------- End Copy %s " % time.ctime() )
         return True
 
 
     @api.one
-    def run_extract_filesdat(self, use_new_cursor=False, csv_path=False, csv_file=False):
-        this = self
+    def send_msg_channel(self, body=""):
+        users = self.env.ref('base.user_admin')
+        ch_obj = self.env['mail.channel']
+        ch_partner = self.env['mail.channel.partner']
+        if users:
+            for user in users:
+                ch_name = user.name+', '+self.env.user.name
+                ch = ch_obj.sudo().search([('name', 'ilike', str(ch_name))])
+                if not ch:
+                    ch = ch_obj.sudo().search([('name', 'ilike', str(self.env.user.name+', '+user.name))])
+                if not ch:
+                    ch = ch_obj.sudo().create({
+                        'name': user.name+', '+self.env.user.name,
+                        'channel_type': 'chat',
+                        'public': 'private'
+                    })
+                    ch_partner.sudo().create({
+                        'partner_id': users.partner_id.id,
+                        'channel_id': ch.id,
+                    })
+                    ch_partner.sudo().create({
+                        'partner_id': self.env.user.partner_id.id,
+                        'channel_id': ch.id,
+                        'fold_state': 'closed',
+                        'is_minimized': False,
+                    })
+            ch.message_post(
+                attachment_ids=[],
+                body=body,
+                content_subtype='html',
+                message_type='comment',
+                partner_ids=[],
+                subtype='mail.mt_comment',
+                email_from=self.env.user.partner_id.email,
+                author_id=self.env.user.partner_id.id
+            )
+        return True
 
-        csv_path = directory
-        csv_file = file_name
 
-        Journal = this.env['account.journal'].sudo()
-        Analytic = this.env['account.analytic.tag'].sudo()
-        AccountAnalytic = this.env['account.analytic.account'].sudo()
-        Account = this.env['account.account'].sudo()
-        Currency = this.env['res.currency'].sudo()
-        AccountMove = this.env['account.move'].sudo()
-        ResCompany = this.env['res.company'].sudo()
 
-        journal_data = { '02': '__export__.account_journal_34_3002a5fc', '04': '__export__.account_journal_35_7a7055ee', }
-        cia_data = {  '01': 'base.main_company',  '02': '__export__.res_company_2_9df76fa0',  '03': '__export__.res_company_3_7a5d5b4a',  '04': '__export__.res_company_2_b7dd0cb1', '05': '__export__.res_company_5_ff170c0f', '06': '__export__.res_company_7_36028222', '07': '__export__.res_company_4_7e1e7fda', '08': '__export__.res_company_8_b46133fd', '09': '__export__.res_company_9_44c3daad', }
-        par_data = { '01': '__export__.res_partner_36468_fe2242c2', '02': '__export__.res_partner_8_395b6438', '03': '__export__.res_partner_7_c490012b', '04': '__export__.res_partner_10_ac021b07', '05': '__export__.res_partner_12_ccf4b46e', '06': '__export__.res_partner_9_c76b467b', '07': '__export__.res_partner_13_c4479a82', '08': '__export__.res_partner_14_16f00b8e'}
-        tag5_data = { '01': '__export__.account_analytic_tag_S5_01', '02': '__export__.account_analytic_tag_S5_02', '03': '__export__.account_analytic_tag_S5_03', '04': '__export__.account_analytic_tag_S5_04', '05': '__export__.account_analytic_tag_S5_05', '06': '__export__.account_analytic_tag_S5_06', '07': '__export__.account_analytic_tag_S5_07', '08': '__export__.account_analytic_tag_S5_08', '09': '__export__.account_analytic_tag_S5_09' }
-        meses = {'ene': '01','feb': '02','mar': '03','abr': '04','may': '05','jun': '06','jul': '07','ago': '08','sep': '09','oct': '10','nov': '11','dic': '12'}
-        anio = {'17': '2017', '18': '2018', '2018': '2018', '19': '2019', '2019': '2019', '20': '2020', '2020': '2020', '21': '2021', '2021': '2021'}
 
-        AnalyticIds, AccountAnalyticIds, AccountAccountIds, UserTypeIds = {}, {}, {}, {}
-        for line in Analytic.search_read([], ['id', 'name', 'code']):
-            AnalyticIds[line.get('code', '')] = line
-        for line in AccountAnalytic.search_read([], ['id', 'name', 'code']):
-            AccountAnalyticIds[line.get('code', '')] = line
-        file_name = csv_file.replace(".dat", '').replace(".DAT", '')
-        fileName = ""
-        dictFile = {}
-        fileTmp = None
-        error_proceso = False
-        cia_id = None
 
-        resultFile = open("%s/%s"%(csv_path, csv_file), 'r', encoding="utf-8")
-        for row_data in csv.reader(resultFile, delimiter='|'):
-            fileNameTmp = "%s%s%s"%(file_name, row_data[6], row_data[2].replace('-', ''))
-            if fileNameTmp != fileName:
-                try:
-                    cia_code = row_data[8].zfill(2)
-                    cia_id = this.env.ref( cia_data.get( cia_code ))
-                except:
-                    error_proceso = True
-                    break
-                try:
-                    journal_name = row_data[6]
-                    journal_dict = Journal.search_read([('name', '=', '%s'%journal_name), ('company_id', '=', cia_id.id)], ['id', 'name', 'code'], limit=1)
-                    result_journal_id = '%s'%(journal_dict and journal_dict[0].get('id') or '')
-                except:
-                    error_proceso = True
-                    break
-                fileName = fileNameTmp
-                if fileTmp != None:
-                    fileTmp.close()
-                tmpimport = '%s/tmpimport/%s.csv'%(csv_path, fileName)
-                fileTmp = open(tmpimport, 'a', encoding="utf-8", newline='')
-                dictFile[fileNameTmp] = {
-                    'file_name': file_name,
-                    'file_dir': tmpimport,
-                    'journal_name': journal_name,
-                    'journal_id': result_journal_id,
-                    'cia_code': cia_code,
-                    'cia_id': cia_id.id,
-                    'nolines': 0
-                }
-            try:
-                cta_code = row_data and row_data[9] or ''
-                if cta_code not in AccountAccountIds:
-                    acc_id = Account.search_read([('deprecated', '=', False), ('company_id', '=', cia_id.id), ("code_alias", "=", cta_code)], fields=['id', 'name', 'code_alias', 'user_type_id'], limit=1)
-                    if not acc_id:
-                        AccountAccountIds = {}
-                        error_proceso = True
-                        break
-                    else:
-                        for acc in acc_id:
-                            AccountAccountIds[ cta_code ] = acc
-                            UserTypeIds[ acc.get("id") ] = acc.get('user_type_id') and acc['user_type_id'][0] or False
-            except:
-                error_proceso = True
-                break
-            debit = float(row_data and row_data[14] or '0.0')
-            credit = float(row_data and row_data[15] or '0.0')
-            if debit != 0.0 and credit != 0.0:
-                dictFile[fileNameTmp]
-                row_data_tmp = list(row_data)
-                row_data_tmp[15] = '0.0'
-                wr = csv.writer(fileTmp, dialect='excel', delimiter ='|')
-                wr.writerow(row_data_tmp)
-                row_data[14] = '0.0'
-                dictFile[fileNameTmp]['nolines'] += 1
-            wr = csv.writer(fileTmp, dialect='excel', delimiter ='|')
-            wr.writerow(row_data)
-            dictFile[fileNameTmp]['nolines'] += 1
-        if fileTmp != None:
-            fileTmp.close()
-        resultFile.close()
 
-        result = {
-            'header': [],
-            'body': [],
-            'error_proceso': error_proceso
-        }
-        dict_datas = {}
-        _logger.info("------- Error_Proceso %s"%error_proceso )
-        if error_proceso == False:
-            for fileName in dictFile:
-                cia_id = dictFile[fileName].get('cia_id') or ''
-                file_dir = dictFile[fileName].get('file_dir') or ''
-                result_journal_id = dictFile[fileName].get('journal_id') or ''
-                journal_name = dictFile[fileName].get('journal_name') or ''
 
-                csvfile = open(file_dir, encoding="utf-8")
-                spamreader = csv.reader(csvfile, delimiter='|')
-                row_datas = list(spamreader)
-                csvfile.close()
-                if cia_id and result_journal_id and journal_name not in ['CREDENCIALBANCO']:
-                    cia_id = ResCompany.browse(cia_id)
-                    move_id = ""
-                    for row_data in row_datas:
-                        debit, credit = 0.0, 0.0
-                        ledger_code = row_data and row_data[1] or ''
-                        fecha = row_data and row_data[2] or ''
-                        currency_code = row_data and row_data[3] or ''
-                        journal_name_tmp = row_data and row_data[6] or ''
-                        amount_currency = row_data and row_data[7] or ''
-                        company_code = row_data and row_data[8] or '01'
-                        cta_code = row_data and row_data[9] or ''
-                        tag3 = row_data and row_data[10].zfill(4) or '0000'          # Localidad
-                        tag4 = row_data and row_data[11].zfill(4) or '0000'          # Centro de Costos
-                        tag5 = row_data and row_data[12].zfill(2) or '00'            # Interco
-                        tag6 = row_data and row_data[13].zfill(4) or '0000'          # Futuro
-                        cargos = float(row_data and row_data[14] or '0.0')
-                        abonos = float(row_data and row_data[15] or '0.0')
 
-                        if cargos == 0.0:
-                            if abonos < 0.0:
-                                debit = abs(abonos)
-                        else:
-                            if cargos > 0:
-                                debit = cargos
-                            else:
-                                if cargos < 0:
-                                    debit = 0
-                        if abonos == 0.0:
-                            if cargos < 0.0:
-                                credit = abs(cargos)
-                        else:
-                            if abonos > 0.0:
-                                credit = abonos
-                            else:
-                                if abonos < 0.0:
-                                    credit = 0.0
+"""
+# -*- coding: utf-8 -*-
+import odoorpc
+this = odoorpc.ODOO('localhost', port=8079)
+this.login('odoo12_donde_pruebas', 'eduardo.bayardo@bias.com.mx', 'Bias4972')
+ToolImport = this.env['connection_tool.import']
+for timpr_id in ToolImport.browse([7]):
+    print("timpr_id", timpr_id)
+    timpr_id.send_to_channel('<p>run_extract_filesdat Bienvenidos</p>', "")
 
-                        analitica = 'C%s'%(tag4) if tag3 == '0000' else 'L%s'%(tag3)
-                        tag3_id = AnalyticIds.get('L%s'%(tag3)) or {}
-                        tag4_id = AnalyticIds.get('C%s'%(tag4)) or {}
-                        tag5_id = AnalyticIds.get('I%s'%(tag5)) or {}
-                        tag6_id = AnalyticIds.get('F%s'%(tag6)) or {}
-                        analitic_id = AccountAnalyticIds.get(analitica) or {}
+no procesar descuadrados
 
-                        result_name = row_data and row_data[16] or 'S/R'
-                        result_ref =  '%s %s'%( (row_data and row_data[5]), (row_data and row_data[6]) )
-                        result_linename = '%s'%(row_data and row_data[19] or '')
-                        result_lineaccount_id = AccountAccountIds.get(cta_code) or '\\N'
-                        result_linecurrency_id = '' if currency_code == 'MXN' else currency_code
-                        result_lineamountcurrency = amount_currency if amount_currency.strip() != '' else ''
-                        result_linedebit = '%s'%debit
-                        result_linecredit = '%s'%credit
-                        result_linetag3 = '%s'%(tag3_id.get('id') or '\\N')
-                        result_linetag4 = '%s'%(tag4_id.get('id') or '\\N')
-                        result_linetag5 = '%s'%(tag5_id.get('id') or '\\N')
-                        result_linetag6 = '%s'%(tag6_id.get('id') or '\\N')
-                        result_lineanalityc = '%s'%(analitic_id.get('id') or '\\N')
-                        result_user_type_id = UserTypeIds.get( result_lineaccount_id.get('id') ) or '\\N'
-                        string_date = fecha.lower().split('-')
-                        if len(string_date[0])==4:
-                            result_date = fecha
-                        else:
-                            result_date = '%s-%s-%s'%(anio.get(string_date[2]), meses.get(string_date[1]), string_date[0].zfill(2) )
-                        result_linepartner = '' if tag5 == '00' else '%s'%cia_id.partner_id.id
-
-                        indx = 0
-                        external_id = '__export__.account_move_%s%s%s%s%s'%(result_date.replace('-', ''), company_code, result_name.replace('/', ''), ledger_code, journal_name)
-                        if external_id not in dict_datas:
-                            indx = 1
-                            dict_datas[external_id] = {
-                                'id': external_id,
-                                'name': result_name,
-                                'debit': 0.0,
-                                'credit': 0.0,
-                                'lines': []
-                            }
-                            move_header = ['id', 'name', 'date', 'ref', 'journal_id/.id']
-                            move_body = [external_id, result_name, result_date, result_ref, result_journal_id]
-                            res = AccountMove.load(move_header, [move_body])
-                            _logger.info("----res %s "%res )
-                            if res.get('ids'):
-                                dict_datas[external_id]["db_id"] = res['ids'][0]
-                                move_id = res['ids'][0]
-                                _logger.info("------- Move ID %s"%move_id )
-                        dict_datas[external_id]['debit'] += debit
-                        dict_datas[external_id]['credit'] += credit
-                        lines_tmp = [
-                            result_linename.replace("\\", "\\\\"),
-                            result_linedebit,
-                            result_linecredit,
-                            (float(result_linedebit) - float(result_linecredit)),
-                            result_linedebit,
-                            result_linecredit,
-                            (float(result_linedebit) - float(result_linecredit)),
-                            cia_id.currency_id.id,
-                            result_lineaccount_id.get("id"),
-                            move_id,
-                            result_ref,
-                            0,
-                            result_journal_id,
-                            result_date,
-                            result_date,
-                            result_lineanalityc,
-                            cia_id.id,
-                            result_user_type_id,
-                            result_linetag3 or '\\N',
-                            result_linetag4 or '\\N',
-                            result_linetag5 or '\\N',
-                            result_linetag6 or '\\N',
-                            result_linepartner or '\\N'
-                        ]
-                        dict_datas[external_id]['lines'] = lines_tmp
-                        externalIdFile = open("%s/import/%s.csv"%(csv_path, external_id), 'a', encoding="utf-8", newline='')
-                        if externalIdFile:
-                            wr = csv.writer(externalIdFile, dialect='excel', delimiter ='|')
-                            wr.writerow(lines_tmp)
-                        externalIdFile.close()
-                        _logger.info('Journal Items %s %s %s '%(external_id, file_name, result_linename) )
-            for external_id in dict_datas:
-                global_debit = dict_datas[external_id]['debit']
-                global_credit = dict_datas[external_id]['credit']
-                _logger.info("-------db_id  %s -- Debit %s Credit %s"%(dict_datas[external_id]['db_id'], global_debit, global_credit)  )
-                if global_debit != global_credit:
-                    if global_debit > global_credit:
-                        credit = round(abs(global_credit - global_debit), 2)
-                        debit = 0.0
-
-                        global_credit += credit
-                        global_debit += debit
-                    else:
-                        debit = round(abs(global_debit - global_credit), 2)
-                        credit = 0.0
-
-                        global_credit += credit
-                        global_debit += debit
-
-                    line = dict_datas[external_id]['lines']
-                    line_tmp = list(line)
-                    line_tmp[0] = 'Ajuste Poliza'
-                    line_tmp[1] = debit
-                    line_tmp[2] = credit
-                    line_tmp[3] = (float(debit) - float(credit))
-                    line_tmp[4] = debit
-                    line_tmp[5] = credit
-                    line_tmp[6] = (float(debit) - float(credit))
-                    line_tmp[8] = '%s'%(cia_id.account_import_id and cia_id.account_import_id.id or '')
-                    line_tmp[15] = '\\N'
-                    line_tmp[17] = cia_id.account_import_id.user_type_id.id
-                    line_tmp[18] = '\\N'
-                    line_tmp[19] = '\\N'
-                    line_tmp[20] = '\\N'
-                    line_tmp[21] = '\\N'
-                    line_tmp[22] = '\\N'
-                    externalIdFile = open("%s/import/%s.csv"%(csv_path, external_id), 'a', encoding="utf-8", newline='')
-                    if externalIdFile:
-                        wr = csv.writer(externalIdFile, dialect='excel', delimiter ='|')
-                        wr.writerow(line_tmp)
-                    externalIdFile.close()
-                    _logger.info('Journal Items %s %s '%(file_name, 'Ajuste Poliza') )
-
-                csv_path_file = "%s/import/%s.csv"%(csv_path, external_id)
-                csv_header = "name, debit, credit, balance, debit_cash_basis, credit_cash_basis, balance_cash_basis, company_currency_id, account_id, move_id, ref, reconciled, journal_id, date_maturity, date, analytic_account_id, company_id, user_type_id, analytic_tag3_id, analytic_tag4_id, analytic_tag5_id, analytic_tag6_id, partner_id"
-                this.run_loaddata_filesdat(use_new_cursor=use_new_cursor, csv_path=csv_path_file, csv_header=csv_header)
-                _logger.info("-------db_id  %s -- Debit %s Credit %s"%(dict_datas[external_id]['db_id'], global_debit, global_credit)  )
-                AccountMove.browse( dict_datas[external_id]['db_id'] ).write({'amount': global_debit})
+"""

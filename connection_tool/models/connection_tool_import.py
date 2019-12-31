@@ -43,13 +43,14 @@ import threading
 from dateutil.relativedelta import relativedelta
 import time
 from odoo import api, fields, models, registry, _, SUPERUSER_ID, tools
-from odoo.exceptions import AccessError, UserError
 from odoo.tools.translate import _
 from odoo.tools.mimetypes import guess_mimetype
 from odoo.tools.safe_eval import safe_eval
 from odoo.tools import config, DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT, pycompat
 import csv
 from odoo.tools import float_compare, float_is_zero
+from odoo.exceptions import MissingError, UserError, ValidationError, AccessError
+from odoo.tools.safe_eval import safe_eval, test_python_expr
 
 _logger = logging.getLogger(__name__)
 
@@ -356,6 +357,13 @@ class Configure(models.Model):
             ('iso-8859-1', 'iso-8859-1 (ANSI)'),
         ], string='Export File Encodig', default='iso-8859-1', help="Export File Encodig")
 
+
+    @api.constrains('source_python_script')
+    def _check_python_code(self):
+        for action in self.sudo().filtered('source_python_script'):
+            msg = test_python_expr(expr=action.source_python_script.strip(), mode="exec")
+            if msg:
+                raise ValidationError(msg)
 
 
     @api.multi
@@ -700,7 +708,7 @@ class Configure(models.Model):
                 error_proceso = result.get('error_proceso') or False
                 _logger.info("----------- Error en Proceso %s "%(error_proceso) )
                 if error_proceso:
-                    if source_connector_id:
+                    if self.source_connector_id:
                         imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
                         imprt._move_ftp_filename_noprocesados(files, automatic=True)
                         imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
@@ -1054,6 +1062,7 @@ class Configure(models.Model):
 
     def process_bank_statement(self, directory='', import_data=''):
         this = self
+        print("--------this", this)
         Journal = this.env['account.journal']
         Layout = this.env['bank.statement.export.layout']
         LayoutLine = this.env['bank.statement.export.layout.line']
@@ -1127,7 +1136,6 @@ class Configure(models.Model):
         results = import_wizard.with_context(**ctx).sudo().do(header, [], options, dryrun=False)
         for statement in results.get('messages') or []:
             statement_id = statement.get('statement_id') or False
-            print("-----statement_id", statement_id)
             try:
                 this.process_bank_statement_line(statement_id)
             except:
@@ -1138,6 +1146,22 @@ class Configure(models.Model):
                     pass
                 # bankstatement.browse(statement_id).unlink()
             # {'ids': [85, 86, 87, 88, 89], 'messages': [{'statement_id': 25, 'type': 'bank_statement'}]}
+
+        for statement in results.get('messages') or []:
+            statement_id = statement.get('statement_id') or False
+            for statement_id in bankstatement.browse( statement_id ):
+                _logger.info("----------- statement_id %s"%statement_id )
+                msg = """<strong>Importar Extracto Bancarios: </strong><br/>
+                Referencia:  <a data-oe-id=%s data-oe-model="account.bank.statement" href=#id=%s&model=account.bank.statement>%s</a><br/>
+                Fecha: %s <br/> Diario: %s <br/> Compañia: %s"""%(
+                  statement_id.id,
+                  statement_id.id,
+                  statement_id.name or statement_id.journal_id.name, 
+                  statement_id.date, 
+                  statement_id.journal_id.name,
+                  statement_id.company_id.name)
+                this.send_msg_channel(body=msg)
+
         return True
 
 
