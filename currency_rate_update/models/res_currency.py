@@ -31,12 +31,28 @@ def rate_retrieve_cop():
     return False
 
 
+class CurrencyRate(models.Model):
+    _inherit = 'res.currency.rate'
+    _name = 'res.currency.rate'
+
+    rate = fields.Float(digits=(12, 10), default=1.0, help='The rate of the currency to the currency of rate 1')
+
 class Currency(models.Model):
     _inherit = "res.currency"
 
+    rate = fields.Float(compute='_compute_current_rate', string='Current Rate', digits=(12, 10),
+                        help='The rate of the currency to the currency of rate 1.')
+
+    @api.multi
+    @api.depends('rate_ids.rate')
+    def _compute_current_rate(self):
+        results = super(Currency, self)._compute_current_rate()
+        return results
+
+
     def getTipoCambio(self, fechaIni, fechaFin, token):
         # url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653,SF46410/datos"
-        url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653/datos"
+        url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653,SF46410/datos"
         urlHost = '%s/%s/%s'%(url, fechaIni, fechaFin)
         response = requests.get(
             urlHost,
@@ -61,10 +77,10 @@ class Currency(models.Model):
                         'fecha': '%s'%fecha,
                         'importe': importe
                     })
-        # for tipoeur in tipoCambios.get('EUR', []):
-        #     tipomxn = next(tipomxn for tipomxn in tipoCambios.get('MXN') if tipomxn["fecha"] == tipoeur['fecha'] )
-        #     tipoeur['importe_real'] = tipoeur.get('importe')
-        #     tipoeur['importe'] = tipomxn.get('importe', 0.0) / tipoeur.get('importe', 0.0)
+        for tipoeur in tipoCambios.get('EUR', []):
+            tipomxn = next(tipomxn for tipomxn in tipoCambios.get('MXN') if tipomxn["fecha"] == tipoeur['fecha'] )
+            tipoeur['importe_real'] = tipoeur.get('importe')
+            tipoeur['importe'] = tipomxn.get('importe', 0.0) / tipoeur.get('importe', 0.0)
         return tipoCambios
 
     @api.multi
@@ -101,7 +117,6 @@ class Currency(models.Model):
             hora_factura_local = hora_factura_utc.astimezone(timezone(tz))
             date_end = hora_factura_local.date()
             date_start = date_end + relativedelta(days=-5)
-            print("---------date_start", date_start, date_end)
         try:
             token = self.env['ir.config_parameter'].sudo().get_param('bmx.token', default='')
             if token:
