@@ -458,7 +458,6 @@ class Configure(models.Model):
                         data.append(line)
                 fp.close()
                 # data = wiz_file
-            print("---data", data)
             imprt.get_source_python_script(use_new_cursor=use_new_cursor, files=wizard_id.datas_fname, import_data=data, options=options, import_wiz=directory)
             if use_new_cursor:
                 self._cr.commit()
@@ -991,6 +990,7 @@ class Configure(models.Model):
         Tag = this.env["account.analytic.tag"]
         
         ctx = dict(this._context, force_price_include=False)
+        lll = statementLines.search([('statement_id', '=', statement_id)])
         for st_line in statementLines.search([('statement_id', '=', statement_id)]):
             st_line.statement_id._end_balance()
             folioOdoo = st_line.ref and st_line.ref[:10] or ''
@@ -1037,8 +1037,6 @@ class Configure(models.Model):
                 res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
             if res:
                 continue
-
-
             codigo = { "V02": "5990100", "V46": "5990100", "V40": "5990100", "V09": "5990100", "V41": "1200004", "V03": "1200004", "V10": "1200004", "W19": "5990100", "W20": "1200004", "W05": "5990100", "W06": "1200004", "W85": "5990100", "W83": "5990100", "W86": "1200004", "C19": "4900101" }
             transaccion = st_line.note.split("|")
             codigo_transaccion = transaccion and transaccion[0] or ""
@@ -1054,19 +1052,16 @@ class Configure(models.Model):
                                 "import_etl": True
                             }
                             st_line.with_context(ctx).fast_counterpart_creation()
-
-
-
         return True
 
 
     def process_bank_statement(self, directory='', import_data=''):
         this = self
-        print("--------this", this)
         Journal = this.env['account.journal']
         Layout = this.env['bank.statement.export.layout']
         LayoutLine = this.env['bank.statement.export.layout.line']
         bankstatement = this.env['account.bank.statement']
+        bankstatementLine = this.env['account.bank.statement.line']
 
         # ["date","ref","partner_id/.id","name","amount","amount_currency","currency_id","balance"]
         result = {
@@ -1076,9 +1071,10 @@ class Configure(models.Model):
         body = [
         ]
         journal_id = False
-        output = io.BytesIO()
+        
         openBalance = 0.0
         balance = 0.0
+        encoding = 'utf-8'
         for indx, line in enumerate(import_data):
             nocuenta = line[0:18].replace('/', '-')
             journal_ids = Journal.search_read([('name', 'ilike', nocuenta)], fields=["name", "company_id"])
@@ -1087,7 +1083,7 @@ class Configure(models.Model):
                 if indx == 0:
                     # last_bnk_stmt = bankstatement.search([('journal_id', '=', journal_id)], limit=1)
                     openBalance = 0.0 # last_bnk_stmt and last_bnk_stmt.balance_end or 0.0
-                transaccion = "%s|%s"%(line[152:155], line[34:64])  
+                transaccion = "%s|%s"%(line[152:155], line[34:64])
                 fecha = line[130:140].replace('/', '-')
                 referencia = line[93:123]
                 folioBanco = line[28:34]
@@ -1098,69 +1094,78 @@ class Configure(models.Model):
                 for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], ['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 'layout_id', 'movel_line_ids', 'partner_id', 'importe']):
                     partner_id = layoutline_id.get('partner_id') and layoutline_id['partner_id'][0] or False
                     layout_id = layoutline_id.get('layout_id') and layoutline_id['layout_id'][0]
-
                 balance += (openBalance + (amount * tipoOperacion))
+                amount_tmp = '%s'%(amount * tipoOperacion)
+                balance_tmp = '%s'%(balance if indx == 0 else balance)
+                fecha_tmp = '%s'%(fecha)
+                referencia_tmp = '%s'%(referencia)
+                transaccion_tmp = '%s'%transaccion
+                folioBanco_tmp = '%s'%folioBanco
+                partner_tmp = '%s'%partner_id
+                journal_tmp = '%s'%(journal.get("company_id") and journal["company_id"][0] or '')
                 body_tmp = [
-                    amount * tipoOperacion,
-                    balance if indx == 0 else balance,
-                    fecha,
-                    referencia,
-                    transaccion,
-                    folioBanco,
-                    partner_id,
-                    journal.get("company_id") and journal["company_id"][0] or False
+                    amount_tmp,    #.encode(encoding),
+                    balance_tmp,    #.encode(encoding),
+                    fecha_tmp,    #.encode(encoding),
+                    referencia_tmp,    #.encode(encoding),
+                    transaccion_tmp,
+                    folioBanco_tmp,    #.encode(encoding),
+                    partner_tmp,    #.encode(encoding),
+                    journal_tmp,    #.encode(encoding),
                 ]
                 body.append(body_tmp)
-        external_id = '__export__.bank_stmt_import'
-        writer = pycompat.csv_writer(output, quoting=1)
+        output =  io.StringIO()
+        writer = csv.writer(output, dialect='excel', delimiter=',')
         for line in body:
-            externalIdFile = open("%s/import/%s.csv"%(directory,external_id), 'a', newline='')
-            if externalIdFile:
-                wr = csv.writer(externalIdFile, dialect='excel')
-                wr.writerow(line)
-                writer.writerow(line)
-            externalIdFile.close()
+            writer.writerow(line)
+        content = output.getvalue()
 
-        filename = 'import.csv'
+        filename = '__export__.account_bank_statement_line_%s.csv'%(self.id)
         ctx = dict(this.env.context)
         ctx['bank_stmt_import'] = True
         ctx['journal_id'] = journal_id
         import_wizard = this.env['base_import.import'].with_context(**ctx).sudo().create({
             'res_model': 'account.bank.statement.line',
-            'file': output.getvalue(),
+            'file': content.encode('utf-8'),
             'file_name': filename,
             'file_type': 'text/csv'
         })
         header =  ["amount","balance","date","ref","note","name","partner_id/.id", "company_id/.id"]
         options = {'headers': False, 'advanced': True, 'keep_matches': False, 'name_create_enabled_fields': {'currency_id': False}, 'encoding': 'ascii', 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': '', 'float_thousand_separator': ',', 'float_decimal_separator': '.', 'fields': [], 'bank_stmt_import': True}
+        options['encoding'] = 'utf-8'
         results = import_wizard.with_context(**ctx).sudo().do(header, [], options, dryrun=False)
-        for statement in results.get('messages') or []:
-            statement_id = statement.get('statement_id') or False
-            try:
-                this.process_bank_statement_line(statement_id)
-            except:
-                try:
-                    shutil.rmtree(directory)
-                except err:
-                    _logger.info("--- Error %s"%(err) )
-                    pass
-                # bankstatement.browse(statement_id).unlink()
-            # {'ids': [85, 86, 87, 88, 89], 'messages': [{'statement_id': 25, 'type': 'bank_statement'}]}
 
-        for statement in results.get('messages') or []:
-            statement_id = statement.get('statement_id') or False
-            for statement_id in bankstatement.browse( statement_id ):
-                _logger.info("----------- statement_id %s"%statement_id )
-                msg = """<strong>Importar Extracto Bancarios: </strong><br/>
-                Referencia:  <a data-oe-id=%s data-oe-model="account.bank.statement" href=#id=%s&model=account.bank.statement>%s</a><br/>
-                Fecha: %s <br/> Diario: %s <br/> Compañia: %s"""%(
-                  statement_id.id,
-                  statement_id.id,
-                  statement_id.name or statement_id.journal_id.name, 
-                  statement_id.date, 
-                  statement_id.journal_id.name,
-                  statement_id.company_id.name)
-                this.send_msg_channel(body=msg)
+        {
+            'ids': [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60], 
+            'messages': [{'statement_id': 35, 'type': 'bank_statement'}]
+        }
+
+        if results.get('ids'):
+            for statement in results.get('messages') or []:
+                statement_id = statement.get('statement_id') or False
+                try:
+                    this.process_bank_statement_line(statement_id)
+                except :
+                    try:
+                        shutil.rmtree(directory)
+                    except err:
+                        _logger.info("--- Error %s"%(err) )
+                        pass
+
+            for statement in results.get('messages') or []:
+                statement_id = statement.get('statement_id') or False
+                for statement_id in bankstatement.browse( statement_id ):
+                    _logger.info("----------- statement_id %s"%statement_id )
+                    msg = """<strong>Importar Extracto Bancarios: </strong><br/>
+                    Referencia:  <a data-oe-id=%s data-oe-model="account.bank.statement" href=#id=%s&model=account.bank.statement>%s</a><br/>
+                    Fecha: %s <br/> Diario: %s <br/> Compañia: %s"""%(
+                      statement_id.id,
+                      statement_id.id,
+                      statement_id.name or statement_id.journal_id.name, 
+                      statement_id.date, 
+                      statement_id.journal_id.name,
+                      statement_id.company_id.name)
+                    this.send_msg_channel(body=msg)
 
         return True
 

@@ -134,90 +134,6 @@ class ConnectionToolImportWiz(models.TransientModel):
     _inherit = 'connection_tool.import.wiz'
     _description = 'Run Import Manually'
 
-    def _procure_calculation_filesdata(self):
-        with api.Environment.manage():
-            # As this function is in a new thread, I need to open a new cursor, because the old one may be closed
-            new_cr = self.pool.cursor()
-            self = self.with_env(self.env(cr=new_cr))
-
-            _logger.info("------- Start %s " % time.ctime() )
-            import_ctx_id = self._context.get("import_id")
-            imprt = self.env['connection_tool.import'].browse(import_ctx_id)
-            csv_path = "/tmp/wizard_tmpsftp_import_%s"%(self.id)
-            if not os.path.exists(csv_path):
-                os.makedirs(csv_path)
-                subdirectory = ['done', 'csv', 'tmpimport', 'import', 'wiz']
-                for folder in subdirectory:
-                    if not os.path.exists(csv_path+'/'+folder):
-                        os.makedirs(csv_path+'/'+folder)
-
-                wiz_file = base64.decodestring(self.datas_file)
-                wiz_filename = '%s/%s'%(csv_path, self.datas_fname)
-                new_file = open(wiz_filename, 'wb')
-                new_file.write(wiz_file)
-                new_file.close()
-            data = []
-            options = OPTIONS
-            if imprt.type == 'csv':
-                mimetype, encoding = mimetypes.guess_type(wiz_filename)
-                (file_extension, handler, req) = FILE_TYPE_DICT.get(mimetype, (None, None, None))
-                rows_to_import=None
-                options['quoting'] = imprt.quoting or OPTIONS['quoting']
-                options['separator'] = imprt.separator or OPTIONS['separator']
-                f = open(wiz_filename, 'rb')
-                datas = f.read()
-                f.close()
-                if handler:
-                    try:
-                        rows_to_import=getattr(imprt, '_read_' + file_extension)(options, datas)
-                    except Exception:
-                        _logger.warn("Failed to read file '%s' (transient id %d) using guessed mimetype %s", self.datas_fname or '<unknown>', self.id, mimetype)
-                rows_to_import = rows_to_import or []
-                externalIdFile = open("%s/wiz/%s.csv"%(csv_path, 'import_data'), 'a', encoding="utf-8", newline='')
-                row_datas = list(itertools.islice(rows_to_import, 0, None))
-                for row in row_datas:
-                    wr = csv.writer(externalIdFile, dialect='excel', delimiter ='|')
-                    wr.writerow(row)
-                externalIdFile.close()
-
-                res = imprt.get_source_python_script(use_new_cursor=True, files='import_data.csv', import_data=[], options=options, import_wiz=False, directory=csv_path)
-            elif imprt.type == 'txt':
-                with open(wiz_filename, encoding=imprt.export_file_encoding) as fp:
-                    for line in fp.readlines():
-                        data.append(line)
-                fp.close()
-                res = imprt.get_source_python_script(use_new_cursor=True, files=self.datas_fname, import_data=data, options=options, import_wiz=False, directory=csv_path)
-                # data = wiz_file
-            print("---data", data)
-            try:
-                print("---csv_path", csv_path)
-                shutil.rmtree(csv_path)
-            except:
-                pass
-
-            new_cr.close()
-            return {}
-
-
-    def import_calculation_wiz_old(self):
-        threaded_calculation = threading.Thread(target=self._procure_calculation_filesdata, args=())
-        threaded_calculation.start()
-        return {'type': 'ir.actions.act_window_close'}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def import_calculation_wiz(self):
         import_ctx_id = self._context.get("import_id")
         imprt = self.env['connection_tool.import'].browse(import_ctx_id)
@@ -227,7 +143,6 @@ class ConnectionToolImportWiz(models.TransientModel):
             csv_file = self.datas_fname
         csv_path = imprt.getCsvPath(is_wizard=self.id, datas_file=self.datas_file, datas_fname=self.datas_fname)
         datas = imprt.setFileCsvPath(is_wizard=self.id, csv_path=csv_path, datas_fname=self.datas_fname, imprt=imprt)
-        print("----datas", datas)
         ctx = {
             'is_wizard': True,
             'csv_file': csv_file,
@@ -237,14 +152,10 @@ class ConnectionToolImportWiz(models.TransientModel):
         res = imprt.with_context(**ctx).run()
         if res:
             try:
-                shutil.rmtree(csv_path)
+                print("--------------------------------")
+                # shutil.rmtree(csv_path)
             except Exception as ee:
                 pass
-
-
-
-
-
 
 
 class ConnectionToolImport(models.Model):
@@ -292,10 +203,11 @@ class ConnectionToolImport(models.Model):
                 wr.writerow(row)
             externalIdFile.close()
         elif imprt.type == 'txt':
-            with open(wiz_filename, encoding=imprt.export_file_encoding) as fp:
-                for line in fp.readlines():
-                    data.append(line)
-            fp.close()
+            with open(wiz_filename, 'rb') as fp:
+                for cnt, line in enumerate(fp):
+                    data.append(
+                        line.decode(imprt.export_file_encoding)
+                    )
         return data
 
     def getCsvPath(self, is_wizard=False, datas_file=False, datas_fname=False):
@@ -377,9 +289,10 @@ class ConnectionToolImport(models.Model):
         def loadDataCSV(csv_path, header):
             csvfile = open(csv_path, 'r', encoding="utf-8")
             reader = csv.reader(csvfile, dialect='excel', delimiter='|')
-            if header==False:
-                header = next(reader)
-            reader = list(reader)
+            if reader:
+                if header==False:
+                    header = next(reader)
+                reader = list(reader)
             csvfile.close()
             return reader
 
@@ -426,7 +339,6 @@ class ConnectionToolImport(models.Model):
         run_self = self.with_context(eval_context['env'].context)
         func = getattr(run_self, 'run_action_%s_multi' % 'code')
         res = func(self, eval_context=eval_context)
-        print("---------- res", res)
         return res
 
 
@@ -609,7 +521,6 @@ class ConnectionToolImport(models.Model):
             ch.message_post(
                 attachment_ids=[],
                 body=body,
-                content_subtype='html',
                 message_type='comment',
                 partner_ids=[],
                 subtype='mail.mt_comment',
