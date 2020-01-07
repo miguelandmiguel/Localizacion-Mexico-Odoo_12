@@ -447,11 +447,9 @@ class Configure(models.Model):
                         rows_to_import=getattr(imprt, '_read_' + file_extension)(options, datas)
                     except Exception:
                         _logger.warn("Failed to read file '%s' (transient id %d) using guessed mimetype %s", wizard_id.datas_fname or '<unknown>', wizard_id.id, mimetype)
-                print("----rows_to_import", rows_to_import)
                 rows_to_import = rows_to_import or []
                 data = list(itertools.islice(rows_to_import, 0, None))
             elif imprt.type == 'txt':
-                print("---------wiz_filenamewiz_filename", wiz_filename)
                 # fp = io.open('wiz_filename')
                 with open(wiz_filename, encoding=imprt.export_file_encoding) as fp:
                     for line in fp.readlines():
@@ -883,8 +881,10 @@ class Configure(models.Model):
         sheet = book.sheet_by_index(0)
         # emulate Sheet.get_rows for pre-0.9.4
         for row in pycompat.imap(sheet.row, range(sheet.nrows)):
+            print("------------row", row)
             values = []
             for cell in row:
+                print("-------------cell", cell)
                 if cell.ctype is xlrd.XL_CELL_NUMBER:
                     is_float = cell.value % 1 != 0.0
                     values.append(

@@ -91,18 +91,18 @@ class Currency(models.Model):
             currency_id = Currency.search([('name', '=', moneda)])
             for tipo in tipoCambios[moneda]:
                 if tipo['importe'] != 0.0:
-                    rate_brw = CurrencyRate.search([('name', 'like', '%s'%tipo['fecha']), ('currency_id', '=', currency_id.id)])
+                    rate_brw = CurrencyRate.sudo().search([('name', 'like', '%s'%tipo['fecha']), ('currency_id', '=', currency_id.id)])
                     vals = {
                         'name': '%s'%(tipo['fecha']),
                         'currency_id': currency_id.id,
                         'rate': tipo['importe'],
-                        'company_id': False
+                        'company_id': None
                     }
                     if not rate_brw:
-                        CurrencyRate.create(vals)
+                        CurrencyRate.sudo().create(vals)
                         _logger.info('  ** Create currency %s -- date %s --rate %s ',currency_id.name, tipo['fecha'], tipo['importe'])
                     else:
-                        CurrencyRate.write(vals)
+                        rate_brw.sudo().write(vals)
                         _logger.info('  ** Update currency %s -- date %s --rate %s',currency_id.name, tipo['fecha'], tipo['importe'])
 
 
