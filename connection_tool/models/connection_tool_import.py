@@ -1037,7 +1037,24 @@ class Configure(models.Model):
                 res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
             if res:
                 continue
-            codigo = { "V02": "5990100", "V46": "5990100", "V40": "5990100", "V09": "5990100", "V41": "1200004", "V03": "1200004", "V10": "1200004", "W19": "5990100", "W20": "1200004", "W05": "5990100", "W06": "1200004", "W85": "5990100", "W83": "5990100", "W86": "1200004", "C19": "4900101" }
+            codigo = {
+                "V02": "5990100",
+                "V46": "5990100",
+                "V47": "1200004",
+                "V40": "5990100",
+                "V09": "5990100",
+                "V41": "1200004",
+                "V03": "1200004",
+                "V10": "1200004",
+                "W19": "5990100",
+                "W20": "1200004",
+                "W05": "5990100",
+                "W06": "1200004",
+                "W85": "5990100",
+                "W83": "5990100",
+                "W86": "1200004",
+                "C19": "4900101"
+            }
             transaccion = st_line.note.split("|")
             codigo_transaccion = transaccion and transaccion[0] or ""
             if (codigo_transaccion in codigo):
