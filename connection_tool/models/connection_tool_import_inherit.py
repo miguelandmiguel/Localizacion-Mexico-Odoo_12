@@ -117,14 +117,16 @@ class OdooFTP():
                             _logger.info("------- CRON Import: Descarga Archivo DAT %s "%(line) )
                             break
                     if(encontro==False):
+                        _logger.info("------- CRON Import: No hay archivos DAT %s "%(line) )
                         return None
                 except Exception as e:
                     _logger.info("------- CRON Import: Error %s"%e )
                     if sftp.exists(self.file_ctrl):
                         sftp.remove(self.file_ctrl)
+                    _logger.info("------- CRON Import: Error en FTP %s "%(e) )
                     return None
         except Exception as e:
-            print("--- error")
+            _logger.info("------- CRON Import: Error en FTP %s "%(e) )
             return None
         return {}
 
@@ -363,11 +365,12 @@ class ConnectionToolImport(models.Model):
             self = self.with_env(self.env(cr=cr))
 
         options = {}
-        _logger.info("------- Start %s " % time.ctime() )
+        _logger.info("------- CRON Import: Inicia Proceso %s " % time.ctime() )
         directory = "/tmp/tmpsftp_import_%s"%(self.id)
         # Si existe directorio no hacer nada
         if os.path.exists(directory):
             _logger.info("------- CRON Import: Existe un archivo previo")
+            _logger.info("------- CRON Import: Finaliza Proceso %s " % time.ctime() )
             if use_new_cursor:
                 cr.commit()
                 cr.close()
@@ -388,6 +391,8 @@ class ConnectionToolImport(models.Model):
                             if use_new_cursor:
                                 cr.commit()
                                 cr.close()
+                            _logger.info("------- CRON Import: Existe un archivo previo DAT")
+                            _logger.info("------- CRON Import: Finaliza Proceso %s " % time.ctime() )
                             return None
                 
                 ftp = self.getFTPSource()
@@ -397,6 +402,7 @@ class ConnectionToolImport(models.Model):
                     if use_new_cursor:
                         cr.commit()
                         cr.close()
+                    _logger.info("------- CRON Import: Finaliza Proceso %s " % time.ctime() )
                     return res
 
                 imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
@@ -406,7 +412,6 @@ class ConnectionToolImport(models.Model):
                         try:
                             res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=line, import_data=[], options=options, import_wiz=False, directory=directory)
                         except Exception as e:
-                            _logger.info("------- Error Python ", e)
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
                             imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
                             imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
@@ -419,27 +424,25 @@ class ConnectionToolImport(models.Model):
                             if use_new_cursor:
                                 cr.commit()
                                 cr.close()
-                            break
+                            _logger.info("---- CRON Import: Error Python %s"%(e) )
                             return None
                 # time.sleep( 360 )
             except Exception as e:
-                print("--------- error 001", e)
-                _logger.info("---- CRON Import: Error Error %s"%(e) )
                 try:
                     shutil.rmtree(directory)
                 except Exception as ee:
                     pass
+                _logger.info("---- CRON Import: Error Error %s"%(e) )
                 return None          
 
         except Exception as e:
-            print("--------- error 000", e)
+            _logger.info("---- CRON Import: Error Error %s"%(e) )
             try:
                 shutil.rmtree(directory)
             except Exception as ee:
                 pass
-
         
-        _logger.info("------- End %s " % time.ctime() )
+        _logger.info("------- Finaliza Proceso %s " % time.ctime() )
         if use_new_cursor:
             cr.commit()
             cr.close()
@@ -453,7 +456,6 @@ class ConnectionToolImport(models.Model):
             imprt._run_action_datasetl(use_new_cursor=use_new_cursor)
             if use_new_cursor:
                 self._cr.commit()
-
         if use_new_cursor:
             self._cr.commit()
 
@@ -466,17 +468,13 @@ class ConnectionToolImport(models.Model):
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            _logger.info("------- Inicia Proceso RUN ")
             self._run_import_datasetl(use_new_cursor=use_new_cursor, company_id=company_id)
-            _logger.info("------- Fin Proceso RUN ")
         finally:
             if use_new_cursor:
-                _logger.info("------- Finally Inicia Proceso RUN ")
                 try:
                     self._cr.close()
                 except Exception:
                     pass
-                _logger.info("------- Finally Fin Proceso RUN ")
         return {}
 
 

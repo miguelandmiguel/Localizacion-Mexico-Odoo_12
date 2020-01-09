@@ -692,10 +692,16 @@ class Configure(models.Model):
             except Exception as e:
                 _logger.info("--- Error en Python Source %s "%(str(e)) )
                 self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
-                if use_new_cursor:
-                    cr.commit()
-                    cr.close()
+                if self.source_connector_id:
+                    imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                    imprt._move_ftp_filename_noprocesados(files, automatic=True)
+                    imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+                try:
+                    shutil.rmtree(directory)
+                except:
+                    pass
                 return None
+
             result = localdict.get('result',False)
             _logger.info("----- Result %s "%(result) )
             if result:
