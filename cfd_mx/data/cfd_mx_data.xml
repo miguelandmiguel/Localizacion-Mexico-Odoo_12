@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="host_finkok_demo" model="ir.config_parameter">
+            <field name="key">host.finkok.demo</field>
+            <field name="value">http://demo-facturacion.finkok.com/servicios/soap</field>
+        </record>
+        <record id="host_finkok_prod" model="ir.config_parameter">
+            <field name="key">host.finkok.prod</field>
+            <field name="value">http://facturacion.finkok.com/servicios/soap</field>
+        </record>
+
+    </data>
+</odoo>

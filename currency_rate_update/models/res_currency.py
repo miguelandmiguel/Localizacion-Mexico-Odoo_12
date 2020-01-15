@@ -98,6 +98,7 @@ class Currency(models.Model):
                         'rate': tipo['importe'],
                         'company_id': None
                     }
+                    print("-----------------currency_id", currency_id)
                     if not rate_brw:
                         CurrencyRate.sudo().create(vals)
                         _logger.info('  ** Create currency %s -- date %s --rate %s ',currency_id.name, tipo['fecha'], tipo['importe'])
@@ -111,12 +112,8 @@ class Currency(models.Model):
     def run_update_currency_bmx(self, use_new_cursor=False):
         _logger.info(' === Starting the currency rate update cron')
         tz = self.env.user.tz
-        date_cron = fields.Date.today()
-        if tz:
-            hora_factura_utc = datetime.datetime.now(timezone("UTC"))
-            hora_factura_local = hora_factura_utc.astimezone(timezone(tz))
-            date_end = hora_factura_local.date()
-            date_start = date_end + relativedelta(days=-5)
+        date_end = fields.Date.today()
+        date_start = date_end #  + relativedelta(days=-5)
         try:
             token = self.env['ir.config_parameter'].sudo().get_param('bmx.token', default='')
             if token:
@@ -124,8 +121,9 @@ class Currency(models.Model):
                 self.refresh_currency(tipoCambios)
         except:
             pass
-        try:
-            tipoCambios = rate_retrieve_cop()
-            self.refresh_currency(tipoCambios)
-        except:
-            pass
+        _logger.info(' === End the currency rate update cron')
+        # try:
+        #     tipoCambios = rate_retrieve_cop()
+        #     self.refresh_currency(tipoCambios)
+        # except:
+        #     pass
