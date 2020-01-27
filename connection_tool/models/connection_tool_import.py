@@ -761,7 +761,6 @@ class Configure(models.Model):
                                 msg="<span>Error: %s</span> "%(results['messages'])
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
                         except Exception as e:
-                            # print("------------eeeeeeeeeee ", str(e))
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>Error %s </span><br />"%e)
                             if self.source_connector_id:
                                 imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
@@ -887,10 +886,8 @@ class Configure(models.Model):
         sheet = book.sheet_by_index(0)
         # emulate Sheet.get_rows for pre-0.9.4
         for row in pycompat.imap(sheet.row, range(sheet.nrows)):
-            print("------------row", row)
             values = []
             for cell in row:
-                print("-------------cell", cell)
                 if cell.ctype is xlrd.XL_CELL_NUMBER:
                     is_float = cell.value % 1 != 0.0
                     values.append(
@@ -996,7 +993,6 @@ class Configure(models.Model):
         Tag = this.env["account.analytic.tag"]
         
         ctx = dict(this._context, force_price_include=False)
-        lll = statementLines.search([('statement_id', '=', statement_id)])
         for st_line in statementLines.search([('statement_id', '=', statement_id)]):
             st_line.statement_id._end_balance()
             folioOdoo = st_line.ref and st_line.ref[:10] or ''
@@ -1164,8 +1160,25 @@ class Configure(models.Model):
         }
 
         if results.get('ids'):
+
             for statement in results.get('messages') or []:
                 statement_id = statement.get('statement_id') or False
+
+                amount_total_txt = balance_end_txt = initial_txt = ''
+                for st in bankstatement.browse( statement_id ):
+                    amount_total = sum(st.line_ids.mapped('amount'))
+                    amount_total_txt = "{0:,.2f}".format(amount_total)
+                    last_line = st.line_ids.filtered(lambda l: '|SALDO ULTIMA TRANS' in l.note)
+                    if len(last_line) > 1:
+                        last_line = last_line[-1]
+                    if len(last_line) == 1:
+                        balance_end = last_line.amount
+                        balance_end_txt = "{0:,.2f}".format(balance_end)
+                        initial = (balance_end * 2) - amount_total
+                        initial_txt = "{0:,.2f}".format(initial)
+                        st.write({'balance_start':initial, 'balance_end_real':balance_end})
+                        last_line.unlink()
+
                 try:
                     this.process_bank_statement_line(statement_id)
                 except :
