@@ -1104,15 +1104,24 @@ class Configure(models.Model):
                     openBalance = 0.0 # last_bnk_stmt and last_bnk_stmt.balance_end or 0.0
                 transaccion = "%s|%s"%(line[152:155], line[34:64])
                 fecha = line[130:140].replace('/', '-')
-                referencia = line[93:123]
+                
                 folioBanco = line[28:34]
                 amount = float(line[65:81] or '0.0')
                 tipoOperacion = 1 if (line[64:65] in ['0', '2']) else -1
-                folioOdoo = referencia[:10]
+                
+                referencia = line[93:123]
+                codigoTransaccion = line[152:155]
+                if codigoTransaccion == "T17":
+                    folioOdoo = referencia[7:17]
+                else:
+                    folioOdoo = referencia[:10]
                 partner_id = ''
+                _logger.info("------------- folioOdoo %s -- "%folioOdoo)
                 for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], ['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 'layout_id', 'movel_line_ids', 'partner_id', 'importe']):
                     partner_id = layoutline_id.get('partner_id') and layoutline_id['partner_id'][0] or False
                     layout_id = layoutline_id.get('layout_id') and layoutline_id['layout_id'][0]
+                    _logger.info("------------- folioOdoo %s -- PartnerID %s-- "%(folioOdoo, partner_id))
+                _logger.info("------------- partner_id %s -- "%partner_id)
                 balance += (openBalance + (amount * tipoOperacion))
                 amount_tmp = '%s'%(amount * tipoOperacion)
                 balance_tmp = '%s'%(balance if indx == 0 else balance)
@@ -1153,17 +1162,9 @@ class Configure(models.Model):
         options = {'headers': False, 'advanced': True, 'keep_matches': False, 'name_create_enabled_fields': {'currency_id': False}, 'encoding': 'ascii', 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': '', 'float_thousand_separator': ',', 'float_decimal_separator': '.', 'fields': [], 'bank_stmt_import': True}
         options['encoding'] = 'utf-8'
         results = import_wizard.with_context(**ctx).sudo().do(header, [], options, dryrun=False)
-
-        {
-            'ids': [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60], 
-            'messages': [{'statement_id': 35, 'type': 'bank_statement'}]
-        }
-
         if results.get('ids'):
-
             for statement in results.get('messages') or []:
                 statement_id = statement.get('statement_id') or False
-
                 amount_total_txt = balance_end_txt = initial_txt = ''
                 for st in bankstatement.browse( statement_id ):
                     amount_total = sum(st.line_ids.mapped('amount'))
@@ -1178,7 +1179,6 @@ class Configure(models.Model):
                         initial_txt = "{0:,.2f}".format(initial)
                         st.write({'balance_start':initial, 'balance_end_real':balance_end})
                         last_line.unlink()
-
                 try:
                     this.process_bank_statement_line(statement_id)
                 except :
