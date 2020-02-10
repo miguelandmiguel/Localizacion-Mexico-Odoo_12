@@ -163,63 +163,6 @@ OPTIONS = {
 FIELD_TYPES = [(key, key) for key in sorted(fields.Field.by_type)]
 
 
-
-class AccountMove(models.Model):
-    _inherit = "account.move"
-
-    @api.multi
-    def assert_balanced(self):
-        if not self.ids:
-            return True
-        ctx = self._context
-        if ctx.get('ConnectionTool', False) == True:
-            return True
-        else:
-            return super(AccountMove, self).assert_balanced()
-        return True
-
-class ResCompany(models.Model):
-    _inherit = 'res.company'
-
-    account_import_id = fields.Many2one('account.account', string='Adjustment Account (import)')
-
-class ResConfigSettings(models.TransientModel):
-    _inherit = 'res.config.settings'
-
-    @api.one
-    @api.depends('company_id')
-    def _get_account_import_id(self):
-        self.account_import_id = self.company_id.account_import_id
-
-    @api.one
-    def _set_account_import_id(self):
-        if self.account_import_id != self.company_id.account_import_id:
-            self.company_id.account_import_id = self.account_import_id
-
-   
-    account_import_id = fields.Many2one('account.account', compute='_get_account_import_id', inverse='_set_account_import_id', required=False,
-        string='Adjustment Account (import)', help="Adjustment Account (import).")
-
-
-class AccountBankStatementLine(models.Model):
-    _inherit = "account.bank.statement.line"
-
-    def _prepare_reconciliation_move_line(self, move, amount):
-        res = super(AccountBankStatementLine, self)._prepare_reconciliation_move_line(move, amount)
-        if self._context.get("import_etl"):
-            res["analytic_tag_ids"] = [self._context.get("tag_id")] # [(6, 0, self._context.get("tag_id"))]
-            res["analytic_account_id"] = self._context.get("analytic_id")
-        return res
-
-    @api.multi
-    def _prepare_move_line_for_currency(self, aml_dict, date):
-        self.ensure_one()
-        res = super(AccountBankStatementLine, self)._prepare_move_line_for_currency(aml_dict, date)
-        if self._context.get("import_etl"):
-            aml_dict["analytic_tag_ids"] = [self._context.get("tag_id")] # [(6, 0, self._context.get("tag_id"))]
-            aml_dict["analytic_account_id"] = self._context.get("analytic_id")
-
-
 class WizardImportMenuCreate(models.TransientModel):
     """Credit Notes"""
 
@@ -1035,25 +978,28 @@ class Configure(models.Model):
                                 'credit': balance > 0 and balance or 0,
                                 'move_line': aml,
                             })
-
                 res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
             if res:
                 continue
             codigo = {
+                "V42": "1010101",
                 "V02": "5990100",
-                "V46": "5990100",
-                "V47": "1200004",
-                "V40": "5990100",
                 "V09": "5990100",
-                "V41": "1200004",
-                "V03": "1200004",
-                "V10": "1200004",
+                "V40": "5990100",
+                "V43": "5990100",
+                "V46": "5990100",
                 "W19": "5990100",
-                "W20": "1200004",
                 "W05": "5990100",
-                "W06": "1200004",
                 "W85": "5990100",
                 "W83": "5990100",
+                "V03": "1200004",
+                "V10": "1200004",
+                "V41": "1200004",
+                "V44": "1200004",
+                "V47": "1200004",
+                "W06": "1200004",
+                "W20": "1200004",
+                "W84": "1200004",
                 "W86": "1200004",
                 "C19": "4900101"
             }
@@ -1116,12 +1062,9 @@ class Configure(models.Model):
                 else:
                     folioOdoo = referencia[:10]
                 partner_id = ''
-                _logger.info("------------- folioOdoo %s -- "%folioOdoo)
                 for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], ['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 'layout_id', 'movel_line_ids', 'partner_id', 'importe']):
                     partner_id = layoutline_id.get('partner_id') and layoutline_id['partner_id'][0] or False
                     layout_id = layoutline_id.get('layout_id') and layoutline_id['layout_id'][0]
-                    _logger.info("------------- folioOdoo %s -- PartnerID %s-- "%(folioOdoo, partner_id))
-                _logger.info("------------- partner_id %s -- "%partner_id)
                 balance += (openBalance + (amount * tipoOperacion))
                 amount_tmp = '%s'%(amount * tipoOperacion)
                 balance_tmp = '%s'%(balance if indx == 0 else balance)
@@ -1180,7 +1123,8 @@ class Configure(models.Model):
                         st.write({'balance_start':initial, 'balance_end_real':balance_end})
                         last_line.unlink()
                 try:
-                    this.process_bank_statement_line(statement_id)
+                    for st in bankstatement.browse( statement_id ):
+                        st.getProcessBankStatementLine()
                 except :
                     try:
                         shutil.rmtree(directory)
