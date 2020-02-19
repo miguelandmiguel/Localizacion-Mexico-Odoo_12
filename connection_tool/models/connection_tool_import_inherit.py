@@ -7,6 +7,7 @@ import csv
 import threading
 import base64
 import codecs, itertools, shutil
+import logging
 try:
     from StringIO import StringIO
 except ImportError:
@@ -23,6 +24,8 @@ from odoo.osv import expression
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT, float_compare, float_round
 from odoo.exceptions import MissingError, UserError, ValidationError, AccessError
 from odoo.tools.safe_eval import safe_eval, test_python_expr
+
+_logger = logging.getLogger(__name__)
 
 try:
     import mimetypes
@@ -76,8 +79,8 @@ OPTIONS = {
     'float_decimal_separator': '.'
 }
 
-import logging
-_logger = logging.getLogger(__name__)
+
+
 
 
 class OdooFTP():
