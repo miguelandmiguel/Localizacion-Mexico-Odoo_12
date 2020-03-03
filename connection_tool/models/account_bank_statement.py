@@ -75,6 +75,7 @@ class AccountBankStatement(models.Model):
             }
         return ctx
 
+
     def getProcessBankStatementLine(self):
         statementLines = self.env['account.bank.statement.line']
 
@@ -90,10 +91,14 @@ class AccountBankStatement(models.Model):
         codigos = {
             1: {
                 "C07": "1010101",
+                #"C03": ???????
                 "C19": "4900101",
+                #"C20": ???????
                 "C72": "1010101",
                 "C76": "1010101",
                 "C77": "1010101",
+                #"DO ": ???????
+                "E01": "1010101",
                 "I01": "1010101",
                 "I02": "1020001",
                 "I72": "1010101",
@@ -114,12 +119,14 @@ class AccountBankStatement(models.Model):
                 "V45": "1010101",
                 "V46": "5990100",
                 "V47": "1200004",
+                #"W01": ???????
                 "W02": "1010101",
                 "W05": "5990100",
                 "W06": "1200004",
                 "W19": "5990100",
                 "W20": "1200004",
                 "W41": "1010101",
+                #"W42": ????????
                 "W83": "5990100",
                 "W84": "1200004",
                 "W85": "5990100",
@@ -130,68 +137,86 @@ class AccountBankStatement(models.Model):
                 "Y16": "1010101",
             },
             2: {
-                "C07": "1010101",
-                "C19": "1030900", # "4900101",
+                "C07": "1010701",#
+                "C19": "1030900",
                 "C20": "1030900",
-                "C72": "1010101",
-                "C76": "1010101",
-                "C77": "1010101",
-                "I01": "1010101",
+                "C72": "1010701",#
+                "C76": "1010701",#
+                "C77": "1010701",#
+                "E01": "1010701",#
+                "I01": "1010701",#
                 "I02": "1020001",
-                "I72": "1010101",
-                "T17": "1010101",
-                "T20": "1010101",
-                "T09": "1010101",
-                "T91": "1010101",
-                "V01": "1010101",
+                "I72": "1010701",#
+                "T17": "1010701",#
+                "T20": "1010701",#
+                "T09": "1010701",#
+                "T91": "1010701",#
+                "V01": "1010701",#
                 "V02": "5990100",
                 "V03": "1200004",
                 "V09": "5990100",
                 "V10": "1200004",
                 "V40": "5990100",
                 "V41": "1200004",
-                "V42": "1010101",
+                "V42": "1010701",#
                 "V43": "5990100",
                 "V44": "1200004",
-                "V45": "1010101",
+                "V45": "1010701",#
                 "V46": "5990100",
                 "V47": "1200004",
-                "W02": "1010101",
+                "W02": "1010701",#
                 "W05": "5990100",
                 "W06": "1200004",
                 "W19": "5990100",
                 "W20": "1200004",
-                "W41": "1010101",
-                "W83": "5090901", #"5990100",
+                "W41": "1010701",#
+                "W83": "5090901",
                 "W84": "1200004",
-                "W85": "5090901", #"5990100",
+                "W85": "5090901",
                 "W86": "1200004",
-                "Y01": "1010101",
-                "Y02": "1010101",
-                "Y15": "1010101",
-                "Y16": "1010101",
+                "Y01": "1010701",#
+                "Y02": "1010701",#
+                "Y15": "1010701",#
+                "Y16": "1010701",#
             }
         }
 
-        # line_ids
+        extra_code = ["W01"]
         ctx = dict(self._context, force_price_include=False)
-        for st_line in self.line_ids:
+        len_line_ids = len(self.line_ids.filtered(lambda l: not l.journal_entry_ids))
+        _logger.info("01 ----------- Start statement process of %s lines"%(len_line_ids))
+        counter = 0
+        ret = False
+        for indx, st_line in enumerate(self.line_ids.filtered(lambda l: not l.journal_entry_ids)):
             if st_line.journal_entry_ids:
                 continue
-
-            folioOdoo = st_line.ref and st_line.ref[:10] or ''
+            transaccion = st_line.note.split("|")
+            codigo_transaccion = transaccion and transaccion[0] or ""
+            concepto_transaccion = transaccion and transaccion[1] or ""
+            ref = st_line.ref
+            if codigo_transaccion == 'T17' and ref: 
+                ref = ref.replace('0000001','')
+            folioOdoo = ref and ref[:10] or ''
             account_id = False
+            codigo = codigos.get( st_line.company_id.id ) or codigos.get(1)
+            _logger.info("02 *********** COUNT: %s | Process Line %s/%s"%(counter, indx, len_line_ids))
+            if (codigo_transaccion not in extra_code) and (codigo_transaccion not in codigo):
+                continue
+            counter += 1
+            if counter > 6:
+                break
 
             res = False
-            for layoutline_id in LayoutLine.search_read([
-                        ('name', '=', folioOdoo)
-                    ], fields=['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 'layout_id', 'movel_line_ids', 'partner_id', 'importe']
+            for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], 
+                    fields=['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 
+                            'layout_id', 'movel_line_ids', 'partner_id', 'importe']
                 ):
                 movel_line_ids = layoutline_id.get('movel_line_ids') and layoutline_id['movel_line_ids'] or []
                 move_lines = AccountMoveLine.browse(movel_line_ids)
                 line_residual = st_line.currency_id and st_line.amount_currency or st_line.amount
                 line_currency = st_line.currency_id or st_line.journal_id.currency_id or st_line.company_id.currency_id
-                total_residual = move_lines and sum(aml.currency_id and aml.amount_residual_currency or aml.amount_residual for aml in move_lines) or 0.0
+                amount_residual = move_lines and sum(aml.currency_id and aml.amount_residual_currency or aml.amount_residual for aml in move_lines)
+                total_residual = amount_residual or 0.0
                 balance = total_residual - line_residual
                 open_balance_dicts = []
                 counterpart_aml_dicts = []
@@ -219,42 +244,18 @@ class AccountBankStatement(models.Model):
                                 'credit': balance > 0 and balance or 0,
                                 'move_line': aml,
                             })
+                _logger.info("03 ----------- Start Reconcile")
                 res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
+                _logger.info("04 ----------- End Reconcile: %s"%res.name)
             if res:
+                ret = True
                 continue
 
-            codigo = codigos.get( st_line.company_id.id ) or codigos.get(1)
-            transaccion = st_line.note.split("|")
-            codigo_transaccion = transaccion and transaccion[0] or ""
-            concepto_transaccion = transaccion and transaccion[1] or ""
+            ctx = {}
             if (codigo_transaccion in codigo):
-                for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), ('company_id', '=', st_line.company_id.id)], fields=["name"]):
+                for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), 
+                        ('company_id', '=', st_line.company_id.id)], fields=["name"]):
                     st_line.account_id = account_id.get("id")
-
-                if codigo_transaccion == "T20":
-                    ctx = { "import_etl": True }
-                    st_line.with_context(ctx).fast_counterpart_creation()
-                    continue
-
-                if codigo_transaccion in ["Y01", "Y15"]:
-                    ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion, conreplace="CE662143")
-                    _logger.info("------ codigo_transaccion- %s - %s "%(codigo_transaccion, ctx) )
-                    if ctx:
-                        st_line.with_context(ctx).fast_counterpart_creation()
-
-
-                if codigo_transaccion in ["Y16"]:
-                    ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion, conreplace="CI")
-                    _logger.info("------ codigo_transaccion- %s - %s "%(codigo_transaccion, ctx) )
-                    if ctx:
-                        st_line.with_context(ctx).fast_counterpart_creation()
-
-                if codigo_transaccion in ["C72"]:
-                    concepto_transaccion_tmp = st_line.ref
-                    ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion_tmp, conreplace="CI")
-                    _logger.info("------ codigo_transaccion- %s - %s "%(codigo_transaccion, ctx) )
-                    if ctx:
-                        st_line.with_context(ctx).fast_counterpart_creation()
 
                 for afiliation_id in Afiliation.search_read([("name", "ilike", st_line.name)], fields=["name", "description"], limit=1):
                     for tag_id in Tag.search_read([("afiliation_id", "=", afiliation_id.get("id"))], fields=["name", "code"]):
@@ -264,13 +265,21 @@ class AccountBankStatement(models.Model):
                             "analytic_id": analytic_id and analytic_id.id or False,
                             "import_etl": True
                         }
-                        st_line.with_context(ctx).fast_counterpart_creation()
-                        #for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), ('company_id', '=', st_line.company_id.id)], fields=["name"]):
-                        #    st_line.account_id = account_id.get("id")
-
-        return True
-
-
+                if not ctx and codigo_transaccion in ["Y01", "Y15"]:
+                    ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion, conreplace="CE662143")
+                elif not ctx and codigo_transaccion in ["Y16"]:
+                    ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion, conreplace="CI")
+                elif not ctx and codigo_transaccion in ["C72"]:
+                    concepto_transaccion_tmp = st_line.ref
+                    ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion_tmp, conreplace="CI")
+                if not ctx:
+                    ctx = { "import_etl": True }
+                ret = True
+                st_line.with_context(ctx).fast_counterpart_creation()
+                _logger.info("05 ----------- Código/Cuenta: %s/%s - ACCID:%s - CTX:%s"%(codigo_transaccion, 
+                    codigo[codigo_transaccion], account_id.get("id"), ctx))
+            _logger.info("06 ----------- END LINE")
+        return ret
 
 
 # C72 -- Tomar de las referencias
