@@ -1002,7 +1002,7 @@ class Configure(models.Model):
                 
                 referencia = line[93:123]
                 codigoTransaccion = line[152:155]
-                if codigoTransaccion == "T17":
+                if codigoTransaccion in ["T17", "T22"]:
                     folioOdoo = referencia[7:17]
                 else:
                     folioOdoo = referencia[:10]
