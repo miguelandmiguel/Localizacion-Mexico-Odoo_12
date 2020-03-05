@@ -91,17 +91,19 @@ class AccountBankStatement(models.Model):
         codigos = {
             1: {
                 "C07": "1010101",
-                #"C03": ???????
+                "C03": "1010193",
                 "C19": "4900101",
+                #"C13": ???????
                 #"C20": ???????
                 "C72": "1010101",
                 "C76": "1010101",
                 "C77": "1010101",
-                #"DO ": ???????
+                "DO ": "5990100", # OK
                 "E01": "1010101",
                 "I01": "1010101",
                 "I02": "1020001",
                 "I72": "1010101",
+                "P14": "1010103",
                 "T17": "1010101",
                 "T20": "1010101",
                 "T09": "1010101",
@@ -119,14 +121,14 @@ class AccountBankStatement(models.Model):
                 "V45": "1010101",
                 "V46": "5990100",
                 "V47": "1200004",
-                #"W01": ???????
+                "W01": "1010193", # OK
                 "W02": "1010101",
                 "W05": "5990100",
                 "W06": "1200004",
                 "W19": "5990100",
                 "W20": "1200004",
                 "W41": "1010101",
-                #"W42": ????????
+                "W42": "1010103", # OK
                 "W83": "5990100",
                 "W84": "1200004",
                 "W85": "5990100",
@@ -134,7 +136,7 @@ class AccountBankStatement(models.Model):
                 "Y01": "1010101",
                 "Y02": "1010101",
                 "Y15": "1010101",
-                "Y16": "1010101",
+                "Y16": "1010101"
             },
             2: {
                 "C07": "1010701",#
@@ -178,10 +180,28 @@ class AccountBankStatement(models.Model):
                 "Y02": "1010701",#
                 "Y15": "1010701",#
                 "Y16": "1010701",#
-            }
+            },
+            3: {
+                "V02": "5990100",
+                "V03": "1200004",
+                "V09": "5990100",
+                "V10": "1200004",
+                "V40": "5990100",
+                "V41": "1200004",
+                "V42": "1030603",
+                "V43": "5990100",
+                "V44": "1200004",
+                "V45": "1030603",
+                "V46": "5990100",
+                "V47": "1200004",
+                "W83": "5090901",
+                "W84": "1200004",
+                "W85": "5090901",
+                "W86": "1200004",
+              }
         }
 
-        extra_code = ["W01"]
+        extra_code = []
         ctx = dict(self._context, force_price_include=False)
         len_line_ids = len(self.line_ids.filtered(lambda l: not l.journal_entry_ids))
         _logger.info("01 ----------- Start statement process of %s lines"%(len_line_ids))
@@ -194,17 +214,17 @@ class AccountBankStatement(models.Model):
             codigo_transaccion = transaccion and transaccion[0] or ""
             concepto_transaccion = transaccion and transaccion[1] or ""
             ref = st_line.ref
-            if codigo_transaccion == 'T17' and ref: 
+            if codigo_transaccion in ('T17','T22') and ref: 
                 ref = ref.replace('0000001','')
             folioOdoo = ref and ref[:10] or ''
             account_id = False
             codigo = codigos.get( st_line.company_id.id ) or codigos.get(1)
-            _logger.info("02 *********** COUNT: %s | Process Line %s/%s"%(counter, indx, len_line_ids))
+            _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s"%(counter, indx, len_line_ids, codigo_transaccion))
             if (codigo_transaccion not in extra_code) and (codigo_transaccion not in codigo):
                 continue
             counter += 1
-            if counter > 6:
-                break
+            # if counter > 6:
+            #     break
 
             res = False
             for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], 
@@ -248,6 +268,7 @@ class AccountBankStatement(models.Model):
                 res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
                 _logger.info("04 ----------- End Reconcile: %s"%res.name)
             if res:
+                _logger.info("------RES %s -%s "%(codigo_transaccion, res) )
                 ret = True
                 continue
 
@@ -272,11 +293,15 @@ class AccountBankStatement(models.Model):
                 elif not ctx and codigo_transaccion in ["C72"]:
                     concepto_transaccion_tmp = st_line.ref
                     ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion_tmp, conreplace="CI")
+                elif not ctx and codigo_transaccion in ["W01"]:
+                    if (st_line.ref.upper().find('EMPENO') >= 0) or (st_line.ref.upper().find('EXPREQ') >= 0):
+                        concepto_transaccion_tmp = st_line.ref
+                        ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion_tmp, conreplace="CI")
                 if not ctx:
                     ctx = { "import_etl": True }
                 ret = True
                 st_line.with_context(ctx).fast_counterpart_creation()
-                _logger.info("05 ----------- Código/Cuenta: %s/%s - ACCID:%s - CTX:%s"%(codigo_transaccion, 
+                _logger.info("05 ----------- Codigo/Cuenta: %s/%s - ACCID:%s - CTX:%s"%(codigo_transaccion, 
                     codigo[codigo_transaccion], account_id.get("id"), ctx))
             _logger.info("06 ----------- END LINE")
         return ret
