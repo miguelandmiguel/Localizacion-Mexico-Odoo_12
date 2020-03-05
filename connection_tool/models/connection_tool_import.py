@@ -993,7 +993,9 @@ class Configure(models.Model):
                 if indx == 0:
                     openBalance = 0.0 
                 transaccion = "%s|%s"%(line[152:155], line[34:64])
-                fecha = line[130:140].replace('/', '-')
+                # fecha = line[130:140].replace('/', '-')
+                fecha = line[18:28]
+                print("-----fecha", fecha)
                 
                 folioBanco = line[28:34]
                 amount = float(line[65:81] or '0.0')

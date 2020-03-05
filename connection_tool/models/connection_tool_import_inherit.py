@@ -284,12 +284,10 @@ class ConnectionToolImport(models.Model):
                 )
 
         def runCopySQLCSV(csv_path, csv_header):
-            _logger.info("------- Start Copy %s " % time.ctime() )
             csv_file = open(csv_path, 'r', encoding="utf-8")
             res = self._cr.copy_expert(
                 """COPY account_move_line(%s)
                    FROM STDIN WITH DELIMITER '|' """%csv_header, csv_file)
-            _logger.info("------- End Copy %s " % time.ctime() )
 
         def loadDataCSV(csv_path, header):
             csvfile = open(csv_path, 'r', encoding="utf-8")
