@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import time
 import logging
 
 from odoo import api, fields, models, registry, _, SUPERUSER_ID, tools
 
 
 _logger = logging.getLogger(__name__)
+
+
+def millis():
+    milli_sec = int(round(time.time() * 1000))
+    return milli_sec
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -76,18 +82,16 @@ class AccountBankStatement(models.Model):
         return ctx
 
 
-    def getProcessBankStatementLine(self):
-        statementLines = self.env['account.bank.statement.line']
 
+    def getProcessBankStatementLine(self, limit=0):
+        statementLines = self.env['account.bank.statement.line']
         Account = self.env["account.account"]
         LayoutLine = self.env['bank.statement.export.layout.line']
         AccountMoveLine = self.env['account.move.line']
         Afiliation = self.env["account.bank.afiliation"]
         AccountAnalytic = self.env["account.analytic.account"]
         Tag = self.env["account.analytic.tag"]
-
         self._end_balance()
-
         codigos = {
             1: {
                 "C07": "1010101",
@@ -104,7 +108,7 @@ class AccountBankStatement(models.Model):
                 "I02": "1020001",
                 "I72": "1010101",
                 "P14": "1010103",
-                "T17": "1010101",
+                # "T17": "1010101",
                 "T20": "1010101",
                 "T22": "1010103",
                 "T09": "1010101",
@@ -208,9 +212,20 @@ class AccountBankStatement(models.Model):
         _logger.info("01 ----------- Start statement process of %s lines"%(len_line_ids))
         counter = 0
         ret = False
+        milliseconds = limit * 60 * 1000
+        milliseconds_now = millis()
         for indx, st_line in enumerate(self.line_ids.filtered(lambda l: not l.journal_entry_ids)):
             if st_line.journal_entry_ids:
                 continue
+
+            if limit != 0:
+                milliseconds_now_02 = millis()
+                milliseconds_tmp = (milliseconds_now_02 - milliseconds_now)
+                _logger.info("---------- milliseconds_tmp %s --- milliseconds %s "%(milliseconds_tmp, milliseconds) )
+                if milliseconds_tmp >= milliseconds:
+                    break
+
+
             transaccion = st_line.note.split("|")
             codigo_transaccion = transaccion and transaccion[0] or ""
             concepto_transaccion = transaccion and transaccion[1] or ""
@@ -224,7 +239,7 @@ class AccountBankStatement(models.Model):
             if (codigo_transaccion not in extra_code) and (codigo_transaccion not in codigo):
                 continue
             counter += 1
-            # if counter > 6:
+            # if counter > 1:
             #     break
 
             res = False
