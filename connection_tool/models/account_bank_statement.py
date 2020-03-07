@@ -91,8 +91,10 @@ class AccountBankStatement(models.Model):
         Afiliation = self.env["account.bank.afiliation"]
         AccountAnalytic = self.env["account.analytic.account"]
         Tag = self.env["account.analytic.tag"]
+        Codes = self.env['account.code.bank.statement']
+
         self._end_balance()
-        codigos = {
+        codigosTMP = {
             1: {
                 "C07": "1010101",
                 "C03": "1010103",
@@ -206,6 +208,11 @@ class AccountBankStatement(models.Model):
               }
         }
 
+        codigo = {}
+        for codes_id in Codes.search([('company_id', '=', self.company_id.id), ('journal_id', '=', self.journal_id.id)]):
+            for code in codes_id.code_line_ids:
+                codigo[ code.name.ljust(3, " ") ] = code.account_id and code.account_id.id or False
+        
         extra_code = []
         ctx = dict(self._context, force_price_include=False)
         len_line_ids = len(self.line_ids.filtered(lambda l: not l.journal_entry_ids))
@@ -234,7 +241,7 @@ class AccountBankStatement(models.Model):
                 ref = ref.replace('0000001','')
             folioOdoo = ref and ref[:10] or ''
             account_id = False
-            codigo = codigos.get( st_line.company_id.id ) or codigos.get(1)
+            # codigo = codigos.get( st_line.company_id.id ) or codigos.get(1)
             _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s"%(counter, indx, len_line_ids, codigo_transaccion))
             if (codigo_transaccion not in extra_code) and (codigo_transaccion not in codigo):
                 continue
@@ -290,9 +297,13 @@ class AccountBankStatement(models.Model):
 
             ctx = {}
             if (codigo_transaccion in codigo):
-                for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), 
-                        ('company_id', '=', st_line.company_id.id)], fields=["name"]):
-                    st_line.account_id = account_id.get("id")
+
+                print("-------------", codigo_transaccion, codigo[codigo_transaccion])
+
+                # for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), 
+                #         ('company_id', '=', st_line.company_id.id)], fields=["name"]):
+                #     st_line.account_id = account_id.get("id")
+                st_line.account_id = codigo[codigo_transaccion]
 
                 for afiliation_id in Afiliation.search_read([("name", "ilike", st_line.name)], fields=["name", "description"], limit=1):
                     for tag_id in Tag.search_read([("afiliation_id", "=", afiliation_id.get("id"))], fields=["name", "code"]):
@@ -318,7 +329,7 @@ class AccountBankStatement(models.Model):
                 ret = True
                 st_line.with_context(ctx).fast_counterpart_creation()
                 _logger.info("05 ----------- Codigo/Cuenta: %s/%s - ACCID:%s - CTX:%s"%(codigo_transaccion, 
-                    codigo[codigo_transaccion], account_id.get("id"), ctx))
+                    codigo[codigo_transaccion], codigo[codigo_transaccion], ctx))
             _logger.info("06 ----------- END LINE")
         return ret
 
@@ -327,6 +338,7 @@ class AccountBankStatement(models.Model):
 # Y01|CE662143 + número de sucursal LXXXX
 # Y15|CE662143 + número de sucursal LXXXX
 # Y16| "CI" + número de sucursal 1, 2 o 3 dígit
+
 
 
 
