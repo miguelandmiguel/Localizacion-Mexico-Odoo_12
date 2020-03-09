@@ -940,9 +940,7 @@ class Configure(models.Model):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
-            print("-------------------01 ")
             self.env['connection_tool.import'].process_bank_statement_thread(use_new_cursor=self._cr.dbname, directory=directory, import_data=import_data)
-            print("-------------------02 ")
             new_cr.close()
             return {}
 
@@ -1019,6 +1017,7 @@ class Configure(models.Model):
                 folioBanco_tmp = '%s'%folioBanco
                 partner_tmp = '%s'%partner_id
                 journal_tmp = '%s'%(journal.get("company_id") and journal["company_id"][0] or '')
+
                 body_tmp = [
                     amount_tmp,    #.encode(encoding),
                     balance_tmp,    #.encode(encoding),
@@ -1029,7 +1028,9 @@ class Configure(models.Model):
                     partner_tmp,    #.encode(encoding),
                     journal_tmp,    #.encode(encoding),
                 ]
+
                 body.append(body_tmp)
+
         output =  io.StringIO()
         writer = csv.writer(output, dialect='excel', delimiter=',')
         for line in body:

@@ -93,6 +93,8 @@ class AccountBankStatement(models.Model):
         Tag = self.env["account.analytic.tag"]
         Codes = self.env['account.code.bank.statement']
 
+        gastos2 = self.env.ref('__export__.account_journal_269_4a99fbb7')
+
         self._end_balance()
         codigosTMP = {
             1: {
@@ -243,8 +245,8 @@ class AccountBankStatement(models.Model):
             account_id = False
             # codigo = codigos.get( st_line.company_id.id ) or codigos.get(1)
             _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s"%(counter, indx, len_line_ids, codigo_transaccion))
-            if (codigo_transaccion not in extra_code) and (codigo_transaccion not in codigo):
-                continue
+            # if (codigo_transaccion not in extra_code) and (codigo_transaccion not in codigo):
+            #     continue
             counter += 1
             # if counter > 1:
             #     break
@@ -297,9 +299,7 @@ class AccountBankStatement(models.Model):
 
             ctx = {}
             if (codigo_transaccion in codigo):
-
-                print("-------------", codigo_transaccion, codigo[codigo_transaccion])
-
+                counterpart = True
                 # for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), 
                 #         ('company_id', '=', st_line.company_id.id)], fields=["name"]):
                 #     st_line.account_id = account_id.get("id")
@@ -320,10 +320,20 @@ class AccountBankStatement(models.Model):
                 elif not ctx and codigo_transaccion in ["C72"]:
                     concepto_transaccion_tmp = st_line.ref
                     ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion_tmp, conreplace="CI")
+
+                """
                 elif not ctx and codigo_transaccion in ["W01"]:
-                    if (st_line.ref.upper().find('EMPENO') >= 0) or (st_line.ref.upper().find('EXPREQ') >= 0):
-                        concepto_transaccion_tmp = st_line.ref
-                        ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion_tmp, conreplace="CI")
+                    if gastos2.id==self.journal_id.id:
+                        if (st_line.ref.upper().find('EMPENO') < 0):
+                            st_line.account_id = False
+                            continue
+                        else:
+                            #TODO
+                            # Buscar cuenta analitica
+                    else:
+                        st_line.account_id = False
+                        continue
+                """
                 if not ctx:
                     ctx = { "import_etl": True }
                 ret = True
