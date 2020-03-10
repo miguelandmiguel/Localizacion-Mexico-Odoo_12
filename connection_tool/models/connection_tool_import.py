@@ -1004,6 +1004,7 @@ class Configure(models.Model):
                     folioOdoo = referencia[7:17]
                 else:
                     folioOdoo = referencia[:10]
+                print("-------codigoTransaccion", codigoTransaccion, "--folioOdoo", folioOdoo, )
                 partner_id = ''
                 for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], ['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 'layout_id', 'movel_line_ids', 'partner_id', 'importe']):
                     partner_id = layoutline_id.get('partner_id') and layoutline_id['partner_id'][0] or False

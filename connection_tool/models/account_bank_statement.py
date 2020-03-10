@@ -4,6 +4,7 @@ import time
 import logging
 
 from odoo import api, fields, models, registry, _, SUPERUSER_ID, tools
+from odoo.tools import float_compare
 
 
 _logger = logging.getLogger(__name__)
@@ -93,123 +94,7 @@ class AccountBankStatement(models.Model):
         Tag = self.env["account.analytic.tag"]
         Codes = self.env['account.code.bank.statement']
 
-        gastos2 = self.env.ref('__export__.account_journal_269_4a99fbb7')
-
         self._end_balance()
-        codigosTMP = {
-            1: {
-                "C07": "1010101",
-                "C03": "1010103",
-                "C19": "4900101",
-                #"C13": ???????
-                #"C20": ???????
-                "C72": "1010101",
-                "C76": "1010101",
-                "C77": "1010101",
-                "DO ": "5990100", # OK
-                "E01": "1010101",
-                "I01": "1010101",
-                "I02": "1020001",
-                "I72": "1010101",
-                "P14": "1010103",
-                # "T17": "1010101",
-                "T20": "1010101",
-                "T22": "1010103",
-                "T09": "1010101",
-                "T91": "1010101",
-                "V01": "1010101",
-                "V02": "5990100",
-                "V03": "1200004",
-                "V09": "5990100",
-                "V10": "1200004",
-                "V40": "5990100",
-                "V41": "1200004",
-                "V42": "1010101",
-                "V43": "5990100",
-                "V44": "1200004",
-                "V45": "1010101",
-                "V46": "5990100",
-                "V47": "1200004",
-                "W01": "1010103", # OK
-                "W02": "1010101",
-                "W05": "5990100",
-                "W06": "1200004",
-                "W19": "5990100",
-                "W20": "1200004",
-                "W41": "1010101",
-                "W42": "1010103", # OK
-                "W83": "5990100",
-                "W84": "1200004",
-                "W85": "5990100",
-                "W86": "1200004",
-                "Y01": "1010101",
-                "Y02": "1010101",
-                "Y15": "1010101",
-                "Y16": "1010101"
-            },
-            2: {
-                "C07": "1010701",#
-                "C19": "1030900",
-                "C20": "1030900",
-                "C72": "1010701",#
-                "C76": "1010701",#
-                "C77": "1010701",#
-                "E01": "1010701",#
-                "I01": "1010701",#
-                "I02": "1020001",
-                "I72": "1010701",#
-                "T17": "1010701",#
-                "T20": "1010701",#
-                "T09": "1010701",#
-                "T91": "1010701",#
-                "V01": "1010701",#
-                "V02": "5990100",
-                "V03": "1200004",
-                "V09": "5990100",
-                "V10": "1200004",
-                "V40": "5990100",
-                "V41": "1200004",
-                "V42": "1010701",#
-                "V43": "5990100",
-                "V44": "1200004",
-                "V45": "1010701",#
-                "V46": "5990100",
-                "V47": "1200004",
-                "W02": "1010701",#
-                "W05": "5990100",
-                "W06": "1200004",
-                "W19": "5990100",
-                "W20": "1200004",
-                "W41": "1010701",#
-                "W83": "5090901",
-                "W84": "1200004",
-                "W85": "5090901",
-                "W86": "1200004",
-                "Y01": "1010701",#
-                "Y02": "1010701",#
-                "Y15": "1010701",#
-                "Y16": "1010701",#
-            },
-            3: {
-                "V02": "5990100",
-                "V03": "1200004",
-                "V09": "5990100",
-                "V10": "1200004",
-                "V40": "5990100",
-                "V41": "1200004",
-                "V42": "1030603",
-                "V43": "5990100",
-                "V44": "1200004",
-                "V45": "1030603",
-                "V46": "5990100",
-                "V47": "1200004",
-                "W83": "5990100",
-                "W84": "1200004",
-                "W85": "5990100",
-                "W86": "1200004",
-              }
-        }
-
         codigo = {}
         for codes_id in Codes.search([('company_id', '=', self.company_id.id), ('journal_id', '=', self.journal_id.id)]):
             for code in codes_id.code_line_ids:
@@ -240,6 +125,7 @@ class AccountBankStatement(models.Model):
             concepto_transaccion = transaccion and transaccion[1] or ""
             ref = st_line.ref
             if codigo_transaccion in ('T17','T22') and ref: 
+                #ref = ref[7:]
                 ref = ref.replace('0000001','')
             folioOdoo = ref and ref[:10] or ''
             account_id = False
@@ -267,29 +153,37 @@ class AccountBankStatement(models.Model):
                 counterpart_aml_dicts = []
                 amount_total = abs(line_residual)
                 payment_aml_rec = self.env['account.move.line']
+                _logger.info(" TEST: Move IDS %s "%(move_lines) )
                 for aml in move_lines:
+                    _logger.info(" TEST: %s - %s ", aml.id, aml.full_reconcile_id)
                     if aml.full_reconcile_id:
                         continue
-                    if aml.account_id.internal_type == 'liquidity':
-                        payment_aml_rec |= aml
-                    else:
-                        amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
-                        if amount_total >= abs(amount):
-                            amount_total -= abs(amount)
-                            counterpart_aml_dicts.append({
+
+                    #
+                    # Convertir a la moneda...
+                    #
+                    if aml.currency_id:
+                        break
+                        
+                    amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
+                    _logger.info("----------amount_total %s - amount %s - %s  "%(amount_total, abs(amount), amount_total >= abs(amount)  ) )
+                    # float_compare(amount_total, abs(amount), precision_digits=2)
+                    if round(amount_total, 2) >= round(abs(amount), 2):
+                        amount_total -= abs(amount)
+                        counterpart_aml_dicts.append({
                                 'name': aml.name if aml.name != '/' else aml.move_id.name,
                                 'debit': amount < 0 and -amount or 0,
                                 'credit': amount > 0 and amount or 0,
                                 'move_line': aml,
-                            })
-                        else:
-                            counterpart_aml_dicts.append({
+                        })
+                    else:
+                        counterpart_aml_dicts.append({
                                 'name': aml.name if aml.name != '/' else aml.move_id.name,
                                 'debit': balance < 0 and -balance or 0,
                                 'credit': balance > 0 and balance or 0,
                                 'move_line': aml,
-                            })
-                _logger.info("03 ----------- Start Reconcile")
+                        })
+                _logger.info("03 ----------- Start Reconcile %s"%(counterpart_aml_dicts))
                 res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
                 _logger.info("04 ----------- End Reconcile: %s"%res.name)
             if res:
@@ -299,7 +193,9 @@ class AccountBankStatement(models.Model):
 
             ctx = {}
             if (codigo_transaccion in codigo):
-                counterpart = True
+
+                print("-------------", codigo_transaccion, codigo[codigo_transaccion])
+
                 # for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), 
                 #         ('company_id', '=', st_line.company_id.id)], fields=["name"]):
                 #     st_line.account_id = account_id.get("id")
@@ -320,20 +216,10 @@ class AccountBankStatement(models.Model):
                 elif not ctx and codigo_transaccion in ["C72"]:
                     concepto_transaccion_tmp = st_line.ref
                     ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion_tmp, conreplace="CI")
-
-                """
                 elif not ctx and codigo_transaccion in ["W01"]:
-                    if gastos2.id==self.journal_id.id:
-                        if (st_line.ref.upper().find('EMPENO') < 0):
-                            st_line.account_id = False
-                            continue
-                        else:
-                            #TODO
-                            # Buscar cuenta analitica
-                    else:
-                        st_line.account_id = False
-                        continue
-                """
+                    if (st_line.ref.upper().find('EMPENO') >= 0) or (st_line.ref.upper().find('EXPREQ') >= 0):
+                        concepto_transaccion_tmp = st_line.ref
+                        ctx = self.getAnalyticTagIdsTransactions(concepto_transaccion_tmp, conreplace="CI")
                 if not ctx:
                     ctx = { "import_etl": True }
                 ret = True
