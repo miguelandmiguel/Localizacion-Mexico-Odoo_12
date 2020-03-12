@@ -931,7 +931,7 @@ class Configure(models.Model):
 
 
 
-    def process_bank_statement(self, directory='', import_data=''):
+    def process_bank_statement_old(self, directory='', import_data=''):
         threaded_calculation = threading.Thread(target=self._process_bank_statement, args=(directory, import_data))
         threaded_calculation.start()
         return True
@@ -962,7 +962,8 @@ class Configure(models.Model):
 
         return {}
 
-    def action_process_bank_statement_thread(self, directory='', import_data=''):
+    # def action_process_bank_statement_thread(self, directory='', import_data=''):
+    def processBankStatement(self, directory='', import_data=''):
         this = self
         Journal = this.env['account.journal']
         Layout = this.env['bank.statement.export.layout']
