@@ -53,8 +53,39 @@ class ResConfigSettings(models.TransientModel):
         string='Adjustment Account (import)', help="Adjustment Account (import).")
 
 
+# Validar que no se borren asientos del layout de pagos
+
 class AccountBankStatement(models.Model):
     _inherit = "account.bank.statement"
+
+    def getMoveCounterPart(self):
+        _logger.info(" INICIA ------------------------")
+        AccountMoveLine = self.env["account.move.line"]
+
+        layoutline_id = {
+            'movel_line_ids': [29142462, 29142457]
+        }
+        movel_line_ids = layoutline_id.get('movel_line_ids') and layoutline_id['movel_line_ids'] or []
+        line_currency = self.env.user.company_id.currency_id #  st_line.currency_id or st_line.journal_id.currency_id or st_line.company_id.currency_id
+        line_residual = -10000 # st_line.currency_id and st_line.amount_currency or st_line.amount
+        open_balance_dicts = []
+        counterpart_aml_dicts = []
+        balance = 0.0
+        for aml in AccountMoveLine.browse(movel_line_ids):
+            if aml.full_reconcile_id:
+                continue
+            if round(abs(aml.amount_residual), 2) <= round(abs(line_residual), 2):
+                balance += abs(aml.amount_residual)
+                counterpart_aml_dicts.append({
+                        'name': aml.name if aml.name != '/' else aml.move_id.name,
+                        'debit': aml.amount_residual < 0 and -aml.amount_residual or 0,
+                        'credit': aml.amount_residual > 0 and aml.amount_residual or 0,
+                        'move_line': aml,
+                })
+        _logger.info("-------- %s %s "%(counterpart_aml_dicts, balance) )
+
+        return True
+
 
     def getAnalyticTagIdsTransactions(self, concepto_transaccion, conreplace=""):
         ctx = {}
@@ -81,8 +112,6 @@ class AccountBankStatement(models.Model):
                 "import_etl": True
             }
         return ctx
-
-
 
     def getProcessBankStatementLine(self, limit=0):
         statementLines = self.env['account.bank.statement.line']
@@ -115,7 +144,6 @@ class AccountBankStatement(models.Model):
             if limit != 0:
                 milliseconds_now_02 = millis()
                 milliseconds_tmp = (milliseconds_now_02 - milliseconds_now)
-                _logger.info("---------- milliseconds_tmp %s --- milliseconds %s "%(milliseconds_tmp, milliseconds) )
                 if milliseconds_tmp >= milliseconds:
                     break
 
@@ -125,14 +153,10 @@ class AccountBankStatement(models.Model):
             concepto_transaccion = transaccion and transaccion[1] or ""
             ref = st_line.ref
             if codigo_transaccion in ('T17','T22') and ref: 
-                #ref = ref[7:]
                 ref = ref.replace('0000001','')
             folioOdoo = ref and ref[:10] or ''
             account_id = False
-            # codigo = codigos.get( st_line.company_id.id ) or codigos.get(1)
             _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s"%(counter, indx, len_line_ids, codigo_transaccion))
-            # if (codigo_transaccion not in extra_code) and (codigo_transaccion not in codigo):
-            #     continue
             counter += 1
             # if counter > 1:
             #     break
@@ -142,6 +166,7 @@ class AccountBankStatement(models.Model):
                     fields=['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 
                             'layout_id', 'movel_line_ids', 'partner_id', 'importe']
                 ):
+
                 movel_line_ids = layoutline_id.get('movel_line_ids') and layoutline_id['movel_line_ids'] or []
                 move_lines = AccountMoveLine.browse(movel_line_ids)
                 line_residual = st_line.currency_id and st_line.amount_currency or st_line.amount
@@ -158,7 +183,6 @@ class AccountBankStatement(models.Model):
                     _logger.info(" TEST: %s - %s ", aml.id, aml.full_reconcile_id)
                     if aml.full_reconcile_id:
                         continue
-
                     #
                     # Convertir a la moneda...
                     #
@@ -166,8 +190,6 @@ class AccountBankStatement(models.Model):
                         break
                         
                     amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
-                    _logger.info("----------amount_total %s - amount %s - %s  "%(amount_total, abs(amount), amount_total >= abs(amount)  ) )
-                    # float_compare(amount_total, abs(amount), precision_digits=2)
                     if round(amount_total, 2) >= round(abs(amount), 2):
                         amount_total -= abs(amount)
                         counterpart_aml_dicts.append({
@@ -193,9 +215,6 @@ class AccountBankStatement(models.Model):
 
             ctx = {}
             if (codigo_transaccion in codigo):
-
-                print("-------------", codigo_transaccion, codigo[codigo_transaccion])
-
                 # for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), 
                 #         ('company_id', '=', st_line.company_id.id)], fields=["name"]):
                 #     st_line.account_id = account_id.get("id")

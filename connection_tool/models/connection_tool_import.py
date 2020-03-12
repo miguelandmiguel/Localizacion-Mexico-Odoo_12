@@ -1004,7 +1004,6 @@ class Configure(models.Model):
                     folioOdoo = referencia[7:17]
                 else:
                     folioOdoo = referencia[:10]
-                print("-------codigoTransaccion", codigoTransaccion, "--folioOdoo", folioOdoo, )
                 partner_id = ''
                 for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], ['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 'layout_id', 'movel_line_ids', 'partner_id', 'importe']):
                     partner_id = layoutline_id.get('partner_id') and layoutline_id['partner_id'][0] or False
@@ -1018,7 +1017,6 @@ class Configure(models.Model):
                 folioBanco_tmp = '%s'%folioBanco
                 partner_tmp = '%s'%partner_id
                 journal_tmp = '%s'%(journal.get("company_id") and journal["company_id"][0] or '')
-
                 body_tmp = [
                     amount_tmp,    #.encode(encoding),
                     balance_tmp,    #.encode(encoding),
@@ -1029,9 +1027,7 @@ class Configure(models.Model):
                     partner_tmp,    #.encode(encoding),
                     journal_tmp,    #.encode(encoding),
                 ]
-
                 body.append(body_tmp)
-
         output =  io.StringIO()
         writer = csv.writer(output, dialect='excel', delimiter=',')
         for line in body:
@@ -1073,6 +1069,7 @@ class Configure(models.Model):
                         st.write({'balance_start':initial, 'balance_end_real':balance_end, 'name':'EXT/'+st.date.strftime('%Y-%m-%d')})
                         last_line.unlink()
 
+                """
                 try:
                     for st in bankstatement.browse( statement_id ):
                         st.getProcessBankStatementLine()
@@ -1082,6 +1079,7 @@ class Configure(models.Model):
                     except err:
                         _logger.info("--- Error %s"%(err) )
                         pass
+                """
 
             for statement in results.get('messages') or []:
                 statement_id = statement.get('statement_id') or False
