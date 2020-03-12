@@ -963,7 +963,7 @@ class Configure(models.Model):
         return {}
 
     # def action_process_bank_statement_thread(self, directory='', import_data=''):
-    def processBankStatement(self, directory='', import_data=''):
+    def process_bank_statement(self, directory='', import_data=''):
         this = self
         Journal = this.env['account.journal']
         Layout = this.env['bank.statement.export.layout']
