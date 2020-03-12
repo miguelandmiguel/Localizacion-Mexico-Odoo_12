@@ -931,18 +931,9 @@ class Configure(models.Model):
 
 
 
-    def process_bank_statement_old(self, directory='', import_data=''):
-        threaded_calculation = threading.Thread(target=self._process_bank_statement, args=(directory, import_data))
-        threaded_calculation.start()
-        return True
 
-    def _process_bank_statement(self, directory, import_data):
-        with api.Environment.manage():
-            new_cr = self.pool.cursor()
-            self = self.with_env(self.env(cr=new_cr))
-            self.env['connection_tool.import'].process_bank_statement_thread(use_new_cursor=self._cr.dbname, directory=directory, import_data=import_data)
-            new_cr.close()
-            return {}
+
+
 
     @api.model
     def process_bank_statement_thread(self, use_new_cursor=False, directory='', import_data=''):
@@ -959,7 +950,6 @@ class Configure(models.Model):
             except Exception as e:
                 _logger.info("---------ERROR %s "%(e) )
                 pass
-
         return {}
 
     # def action_process_bank_statement_thread(self, directory='', import_data=''):
@@ -1070,18 +1060,6 @@ class Configure(models.Model):
                         st.write({'balance_start':initial, 'balance_end_real':balance_end, 'name':'EXT/'+st.date.strftime('%Y-%m-%d')})
                         last_line.unlink()
 
-                """
-                try:
-                    for st in bankstatement.browse( statement_id ):
-                        st.getProcessBankStatementLine()
-                except :
-                    try:
-                        shutil.rmtree(directory)
-                    except err:
-                        _logger.info("--- Error %s"%(err) )
-                        pass
-                """
-
             for statement in results.get('messages') or []:
                 statement_id = statement.get('statement_id') or False
                 for statement_id in bankstatement.browse( statement_id ):
@@ -1097,7 +1075,11 @@ class Configure(models.Model):
                       statement_id.company_id.name)
                     this.send_msg_channel(body=msg)
 
+            """
+            for statement in results.get('messages') or []:
+                statement_id = statement.get('statement_id') or False
+                for stm_id in bankstatement.browse( statement_id ):
+                    stm_id.process_bank_statement_etl_line()
+            """
+
         return True
-
-
-

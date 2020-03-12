@@ -199,6 +199,9 @@
             <field name="model">account.bank.statement</field>
             <field name="inherit_id" ref="account.view_bank_statement_form"/>
             <field name="arch" type="xml">
+                <field name="all_lines_reconciled" position="after">
+                    <button name="process_bank_statement_etl_line" string="Conciliacion ETL" type="object"   />
+                </field>
                 <xpath expr="//field[@name='line_ids']/tree/field[@name='ref']" position="after">
                     <field name="note" invisible="0" />
                 </xpath>

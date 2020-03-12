@@ -2,7 +2,7 @@
 
 import time
 import logging
-
+import threading
 from odoo import api, fields, models, registry, _, SUPERUSER_ID, tools
 from odoo.tools import float_compare
 
@@ -113,7 +113,42 @@ class AccountBankStatement(models.Model):
             }
         return ctx
 
-    def getProcessBankStatementLine(self, limit=0):
+
+
+
+    def process_bank_statement_etl_line(self):
+        ids = self.ids
+        threaded_calculation = threading.Thread(target=self._process_bank_statement_etl_line, args=(ids))
+        threaded_calculation.start()
+        return True
+
+    def _process_bank_statement_etl_line(self, ids):
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['account.bank.statement'].process_bank_statement_thread(use_new_cursor=self._cr.dbname, ids=ids)
+            new_cr.close()
+            return {}
+
+    def process_bank_statement_thread(self, use_new_cursor=False, ids=False):
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))
+
+        for stmLine in  self.browse(ids):
+            stmLine.getProcessBankStatementLine(limit=0, use_new_cursor=use_new_cursor)
+            if use_new_cursor:
+                cr.commit()
+
+        if use_new_cursor:
+            cr.commit()
+            cr.close()
+
+    def getProcessBankStatementLine(self, limit=0, use_new_cursor=False):
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))
+
         statementLines = self.env['account.bank.statement.line']
         Account = self.env["account.account"]
         LayoutLine = self.env['bank.statement.export.layout.line']
@@ -124,6 +159,9 @@ class AccountBankStatement(models.Model):
         Codes = self.env['account.code.bank.statement']
 
         self._end_balance()
+        if use_new_cursor:
+            cr.commit()
+
         codigo = {}
         for codes_id in Codes.search([('company_id', '=', self.company_id.id), ('journal_id', '=', self.journal_id.id)]):
             for code in codes_id.code_line_ids:
@@ -156,7 +194,7 @@ class AccountBankStatement(models.Model):
                 ref = ref.replace('0000001','')
             folioOdoo = ref and ref[:10] or ''
             account_id = False
-            _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s"%(counter, indx, len_line_ids, codigo_transaccion))
+            _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s -%s"%(counter, indx, len_line_ids, codigo_transaccion, st_line.name))
             counter += 1
             # if counter > 1:
             #     break
@@ -178,9 +216,8 @@ class AccountBankStatement(models.Model):
                 counterpart_aml_dicts = []
                 amount_total = abs(line_residual)
                 payment_aml_rec = self.env['account.move.line']
-                _logger.info(" TEST: Move IDS %s "%(move_lines) )
+                _logger.info(" TEST: Move IDS %s -%s "%(move_lines, st_line.name) )
                 for aml in move_lines:
-                    _logger.info(" TEST: %s - %s ", aml.id, aml.full_reconcile_id)
                     if aml.full_reconcile_id:
                         continue
                     #
@@ -205,15 +242,18 @@ class AccountBankStatement(models.Model):
                                 'credit': balance > 0 and balance or 0,
                                 'move_line': aml,
                         })
-                _logger.info("03 ----------- Start Reconcile %s"%(counterpart_aml_dicts))
+                _logger.info("03 ----------- Start Reconcile %s - %s"%(counterpart_aml_dicts, st_line.name))
                 res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
-                _logger.info("04 ----------- End Reconcile: %s"%res.name)
+                if use_new_cursor:
+                    cr.commit()
+                _logger.info("04 ----------- End Reconcile: %s - %s"%(res.name, st_line.name))
             if res:
                 _logger.info("------RES %s -%s "%(codigo_transaccion, res) )
                 ret = True
                 continue
 
             ctx = {}
+            print("---------------sdas", codigo_transaccion, (codigo_transaccion in codigo) )
             if (codigo_transaccion in codigo):
                 # for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), 
                 #         ('company_id', '=', st_line.company_id.id)], fields=["name"]):
@@ -245,7 +285,14 @@ class AccountBankStatement(models.Model):
                 st_line.with_context(ctx).fast_counterpart_creation()
                 _logger.info("05 ----------- Codigo/Cuenta: %s/%s - ACCID:%s - CTX:%s"%(codigo_transaccion, 
                     codigo[codigo_transaccion], codigo[codigo_transaccion], ctx))
+                if use_new_cursor:
+                    cr.commit()
             _logger.info("06 ----------- END LINE")
+
+        if use_new_cursor:
+            cr.commit()
+            cr.close()
+
         return ret
 
 
