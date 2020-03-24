@@ -190,7 +190,7 @@ class AccountBankStatement(models.Model):
             codigo_transaccion = transaccion and transaccion[0] or ""
             concepto_transaccion = transaccion and transaccion[1] or ""
             ref = st_line.ref
-            if codigo_transaccion in ('T17','T22') and ref: 
+            if codigo_transaccion in ['T17'] and ref: 
                 ref = ref.replace('0000001','')
             folioOdoo = ref and ref[:10] or ''
             account_id = False
@@ -251,9 +251,7 @@ class AccountBankStatement(models.Model):
                 _logger.info("------RES %s -%s "%(codigo_transaccion, res) )
                 ret = True
                 continue
-
             ctx = {}
-            print("---------------sdas", codigo_transaccion, (codigo_transaccion in codigo) )
             if (codigo_transaccion in codigo):
                 # for account_id in Account.search_read([('code_alias', 'ilike', codigo[codigo_transaccion]), 
                 #         ('company_id', '=', st_line.company_id.id)], fields=["name"]):
