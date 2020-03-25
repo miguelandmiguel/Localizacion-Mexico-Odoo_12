@@ -193,6 +193,9 @@ class AccountBankStatement(models.Model):
             if codigo_transaccion in ['T17'] and ref: 
                 ref = ref.replace('0000001','')
             folioOdoo = ref and ref[:10] or ''
+            if codigo_transaccion in ['T22']: 
+                folioOdoo = ''
+
             account_id = False
             _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s -%s"%(counter, indx, len_line_ids, codigo_transaccion, st_line.name))
             counter += 1
