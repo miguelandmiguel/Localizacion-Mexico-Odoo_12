@@ -190,12 +190,24 @@ class AccountBankStatement(models.Model):
             codigo_transaccion = transaccion and transaccion[0] or ""
             concepto_transaccion = transaccion and transaccion[1] or ""
             ref = st_line.ref
+
             if codigo_transaccion in ['T17'] and ref: 
                 ref = ref.replace('0000001','')
-            folioOdoo = ref and ref[:10] or ''
-            if codigo_transaccion in ['T22']: 
-                folioOdoo = ''
-
+                std_ids = statementLines.search_read(
+                    [
+                        ('statement_id', '=', self.id), 
+                        ('name', '=', st_line.name), 
+                        ('ref', '=', st_line.ref),
+                        ('note', 'like', 'T22|')
+                    ], ['name', 'ref', 'note', 'amount'])
+                _logger.info("---------- std_ids %s "%(std_ids) )
+                for std_id in std_ids:
+                    if abs( std_id['amount'] ) == abs(st_line.amount):
+                        ref = ''
+            if codigo_transaccion in ['T22']:
+                ref = ''
+            _logger.info("-------- codigo_transaccion %s %s  "%(codigo_transaccion, ref) )
+            folioOdoo = ref and ref[:10] or '' 
             account_id = False
             _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s -%s"%(counter, indx, len_line_ids, codigo_transaccion, st_line.name))
             counter += 1
