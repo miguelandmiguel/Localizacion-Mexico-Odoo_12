@@ -1041,6 +1041,7 @@ class Configure(models.Model):
         options = {'headers': False, 'advanced': True, 'keep_matches': False, 'name_create_enabled_fields': {'currency_id': False}, 'encoding': 'ascii', 'separator': ',', 'quoting': '"', 'date_format': '%Y-%m-%d', 'datetime_format': '', 'float_thousand_separator': ',', 'float_decimal_separator': '.', 'fields': [], 'bank_stmt_import': True}
         options['encoding'] = 'utf-8'
         results = import_wizard.with_context(**ctx).sudo().do(header, [], options, dryrun=False)
+        _logger.info("------------ IDS results %s "%(results ) )
         _logger.info("------------ IDS %s "%(results.get("ids") ) )
         if results.get('ids'):
             for statement in results.get('messages') or []:
