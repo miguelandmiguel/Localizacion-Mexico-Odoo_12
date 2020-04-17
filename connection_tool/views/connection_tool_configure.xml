@@ -103,6 +103,7 @@
                                         <field name="source_ftp_read_control" attrs="{'required': [('source_type', 'in', ['ftp'])], 'invisible' : [('source_type', 'not in', ['ftp'])]}"/>
                                         <field name="source_ftp_write_control" attrs="{'required': [('source_type', 'in', ['ftp'])], 'invisible' : [('source_type', 'not in', ['ftp'])]}"/>
                                         <field name="source_ftp_re" attrs="{'required': [('source_type', 'in', ['ftp'])], 'invisible' : [('source_type', 'not in', ['ftp'])]}"/>
+                                        <field name="source_ftp_fileext" />
                                         <field name="source_ftp_refilename" attrs="{
                                                 'required': [('source_ftp_re', '=', True)], 
                                                 'invisible' : ['|', ('source_type', 'not in', ['ftp']), ('source_ftp_re', '=', False)]}"/>

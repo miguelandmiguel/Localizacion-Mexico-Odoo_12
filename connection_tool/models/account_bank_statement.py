@@ -165,7 +165,8 @@ class AccountBankStatement(models.Model):
         codigo = {}
         for codes_id in Codes.search([('company_id', '=', self.company_id.id), ('journal_id', '=', self.journal_id.id)]):
             for code in codes_id.code_line_ids:
-                codigo[ code.name.ljust(3, " ") ] = code.account_id and code.account_id.id or False
+                codigo[ code.name ] = code.account_id and code.account_id.id or False
+                # codigo[ code.name.ljust(3, " ") ] = code.account_id and code.account_id.id or False
         
         extra_code = []
         ctx = dict(self._context, force_price_include=False)
@@ -187,8 +188,8 @@ class AccountBankStatement(models.Model):
 
 
             transaccion = st_line.note.split("|")
-            codigo_transaccion = transaccion and transaccion[0] or ""
-            concepto_transaccion = transaccion and transaccion[1] or ""
+            codigo_transaccion = transaccion and transaccion[0].strip() or ""
+            concepto_transaccion = transaccion and transaccion[1].strip() or ""
             ref = st_line.ref
 
             if codigo_transaccion in ['T17'] and ref: 

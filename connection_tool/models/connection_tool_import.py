@@ -268,6 +268,7 @@ class Configure(models.Model):
     source_type = fields.Selection(related='source_connector_id.type', string="Source Type", store=True, readonly=True)
     source_ftp_path = fields.Char(string='FTP Path', default="/")
     source_ftp_path_done = fields.Char(string='FTP Path Done', default="/")
+    source_ftp_fileext = fields.Char(string='Import File Ext', default=".dat")
     source_ftp_filename = fields.Char(string='Import Filename')
     source_ftp_refilename = fields.Char(string='Regular Expression Filename')
     source_ftp_re = fields.Boolean(string='Regular Expression?')
@@ -557,7 +558,7 @@ class Configure(models.Model):
                 imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
 
         msg = "<span><b>Termina Proceso:</b> %s</span><hr/>"%(time.strftime('%Y-%m-%d %H:%M:%S'))
-        imprt.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
+        self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg=msg)
         return True
 
 
@@ -781,6 +782,7 @@ class Configure(models.Model):
     def _convert_import_data(self, options, datas):
         import_fields = []
         rows_to_import = self._read_file(options, datas)
+        print("---------- _convert_import_data ", rows_to_import)
         data = list(itertools.islice(rows_to_import, 0, None))
         return data
 

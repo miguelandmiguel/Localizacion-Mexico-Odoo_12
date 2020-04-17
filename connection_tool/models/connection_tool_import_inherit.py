@@ -84,7 +84,7 @@ OPTIONS = {
 
 
 class OdooFTP():
-    def __init__(self, host='', port=21, username='', password='', path='', path_done='', security=True, file_ctrl=False, import_id=False):
+    def __init__(self, host='', port=21, username='', password='', path='', path_done='', security=True, file_ctrl=False, import_id=False, fileext=False):
         self.host = host
         self.port = port
         self.username = username
@@ -96,6 +96,7 @@ class OdooFTP():
         self.import_id = import_id
         self.ftp = None
         self.file_ftp = ''
+        self.fileext = fileext
 
     def getFileDAT(self):
         try:
@@ -110,7 +111,7 @@ class OdooFTP():
                         return {"error": "Existe el archivo de control %s "%(self.file_ctrl) }
                     encontro = False
                     for line in sftp.listdir():
-                        if line.lower().endswith(".dat"):
+                        if line.lower().endswith(self.fileext):
                             encontro = True
                             output = StringIO()
                             sftp.putfo(output, self.file_ctrl)
@@ -177,12 +178,16 @@ class ConnectionToolImport(models.Model):
             path_done=self.source_ftp_path_done,
             security=imprt.security,
             file_ctrl=self.source_ftp_write_control,
-            import_id=self.id
+            import_id=self.id,
+            fileext=self.source_ftp_fileext
         )
         return ftp
 
 
     def setFileCsvPath(self, is_wizard=False, csv_path=False, datas_fname=False, imprt=False):
+        if imprt == False:
+            imprt = self
+
         wiz_filename = '%s/%s'%(csv_path, datas_fname)
         data = []
         options = OPTIONS
@@ -236,6 +241,7 @@ class ConnectionToolImport(models.Model):
 
     @api.model
     def run_action_code_multi(self, action, eval_context=None):
+        print("----------- eval_context ", eval_context)
         safe_eval(action.sudo().source_python_script.strip(), eval_context, mode="exec", nocopy=True)
         if 'result' in eval_context:
             return eval_context['result']
@@ -377,18 +383,19 @@ class ConnectionToolImport(models.Model):
                 cr.close()
             return None
 
+        datas_fname = ''
         try:
             # Crea directorio
             try:
                 if not os.path.exists(directory):
                     os.makedirs(directory)
-                    subdirectory = ['done', 'csv', 'tmpimport', 'import']
+                    subdirectory = ['done', 'csv', 'tmpimport', 'import', 'wiz']
                     for folder in subdirectory:
                         if not os.path.exists(directory+'/'+folder):
                             os.makedirs(directory+'/'+folder)
                 else:
                     for line in os.listdir(directory):
-                        if line.lower().endswith(".dat"):
+                        if line.lower().endswith(self.source_ftp_fileext):
                             if use_new_cursor:
                                 cr.commit()
                                 cr.close()
@@ -406,17 +413,33 @@ class ConnectionToolImport(models.Model):
                     _logger.info("------- CRON Import: Finaliza Proceso %s " % time.ctime() )
                     return res
 
+                for line in os.listdir(directory):
+                    if line.lower().endswith(self.source_ftp_fileext):
+                        datas_fname = line
+                        break
+
                 imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
                 for line in os.listdir(directory):
-                    if line.lower().endswith(".dat"):
+                    if line.lower().endswith(self.source_ftp_fileext):
                         res = None
                         try:
-                            res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=line, import_data=[], options=options, import_wiz=False, directory=directory)
+                            if self.source_ftp_fileext != '.dat':
+                                datas = self.setFileCsvPath(is_wizard=False, csv_path=directory, datas_fname=datas_fname, imprt=self)
+                                csv_file = 'import_data.csv'
+                                ctx = {
+                                    'is_wizard': False,
+                                    'csv_file': csv_file,
+                                    'csv_path': directory,
+                                    'import_data': datas
+                                }
+                                print("----------- ctx", ctx)
+                                res = self.with_context(**ctx).run()
+                            else:
+                                res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=line, import_data=[], options=options, import_wiz=False, directory=directory)
                         except Exception as e:
                             self.sudo()._run_import_files_log(use_new_cursor=use_new_cursor, msg="<span>%s in macro</span><br />"%e)
                             imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
                             imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
-
                             try:
                                 shutil.rmtree(directory)
                             except Exception as ee:
