@@ -186,7 +186,6 @@ class AccountBankStatement(models.Model):
                 if milliseconds_tmp >= milliseconds:
                     break
 
-
             transaccion = st_line.note.split("|")
             codigo_transaccion = transaccion and transaccion[0].strip() or ""
             concepto_transaccion = transaccion and transaccion[1].strip() or ""
@@ -208,7 +207,14 @@ class AccountBankStatement(models.Model):
             if codigo_transaccion in ['T22']:
                 ref = ''
             _logger.info("-------- codigo_transaccion %s %s  "%(codigo_transaccion, ref) )
-            folioOdoo = ref and ref[:10] or '' 
+            folioOdoo = ref and ref[:10] or ''
+
+            if codigo_transaccion in ['T06']:
+                folioOdoo = ref[7:17]
+
+            if codigo_transaccion in ["P14"]:
+                folioOdoo = ref.replace('REF:', '').replace('CIE:1', '').replace('CIE:0', '').strip()
+
             account_id = False
             _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s -%s"%(counter, indx, len_line_ids, codigo_transaccion, st_line.name))
             counter += 1

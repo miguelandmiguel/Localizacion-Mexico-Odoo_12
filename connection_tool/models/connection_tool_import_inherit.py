@@ -79,7 +79,15 @@ OPTIONS = {
     'float_decimal_separator': '.'
 }
 
-
+def loadDataCSV(csv_path, header):
+    csvfile = open(csv_path, 'r', encoding="utf-8")
+    reader = csv.reader(csvfile, dialect='excel', delimiter='|')
+    if reader:
+        if header==False:
+            header = next(reader)
+        reader = list(reader)
+    csvfile.close()
+    return reader
 
 
 
@@ -432,8 +440,34 @@ class ConnectionToolImport(models.Model):
                                     'csv_path': directory,
                                     'import_data': datas
                                 }
-                                print("----------- ctx", ctx)
                                 res = self.with_context(**ctx).run()
+                                error_proceso = res.get('error_proceso') or False
+                                _logger.info("----------- Error en Proceso %s "%(error_proceso) )
+                                if error_proceso:
+                                    if self.source_connector_id:
+                                        imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                                        imprt._move_ftp_filename_noprocesados(datas_fname, automatic=True)
+                                        imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+                                    try:
+                                        shutil.rmtree(directory)
+                                    except:
+                                        pass
+                                    return None
+                                else:
+                                    if self.source_connector_id:
+                                        imprt = self.source_connector_id.with_context(imprt_id=self.id, directory=directory)
+                                        imprt._move_ftp_filename(datas_fname, automatic=True)
+                                        imprt._delete_ftp_filename(self.source_ftp_write_control, automatic=True)
+                                    try:
+                                        shutil.rmtree(directory)
+                                    except:
+                                        pass
+                                    if use_new_cursor:
+                                        cr.commit()
+                                        cr.close()
+                                    return None
+
+
                             else:
                                 res = self.get_source_python_script(use_new_cursor=use_new_cursor, files=line, import_data=[], options=options, import_wiz=False, directory=directory)
                         except Exception as e:
@@ -550,6 +584,232 @@ class ConnectionToolImport(models.Model):
                 author_id=self.env.user.partner_id.id
             )
         return True
+
+
+    def demoCR(self, csv_path, csv_file):
+        env = self.env
+
+        ResPartner = env['res.partner']
+        ResUsers = env['res.users']
+        HrEmployee = env['hr.employee']
+        CrmLead = env['crm.lead']
+        SaleOrder = env['sale.order']
+        SaleOrderLine = env['sale.order.line']
+        ProductProduct = env['product.product']
+        
+        error_proceso = False
+        dict_datas = {}
+        comercial_datas = {}
+        csv_path_tmp = "%s/wiz/%s"%(csv_path, csv_file)
+        reader = loadDataCSV(csv_path_tmp, False)
+        for row_data in reader:
+            if( row_data[0] == 'ID'):
+                continue
+
+            company_id = env.user.company_id.id
+            etapa_id = env.ref('crm.stage_lead1', raise_if_not_found=False)
+            team_id = env.ref('bias_crm.crm_team_appmulti', raise_if_not_found=False)
+            partner_id = None
+            lead_id = None
+            sale_id = None
+            saleline_id = None
+
+            leadId = row_data[0].strip().replace('|', '').replace("\\", "")
+            leadIdecoID = row_data[1].strip().replace('|', '').replace("\\", "")
+            leadCanal = row_data[2].strip().replace('|', '').replace("\\", "")
+            leadFechaAlta = row_data[5].strip().replace('|', '').replace("\\", "")
+            leadNombreCompleto = '%s %s'%( 
+                row_data[6].strip().replace('|', '').replace('-', '').replace("\\", ""), 
+                row_data[7].strip().replace('|', '').replace('-', '').replace("\\", "")
+            )
+            leadEmail = row_data[8].strip().replace('|', '')
+            leadTelefono = row_data[9].strip().replace('|', '').replace('-', '').replace('_', '').replace(' ', '').replace("\\", "")
+            leadMovil = row_data[10].strip().replace('|', '')
+            leadNombreComercial = row_data[11].strip().replace('|', '')
+            leadProducto = row_data[15].strip().replace('|', '')
+            leadProductoAnio = row_data[16].strip().replace('|', '')
+            leadProductoMarca = row_data[17].strip().replace('|', '')
+            leadProductoModelo = row_data[18].strip().replace('|', '')
+            leadProductoVersion = row_data[19].strip().replace('|', '')
+            leadProductoMonto = row_data[20].strip().replace('|', '').replace('N/A', '0')
+            leadProductoProducto = row_data[21].strip().replace('|', '').replace('N/A', '')
+            leadFrecuencia = row_data[23].strip().replace('|', '')
+            leadSucursal = row_data[24].strip().replace('|', '')
+            leadCupon = row_data[25].strip().replace('|', '')
+            leadEjecucion = row_data[26].strip().replace('|', '').replace('N/A', '0')
+            leadValorAprox = row_data[27].strip().replace('|', '').replace('N/A', '0')
+            leadDescripcion = row_data[28].strip().replace('|', '').replace('N/A', '')
+            leadTipo = row_data[29].strip().replace('|', '').replace('N/A', '')
+            leadFechaCarga = row_data[31].strip().replace('|', '').replace('N/A', '')
+            leadEstatus = row_data[35].strip().replace('|', '').replace('N/A', '')
+            leadAccion = row_data[38].strip().replace('|', '').replace('N/A', '')
+            leadIdSucursal = row_data[45].strip().replace('|', '').replace('N/A', '')
+            leadIdCliente = row_data[46].strip().replace('|', '').replace('N/A', '')
+            leadIdUsuario = row_data[48].strip().replace('|', '').replace('N/A', '')
+            leadProductoDescripcion = 'Garantia: %s - '%(row_data[15].strip())
+            leadProductoDescripcion += u'Año: %s - '%(row_data[16].strip()) if row_data[16].strip() else ''
+            leadProductoDescripcion += u'Marca: %s - '%(row_data[17].strip()) if row_data[17].strip() else ''
+            leadProductoDescripcion += u'Modelo: %s - '%(row_data[18].strip()) if row_data[18].strip() else ''
+            leadProductoDescripcion += u'Version: %s - '%(row_data[19].strip()) if row_data[19].strip() else ''
+
+            leadCanalDict = {
+                'APP MULTIRUBRO': env.ref('bias_crm.crm_lead_canal_multi', raise_if_not_found=False),
+                'APP AUTOS': env.ref('bias_crm.crm_lead_canal_auto', raise_if_not_found=False)
+            }
+            leadCanal_id = leadCanalDict.get( leadCanal ) or ''
+
+            # Busca Comercial
+            user_id = ''
+            if leadIdUsuario not in comercial_datas:
+                for us_id in ResUsers.search_read([('login', 'ilike', leadIdUsuario), ('company_id', '=', company_id)], ['name']):
+                    comercial_datas[ leadIdUsuario ] = us_id.get('id')
+                    user_id = us_id.get('id')
+            else:
+                user_id = comercial_datas[ leadIdUsuario ]
+
+            # Solicitud
+            extpartner_id = ''
+            if not leadTelefono:
+                nombreCliente = leadNombreCompleto.replace(' ', '')
+                if leadTipo.lower().startswith('solicitud'):
+                    nombreCliente = 'solicitud-%s'%nombreCliente
+                extpartner_id = '__export__.res_partner_%s%s'%(nombreCliente, leadIdCliente)
+            else:
+                extpartner_id = '__export__.res_partner_%s%s'%(leadTelefono, leadIdCliente)
+            if extpartner_id not in dict_datas:
+                partner_external_id = env.ref(extpartner_id, raise_if_not_found=False)
+                dict_datas[extpartner_id] = {
+                    'id': extpartner_id,
+                    'name': leadNombreCompleto,
+                    'db_id': 0,
+                    'lines': []
+                }
+                partner_external_id = env.ref(extpartner_id, raise_if_not_found=False)
+                if not partner_external_id:
+                    partner_header = ['id', 'name', 'email', 'ref', 'customer', 'supplier', 'phone', 'mobile', 'comment', 'user_id/.id']
+                    partner_body = [extpartner_id, leadNombreCompleto, leadEmail, leadIdCliente, 'True', 'False', '%s'%leadTelefono, '%s'%leadMovil, leadTipo, '%s'%(user_id)]
+                    res = ResPartner.load(partner_header, [partner_body])
+                    if res.get('ids'):
+                        dict_datas[extpartner_id]["db_id"] = res['ids'][0]
+                        partner_id = res['ids'][0]
+                    else:
+                        error_proceso = True
+                        msg = "<strong>Error: Importar Contacto CRM: </strong>"
+                        # sendMsgChannel(body=msg)
+                else:
+                    partner_id = partner_external_id.id
+                    dict_datas[extpartner_id]["db_id"] = partner_id
+            else:
+                partner_id = dict_datas[extpartner_id]["db_id"]
+            
+            # Carga Leads
+            extlead_id = '__export__.crm_lead_%s%s'%(leadId, leadIdCliente)
+            lead_external_id = env.ref(extlead_id, raise_if_not_found=False)
+            if not lead_external_id:
+                lead_header = [
+                    'id', 
+                    'name', 
+                    'planned_revenue', 
+                    'stage_id/.id', 
+                    'partner_id/.id', 
+                    'email_from', 
+                    'phone', 
+                    'user_id/.id', 
+                    'description', 
+                    'partner_name', 
+                    'folio',
+                    'leadcanal_id/.id',
+                    'leadestatus',
+                    'leadtipo',
+                    'leadejecucion',
+                    'leadproducto',
+                    'leadanio',
+                    'leadmodelo',
+                    'leadmarca',
+                    'leadversion',
+                    'leaddescripcion',
+                    'leadvaloraprox',
+                    'leadcupon',
+                    'leadfrecuencia',
+                    'leadsucursal',
+                    'leadaccion',
+                    'team_id/.id'
+                ]
+                lead_body = [
+                    extlead_id,                                         # External ID 
+                    leadProductoDescripcion,                            # name
+                    leadProductoMonto,                                  # planned_revenue
+                    '%s'%(etapa_id and etapa_id.id or ''),              # stage_id/.id
+                    '%s'%partner_id,
+                    leadEmail,                                          # email_from
+                    '%s'%leadTelefono,                                  # phone
+                    '%s'%user_id,                                       # user_id
+                    '%s'%leadProductoDescripcion,                       # description
+                    leadNombreCompleto,                                 # partner_name
+                    leadIdecoID,                                        # folio
+                    '%s'%(leadCanal_id and leadCanal_id.id or ''),                             # leadcanal_id
+                    leadEstatus,                                        # leadestatus
+                    leadTipo,                                           # leadtipo
+                    leadEjecucion,                                      # leadejecucion
+                    leadProductoProducto,                               # leadproducto
+                    '%s'%leadProductoAnio,                              # leadanio
+                    '%s'%leadProductoModelo,                            # leadmodelo
+                    leadProductoMarca,                                  # leadmarca
+                    '%s'%leadProductoVersion,                           # leadversion
+                    leadProductoDescripcion,                            # leaddescripcion
+                    '%s'%leadValorAprox,                                # leadvaloraprox
+                    leadCupon,                                          # leadcupon
+                    leadFrecuencia,                                     # leadfrecuencia
+                    leadSucursal,                                       # leadsucursal
+                    leadAccion,                                         # leadaccion
+                    team_id and team_id.id or ''
+                ]
+                res = CrmLead.load(lead_header, [lead_body])
+                if res.get('ids'):
+                    lead_id = res['ids'][0]
+                else:
+                    msg = "<strong>Error: Importar Crear Lead: </strong>"
+                    # self.send_msg_channel(body=msg)
+            else:
+                lead_id = lead_external_id and lead_external_id.id or ''
+
+            extsale_id = '__export__.sale_order_%s%s%s'%(leadId, leadIdCliente, partner_id)
+            sale_external_id = env.ref(extsale_id, raise_if_not_found=False)
+            if not sale_external_id:
+                sale_header = ['id', 'partner_id/.id', 'user_id/.id', 'opportunity_id/.id', 'origin', 'team_id/.id']
+                sale_body = [extsale_id, '%s'%partner_id, '%s'%user_id, '%s'%lead_id, '%s'%leadIdecoID, '%s'%(team_id and team_id.id or '') ]
+                res = SaleOrder.load(sale_header, [sale_body])
+                if res.get('ids'):
+                    sale_id = res['ids'][0]
+                else:
+                    msg = "<strong>Error: Importar Crear Lead: </strong>"
+                    # self.send_msg_channel(body=msg)
+            else:
+                sale_id = sale_external_id and sale_external_id.id or ''
+
+            for product_id in ProductProduct.search_read([('name', 'ilike', leadProducto)],  ['name', 'uom_id', 'taxes_id'], limit=1):
+                saleline_id = None
+                extsaleline_id = '__export__.sale_order_line_%s%s%s%s'%(leadId, leadIdCliente, partner_id, sale_id)
+                saleline_external_id = env.ref(extsaleline_id, raise_if_not_found=False)
+                if not saleline_external_id:
+                    taxes_id = '%s'%(product_id.get('taxes_id') and product_id['taxes_id'][0] or '')
+                    saleline_header = ['id', 'name', 'order_id/.id', 'price_unit', 'product_id/.id', 'tax_id/.id']
+                    saleline_body = [extsaleline_id, leadProductoDescripcion, '%s'%(sale_id), leadProductoMonto, '%s'%product_id['id'], taxes_id ]
+                    res = SaleOrderLine.load(saleline_header, [saleline_body])
+                    if res.get('ids'):
+                        saleline_id = res['ids'][0]
+                    else:
+                        msg = "<strong>Error: Importar Crear Lead: </strong>"
+                        # self.send_msg_channel(body=msg)
+
+        result = {
+            'header': [],
+            'body': [],
+            'error_proceso': error_proceso
+        }
+
+
+        # print("----dict_datas",dict_datas)
 
 
 

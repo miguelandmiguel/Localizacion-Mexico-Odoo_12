@@ -993,8 +993,10 @@ class Configure(models.Model):
                 
                 referencia = line[93:123]
                 codigoTransaccion = line[152:155]
-                if codigoTransaccion in ["T17", "T22"]:
+                if codigoTransaccion in ["T17", "T22", "T06"]:
                     folioOdoo = referencia[7:17]
+                elif codigoTransaccion in ["P14"]:
+                    folioOdoo = referencia.replace('REF:', '').replace('CIE:1', '').replace('CIE:0', '').strip()
                 else:
                     folioOdoo = referencia[:10]
                 partner_id = ''
