@@ -269,6 +269,8 @@ class AccountBankStatement(models.Model):
                 if use_new_cursor:
                     cr.commit()
                 _logger.info("04 ----------- End Reconcile: %s - %s"%(res.name, st_line.name))
+                if res:
+                    break
             if res:
                 _logger.info("------RES %s -%s "%(codigo_transaccion, res) )
                 ret = True
