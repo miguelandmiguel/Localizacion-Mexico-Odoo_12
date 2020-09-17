@@ -3,7 +3,6 @@
 from odoo import models
 import datetime
 
-
 class ReportXlsx(models.AbstractModel):
     _name = 'report.bias_base_report.report_xlsx_wiz'
     _inherit = 'report.report_xlsx.abstract'

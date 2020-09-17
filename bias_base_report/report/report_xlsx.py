@@ -10,7 +10,6 @@ try:
 except ImportError:
     _logger.debug('Can not import xlsxwriter`.')
 
-
 class ReportXlsxAbstract(models.AbstractModel):
     _name = 'report.report_xlsx.abstract'
     _description = 'Abstract XLSX Report'

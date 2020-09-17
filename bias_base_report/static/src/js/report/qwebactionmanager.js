@@ -36,7 +36,30 @@ odoo.define('bias_base_report.report', function(require){
                     this.do_warn(_t('Warning'), message, true);
                 }
                 return def;
-            }else{
+            } else if (report_type === 'txt') {
+                framework.blockUI();
+                var def = $.Deferred();
+                var type = '' + url.split('/')[2];
+                var blocked = !session.get_file({
+                    url: url_report,
+                    data: {
+                        data: JSON.stringify([url, type]),
+                    },
+                    success: def.resolve.bind(def),
+                    error: function () {
+                        crash_manager.rpc_error.apply(crash_manager, arguments);
+                        def.reject();
+                    },
+                    complete: framework.unblockUI,
+                });
+                if (blocked) {
+                    var message = _t('A popup window with your report was blocked. You ' +
+                                     'may need to change your browser settings to allow ' +
+                                     'popup windows for this page.');
+                    this.do_warn(_t('Warning'), message, true);
+                }
+                return def;
+            } else{
                 return this._super.apply(this, arguments);
             }
         },
@@ -44,6 +67,8 @@ odoo.define('bias_base_report.report', function(require){
         _executeReportAction: function (action, options) {
             if (action.report_type === 'xlsx') {
                 return this._triggerDownload(action, options, 'xlsx');
+            }else if (action.report_type === 'txt')  {
+                return this._triggerDownload(action, options, 'txt');
             }
             else {
                 return this._super.apply(this, arguments);
@@ -71,7 +96,30 @@ odoo.define('bias_base_report.report', function(require){
                     });
                 }
                 return reportUrls;
-            }else{
+            } else if (action.report_type === 'txt') {
+                var reportUrls = {
+                    txt: '/report/txt/' + action.report_name,
+                };
+                if (_.isUndefined(action.data) || _.isNull(action.data) ||
+                    (_.isObject(action.data) && _.isEmpty(action.data))) {
+                    if (action.context.active_ids) {
+                        var activeIDsPath = '/' + action.context.active_ids.join(',');
+                        reportUrls = _.mapObject(reportUrls, function (value) {
+                            return value += activeIDsPath;
+                        });
+                    }
+                } else {
+                    var serializedOptionsPath = '?options=' + encodeURIComponent(JSON.stringify(action.data));
+                    serializedOptionsPath += '&context=' + encodeURIComponent(JSON.stringify(action.context));
+                    reportUrls = _.mapObject(reportUrls, function (value) {
+                        return value += serializedOptionsPath;
+                    });
+                }
+                return reportUrls;
+            }
+
+
+            else{
                 return this._super.apply(this, arguments);
             }
 

@@ -17,7 +17,6 @@
                 </form>
             </field>
         </record>
-
         <record id="action_report_xlsx_wiz" model="ir.actions.act_window">
             <field name="name">Crear Reporte xlsx</field>
             <field name="res_model">report.xlsx.wiz</field>
@@ -27,13 +26,11 @@
             <field name="context">{}</field>
             <field name="target">new</field>
         </record>
-
         <menuitem 
             action="action_report_xlsx_wiz" 
             id="menu_report_xlsx_wiz" 
             parent="account.menu_finance_reports" 
             sequence="1"/>
-
         <report
             id="report_xlsx_wiz"
             model="report.xlsx.wiz"
@@ -41,8 +38,16 @@
             report_type="xlsx"
             name="bias_base_report.report_xlsx_wiz"
             file="report_xlsx_wiz"
-            attachment_use="False"
-        />
+            attachment_use="False" />
+
+        <report
+            id="report_txt_wiz"
+            model="report.txt.wiz"
+            string="Print to TXT"
+            report_type="txt"
+            name="bias_base_report.report_txt_wiz"
+            file="report_txt_wiz"
+            attachment_use="False" />
 
     </data>
 </odoo>
