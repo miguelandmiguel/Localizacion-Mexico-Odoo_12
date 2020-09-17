@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <template id="l10n_mx_edi_addenda_coppel" name="Addenda Coppel">
+            <t t-set="rec" t-value="record.getDatasAddendaCoppel()"/>
+
+            <requestForPayment 
+                    type="'SimpleInvoiceType'" 
+                    contentVersion="1.0" 
+                    documentStructureVersion="CPLR1.0" 
+                    t-att-documentStatus="rec['documentStatus']" 
+                    t-att-DeliveryDate="rec['DeliveryDate']">
+
+                <requestForPaymentIdentification>
+                    <entityType><t t-esc="rec['entityType']"/></entityType>
+                    <uniqueCreatorIdentification><t t-esc="rec['uniqueCreatorIdentification']"/></uniqueCreatorIdentification>
+                </requestForPaymentIdentification>
+                <orderIdentification>
+                    <referenceIdentification type="ON"><t t-esc="rec['referenceIdentification']"/></referenceIdentification>
+                    <ReferenceDate><t t-esc="rec['ReferenceDate']"/></ReferenceDate>
+                </orderIdentification>
+                <seller>
+                    <gln><t t-esc="rec['gln']"/></gln>
+                    <alternatePartyIdentification type="SELLER_ASSIGNED_IDENTIFIER_FOR_A_PARTY"><t t-esc="rec['alternatePartyIdentification']"/></alternatePartyIdentification>
+                    <IndentificaTipoProv><t t-esc="rec['IndentificaTipoProv']"/></IndentificaTipoProv>
+                </seller>
+                <shipTo>
+                    <gln><t t-esc="rec['shipto_gln']"/></gln>
+                    <nameAndAddress>
+                        <name><t t-esc="rec['shipto_name']"/></name>
+                        <streetAddressOne><t t-esc="rec['streetAddressOne']"/></streetAddressOne>
+                        <city><t t-esc="rec['city']"/></city>
+                        <postalCode><t t-esc="rec['postalCode']"/></postalCode>
+                        <bodegaEnt><t t-esc="rec['bodegaEnt']"/></bodegaEnt>
+                    </nameAndAddress>
+                </shipTo>
+                <currency t-att-currencyISOCode="rec['currencyISOCode']">
+                    <currencyFunction>BILLING_CURRENCY</currencyFunction>
+                    <rateOfChange><t t-esc="rec['rateOfChange']"/></rateOfChange>
+                </currency>
+                <TotalLotes>
+                    <cantidad><t t-esc="rec['TotalLotes']"/></cantidad>
+                </TotalLotes>
+                <t t-foreach="rec['Conceptos']" t-as="line">
+                    <lineItem t-att-type="line['tipo']" t-att-number="line['numero']">
+                        <tradeItemIdentification>
+                            <gtin><t t-esc="line['gtin']"/></gtin>
+                        </tradeItemIdentification>
+                        <alternateTradeItemIdentification t-att-type="line['alternateIdType']"><t t-esc="line['alternateId']"/></alternateTradeItemIdentification>
+                        <codigoTallaInternoCop>
+                            <codigo><t t-esc="line['codigo']"/></codigo>
+                            <talla><t t-esc="line['talla']"/></talla>
+                        </codigoTallaInternoCop>
+                        <tradeItemDescriptionInformation language="ES">
+                            <longText><t t-esc="line['descripcion']"/></longText>
+                        </tradeItemDescriptionInformation>
+                        <invoicedQuantity t-att-unitOfMeasure="line['uom']"><t t-esc="line['cantidad']"/></invoicedQuantity>
+                        <grossPrice>
+                            <Amount><t t-esc="line['grossPrice']"/></Amount>
+                        </grossPrice>
+                        <netPrice>
+                            <Amount><t t-esc="line['netPrice']"/></Amount>
+                        </netPrice>
+                        <palletInformation>
+                            <palletQuantity><t t-esc="line['palletQuantity']"/></palletQuantity> 
+                            <description t-att-type="line['palletDescription']" /> 
+                            <transport>
+                                <methodOfPayment><t t-esc="line['methodOfPayment']"/></methodOfPayment>
+                            </transport>
+                            <prepactCant><t t-esc="line['prepactCant']"/></prepactCant>
+                        </palletInformation>
+                        <allowanceCharge allowanceChargeType="ALLOWANCE_GLOBAL">
+                            <specialServicesType>CAC</specialServicesType> 
+                            <monetaryAmountOrPercentage>
+                                <percentagePerUnit>0.00</percentagePerUnit> 
+                                <ratePerUnit>
+                                    <amountPerUnit>0.00</amountPerUnit>
+                                </ratePerUnit>
+                            </monetaryAmountOrPercentage>
+                        </allowanceCharge>
+                        <totalLineAmount>
+                            <grossAmount>
+                                <Amount><t t-esc="line['totalLineAmount']"/></Amount>
+                            </grossAmount>
+                            <netAmount>
+                                <Amount><t t-esc="line['totalLineAmount']"/></Amount>
+                            </netAmount>
+                        </totalLineAmount>
+                    </lineItem>
+                </t>
+                <totalAmount>
+                    <Amount><t t-esc="rec['baseAmount']"/></Amount>
+                </totalAmount>
+                <TotalAllowanceCharge allowanceOrChargeType="ALLOWANCE">
+                    <specialServicesType>TD</specialServicesType>
+                    <Amount>0.00</Amount>
+                </TotalAllowanceCharge>
+                <baseAmount>
+                    <Amount><t t-esc="rec['baseAmount']"/></Amount>
+                </baseAmount>
+                <tax type="VAT">
+                    <taxPercentage>16.00</taxPercentage>
+                    <taxAmount><t t-esc="rec['taxAmount']"/></taxAmount>
+                    <taxCategory>TRANSFERIDO</taxCategory>
+                </tax>
+                <payableAmount>
+                    <Amount><t t-esc="rec['totalAmount']"/></Amount>
+                </payableAmount>
+                <cadenaOriginal>
+                    <Cadena><t t-esc="rec['Cadena']"/></Cadena>
+                </cadenaOriginal>
+            </requestForPayment>
+            
+
+        </template>
+        <record id="l10n_mx_edi_addenda_coppel" model="ir.ui.view">
+            <field name="l10n_mx_edi_addenda_flag">True</field>
+        </record>
+    </data>
+</odoo>

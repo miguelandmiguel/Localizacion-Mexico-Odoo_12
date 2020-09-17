@@ -1,0 +1,124 @@
+<odoo>
+    <data>
+
+        <record id="res_config_settings_view_form" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.inherit.l10n.mx.edi</field>
+            <field name="model">res.config.settings</field>
+            <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[@id='invoicing_settings']" position="after">
+                    <h2>Electronic invoicing Addenda Coppel (MX)</h2>
+                    <div class="row mt16 o_settings_container" id="l10n_mx_edi_addendacoppel">
+                        <div class="col-12 col-lg-6 o_setting_box" title="The parameters to configure the External Trade complement.">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Addenda Coppel</span>
+                                <div class="text-muted">
+                                    Configuración de Addenda Coppel.
+                                </div>
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="l10n_mx_edi_coppel_tipoprov" class="col-lg-3 o_light_label"/>
+                                        <field name="l10n_mx_edi_coppel_tipoprov"/>
+                                    </div>
+                                    <div class="row mt16">
+                                        <label for="l10n_mx_edi_coppel_alternateid" class="col-lg-3 o_light_label"/>
+                                        <field name="l10n_mx_edi_coppel_alternateid"/>
+                                    </div>
+                                    <div class="row mt16">
+                                        <label for="l10n_mx_edi_coppel_gln" class="col-lg-3 o_light_label"/>
+                                        <field name="l10n_mx_edi_coppel_gln"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="res_partner_form_inherit_coppel" model="ir.ui.view">
+            <field name="name">res.partner.form.coppel</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='vat']" position="after">
+                    <field name="l10n_mx_edi_coppel_esbodega" />
+                    <field name="l10n_mx_edi_coppel_gln"/>
+                    <field name="l10n_mx_edi_coppel_bodegaent" />
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Productos -->
+        
+        <record id="product_normal_coppel_form_view" model="ir.ui.view">
+            <field name="name">product_normal_coppel_form_view</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
+            <field name="arch" type="xml">
+                <field name="barcode" position="after">
+                    <field name="l10n_mx_edi_coppel_alternateid"  />
+                    <field name="l10n_mx_edi_coppel_codigo" />
+                    <field name="l10n_mx_edi_coppel_talla" />
+                </field>
+            </field>
+        </record>
+
+        <!-- Account Invoice -->
+        <record id="account_invoice_coppel_form" model="ir.ui.view">
+            <field name="name">account_invoice_coppel_form</field>
+            <field name="model">account.invoice</field>
+            <field name="inherit_id" ref="account.invoice_form"/>
+            <field name="arch" type="xml">
+                <field name="move_name" position="before">
+                    <field name="l10n_mx_edi_inv_addenda" invisible="1" />
+                </field>
+                <notebook position="inside">
+                    <page string="Addenda Coppel" attrs="{'invisible':[('l10n_mx_edi_inv_addenda', '=', False)]}">
+                        <group>
+                            <group name="Datos Generales">
+                                <field name="l10n_mx_edi_coppel_deliverydate" required="0" />
+                                <field name="l10n_mx_edi_coppel_refid" />
+                                <field name="l10n_mx_edi_coppel_refdate" />
+                            </group>
+                            <group name="Identificación de Referencia">
+                                <field name="l10n_mx_edi_coppel_shipto_id" domain="[('l10n_mx_edi_coppel_esbodega', '=', True)]" />
+                                <field name="l10n_mx_edi_coppel_totallotes" />
+                            </group>
+                        </group>
+                        <group>
+                            <group>
+                                <button name="action_generate_linescoppel" type="object" string="Add Lines Coppel" class="oe_highlight" groups="account.group_account_invoice"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field colspan="4" col="4" name="coppel_line_ids" nolabel="1">
+                                <tree string="Coppel lines">
+                                    <field name="invoice_id" />
+                                    <field name="line_id" />
+                                    <field name="l10n_mx_edi_coppel_palletqty" />
+                                </tree>
+                                <form string="Coppel Lines">
+                                    <group>
+                                        <group>
+                                            <field name="invoice_id" invisible="1" />
+                                            <field name="line_id" invisible="1" />
+                                            <field name="l10n_mx_edi_coppel_palletqty" string="Pallet Quantity" />
+                                            <field name="l10n_mx_edi_coppel_palletprepactqty" string="Pallet Unidad de Empaque" />
+                                            <field name="l10n_mx_edi_coppel_palletdesc" />
+                                            <field name="l10n_mx_edi_coppel_palletmethod" string="Pallet Pago de transporte de embalaje" />
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+                        </group>
+                    </page>
+                </notebook>
+            </field>
+        </record>
+
+        
+
+    </data>
+</odoo>
