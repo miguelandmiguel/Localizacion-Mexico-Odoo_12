@@ -159,7 +159,7 @@ class AccountInvoice(models.Model):
         DeliveryDate = str(self.l10n_mx_edi_coppel_deliverydate or '').replace('-', '')
         ReferenceDate = str(self.l10n_mx_edi_coppel_refdate or '').replace('-', '')
         streetAddressOne = '%s %s %s '%( shipTo.street_name, shipTo.street_number, shipTo.l10n_mx_edi_colony  )
-        city = '%s'%( shipTo.l10n_mx_edi_locality or city or '' )
+        city = '%s'%( shipTo.l10n_mx_edi_locality or shipTo.city_id.name or '' )
         TotalLotes = self.l10n_mx_edi_coppel_totallotes if (self.l10n_mx_edi_coppel_totallotes >= 1) else lenTotalLotes
         cadena = self._get_l10n_mx_edi_cadena()
         res = {
