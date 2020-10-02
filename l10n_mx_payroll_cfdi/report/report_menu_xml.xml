@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+
+        <record id="paperformat_us_portrait" model="report.paperformat">
+            <field name="page_height">0</field>
+            <field name="page_width">0</field>
+            <field name="header_spacing">35</field>
+            <field name="margin_top">10</field>
+            <field name="margin_right">7</field>
+            <field name="margin_bottom">20</field>
+            <field name="margin_left">7</field>
+            <field name="header_line" eval="False" />
+            <field name="name">US Letter Portrait</field>
+            <field name="orientation">Portrait</field>
+            <field name="dpi">90</field>
+            <field name="default" eval="True" />
+            <field name="format">Letter</field>
+        </record>
+
+
+
+        <template id="report_hr_payslip_mx_document">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <t t-set="rec" t-value="o.getDatasXmlPayslip()"/>
+                    <br />
+                    <table class="info" style="width: 100%; font-size: 10px;">
+                        <tr>
+                            <td><span>Lugar de expedición</span></td>
+                            <td style="text-align: right;"><span t-esc="rec.get('LugarExpedicion')"/></td>
+                            <td><span>Método de pago</span></td>
+                            <td style="text-align: right;"><span t-esc="rec.get('MetodoPago')"/></td>
+                            <td><span>No. de Certificado</span></td>
+                            <td style="text-align: right;"><span t-esc="rec.get('NoCertificado')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Fecha de expedición</span></td>
+                            <td style="text-align: right;"><span t-esc="rec.get('Fecha')"/></td>
+                            <td><span>Forma de Pago:</span></td>
+                            <td style="text-align: right;"><span t-esc="rec.get('FormaPago')"/></td>
+                            <td><span>Serie y Folio</span></td>
+                            <td style="text-align: right;"><span t-esc="rec.get('Serie')"/> <span t-esc="rec.get('Folio')"/> </td>
+                        </tr>
+                    </table>
+                    <table class="info" style="width: 100%; font-size: 10px;">
+                        <tr>
+                            <td colspan="6"><span style="font-size: 12px;"><strong>RECIBO DE NÓMINA:</strong></span></td>
+                        </tr>
+                        <tr>
+                            <td><span>RFC</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('EmisorRfc')"/></td>
+                            <td><span>CURP</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('ReceptorCurp')"/></td>
+                            <td><span>Registro patronal</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('RegistroPatronal')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Rfc Patron Origen</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('RfcPatronOrigen')"/></td>
+                            <td><span>Origen Recurso</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('OrigenRecurso')"/></td>
+                            <td><span>Monto Recurso Propio</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('MontoRecursoPropio')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Número de empleado</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('NumEmpleado')"/></td>
+                            <td><span>Tipo de régimen</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('TipoRegimen')"/></td>
+                            <td><span>Departamento</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('Departamento')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Puesto</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('Puesto')"/></td>
+                            <td><span>Riesgo de puesto</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('RiesgoPuesto')"/></td>
+                            <td><span>Tipo de contrato</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('TipoContrato')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Sindicalizado</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('Sindicalizado')"/></td>
+                            <td><span>Tipo de jornada</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('TipoJornada')"/></td>
+                            <td><span>Antigüedad</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('Antiguedad')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Fecha de pago</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('FechaPago')"/></td>
+                            <td><span>Fecha inicial de pago</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('FechaPago')"/></td>
+                            <td><span>Fecha final de pago</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('FechaPago')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Total Percepciones</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('TotalPercepciones')"/></td>
+                            <td><span>Total Deducciones</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('TotalDeducciones')"/></td>
+                            <td><span>Total Otros Pagos</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('TotalOtrosPagos')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Número de días pagados</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('NumDiasPagados')"/></td>
+                            <td><span>Inicio de la relación laboral</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('FechaInicioRelLaboral')"/></td>
+                            <td><span>Salario Diario Integrado</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('SalarioDiarioIntegrado')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Clave Entidad Federativa</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('ClaveEntFed')"/></td>
+                            <td><span>Periodicidad de pago</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('PeriodicidadPago')"/></td>
+                            <td><span>SalarioBaseCotApor</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('SalarioBaseCotApor')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>NSS</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('NumSeguridadSocial')"/></td>
+                            <td><span>Banco</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('Banco')"/></td>
+                            <td><span>Cuenta Bancaria</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('CuentaBancaria')"/></td>
+                        </tr>
+                        <tr>
+                            <td><span>Tipo Nomina</span></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('TipoNomina')"/></td>
+                            <td><span> </span></td>
+                            <td></td>
+                            <td><span> </span></td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <table class="info" style="width: 100%; font-size: 10px;">
+                        <tr>
+                            <td colspan="7"><span style="font-size: 14px;"><strong>Percepciones:</strong></span></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align:top; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; background-color: #EEE; ">
+                                <strong>No.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; background-color: #EEE; ">
+                                <strong>Tipo de percepción.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; background-color: #EEE;">
+                                <strong>Clave.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; background-color: #EEE;">
+                                <strong>Concepto.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; background-color: #EEE;">
+                                <strong>Sueldos.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; background-color: #EEE;">
+                                <strong>Gravado.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; background-color: #EEE;">
+                                <strong>Exento.</strong>
+                            </td>
+                        </tr>
+                        <t t-set="pl" t-value="rec.get('Percepciones') and rec['Percepciones'].get('Lines') or [] "/>
+                        <t t-set="TotalSueldos" t-value="rec.get('Percepciones') and rec['Percepciones'].get('TotalSueldos') or 0.0 "/>
+                        <t t-set="TotalGravado" t-value="rec.get('Percepciones') and rec['Percepciones'].get('TotalGravado') or 0.0 "/>
+                        <t t-set="TotalExento" t-value="rec.get('Percepciones') and rec['Percepciones'].get('TotalExento') or 0.0 "/>
+                        <t t-foreach="pl" t-as="l">
+                            <tr>
+                                <td style="vertical-align:top; border-left: 1px solid #BDBDBD !important;">&amp;nbsp;<span t-esc="l.get('indx')"/></td>
+                                <td>&amp;nbsp;<span t-esc="l.get('TipoPercepcion')"/></td>
+                                <td>&amp;nbsp;<span t-esc="l.get('Clave')"/></td>
+                                <td>&amp;nbsp;<span t-esc="l.get('Concepto')"/></td>
+                                <td>&amp;nbsp; </td>
+                                <td style="vertical-align:top; text-align: center;">
+                                    &amp;nbsp;<span t-esc="l.get('ImporteGravado')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                                <td style="vertical-align:top; border-right: 1px solid #BDBDBD !important; text-align: center;">
+                                    &amp;nbsp;<span t-esc="l.get('ImporteExento')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                            </tr>
+                        </t>
+                        <tr>
+                            <td style="vertical-align:top; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;
+                            </td>
+                            <td style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;
+                            </td>
+                            <td style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;
+                            </td>
+                            <td style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;
+                            </td>
+                            <td style="text-align: center; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;<span t-esc="float(TotalSueldos)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                            </td>
+                            <td style="text-align: center; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;<span t-esc="float(TotalGravado)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                            </td>
+                            <td style="vertical-align:top; text-align: center; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;<span t-esc="float(TotalExento)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                            </td>
+                        </tr>
+                    </table>
+                    <br />
+                    <table class="info" style="width: 100%; font-size: 10px;">
+                        <tr>
+                            <td colspan="7"><span style="font-size: 14px;"><strong>Deducciones:</strong></span></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align:top; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Tipo de deducción.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Clave.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Concepto.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Importe.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Otras Deduc.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Impuestos Ret.</strong>
+                            </td>
+                        </tr>
+                        <t t-set="dl" t-value="rec.get('Deducciones') and rec['Deducciones'].get('Lines') or [] "/>
+                        <t t-set="TotalOtrasDeducciones" t-value="rec.get('Deducciones') and rec['Deducciones'].get('TotalOtrasDeducciones') or 0.0 "/>
+                        <t t-set="TotalImpuestosRetenidos" t-value="rec.get('Deducciones') and rec['Deducciones'].get('TotalImpuestosRetenidos') or 0.0 "/>
+                        <t t-set="TotalImporte" t-value="rec.get('Deducciones') and rec['Deducciones'].get('TotalImporte') or 0.0 "/>
+                        <t t-foreach="dl" t-as="d">
+                            <tr>
+                                <td style="vertical-align:top; border-left: 1px solid #BDBDBD !important;">
+                                    &amp;nbsp;<span t-esc="d.get('TipoDeduccion')"/>
+                                </td>
+                                <td>
+                                    &amp;nbsp;<span t-esc="d.get('Clave')"/>
+                                </td>
+                                <td>
+                                    &amp;nbsp;<span t-esc="d.get('Concepto')"/>
+                                </td>
+                                <td style="text-align: center; vertical-align:top; ">
+                                    &amp;nbsp;<span t-esc="d.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                                <td>&amp;nbsp;</td>
+                                <td style="vertical-align:top; border-right: 1px solid #BDBDBD !important;">
+                                    &amp;nbsp;
+                                </td>
+                            </tr>
+                        </t>
+                        <tr>
+                            <td style="vertical-align:top; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;
+                            </td>
+                            <td style="vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;
+                            </td>
+                            <td style="vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;<span t-esc="TotalImporte" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;<span t-esc="TotalOtrasDeducciones" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                &amp;nbsp;<span t-esc="TotalImpuestosRetenidos" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                            </td>
+                        </tr>
+                    </table>
+                    <br />
+                    <table class="info" style="width: 100%; font-size: 10px;">
+                        <tr>
+                            <td colspan="7"><span style="font-size: 14px;"><strong>Otros Pagos:</strong></span></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align:top; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>No.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Tipo.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Clave.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-top: 1px solid #BDBDBD !important; !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Concepto.</strong>
+                            </td>
+                            <td style="text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important; ">
+                                <strong>Importe.</strong>
+                            </td>
+                        </tr>
+                        <t t-set="ol" t-value="rec.get('OtrosPagos') and rec['OtrosPagos'] or [] "/>
+                        <t t-foreach="ol" t-as="l">
+                            <tr>
+                                <td style="vertical-align:top; border-left: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                    &amp;nbsp;<span t-esc="l.get('indx')"/>
+                                </td>
+                                <td style="border-bottom: 1px solid #BDBDBD !important;">
+                                    &amp;nbsp;<span t-esc="l.get('TipoOtroPago')"/>
+                                </td>
+                                <td style="border-bottom: 1px solid #BDBDBD !important;">
+                                    &amp;nbsp;<span t-esc="l.get('Clave')"/>
+                                </td>
+                                <td style="border-bottom: 1px solid #BDBDBD !important;">
+                                    &amp;nbsp;<span t-esc="l.get('Concepto')"/>
+                                </td>                                
+                                <td style="text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                    &amp;nbsp;<span t-esc="l.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </td>
+                            </tr>
+                        </t>
+                    </table>
+                    <table class="info" style="width: 100%; font-size: 10px;">
+                        <tr>
+                            <td><span style="font-size: 10px;"><strong>Incapacidades:</strong>  <span t-esc="rec.get('Incapacidad')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></span></td>
+                        </tr>
+                    </table>
+                    <table class="info" style="width: 100%; font-size: 10px;">
+                        <tr>
+                            <td style="width: 80%; vertical-align:top;">
+                                <table class="info" style="width: 100%; font-size: 10px;">
+                                    <tr>
+                                        <td colspan="4">
+                                            <span><strong>IMPORTE CON LETRAS:</strong></span> <span t-esc="rec.get('AmountText')" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Folio Fiscal:</td>
+                                        <td><span t-esc="rec.get('UUID')" /></td></tr>
+                                    <tr>
+                                        <td>Fecha y hora de certificación:</td>
+                                        <td><span t-esc="rec.get('FechaTimbrado')" /></td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td style="width: 20%; vertical-align:top;">
+                                <table class="info" style="width: 100%; font-size: 10px;">
+                                    <tr>
+                                        <td><strong>Subtotal</strong></td>
+                                        <td>
+                                            &amp;nbsp;<span t-esc="rec.get('SubTotal')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Descuento</strong></td>
+                                        <td>
+                                            &amp;nbsp;<span t-esc="rec.get('Descuento')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Total</strong></td>
+                                        <td>
+                                            &amp;nbsp;<span t-esc="rec.get('Total')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="row" id='complement'>
+                        <div class="barcode col-3">
+                            <div class="barcode">
+                                <t t-set="sello" t-value="rec.get('Sello')"/>
+                                <img style="height: 180px; width: 180px;" alt="Barcode" t-att-src="'/report/barcode/?type=QR&amp;value=%s' % quote_plus(
+                                    'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?' + keep_query(
+                                        re=o.l10n_mx_edi_cfdi_supplier_rfc, rr=o.l10n_mx_edi_cfdi_customer_rfc,
+                                        tt='%.*f' % (o.currency_id.decimal_places, rec.get('Total')), id=o.l10n_mx_edi_cfdi_uuid)
+                                        + '&amp;fe=%s' % quote_plus(
+                                            sello, 'utf-8', 'strict', '=/').replace('%2B', '+'))"/>
+                            </div>
+                        </div>
+                        <div class="complement-details col-9">
+                            <div class="digital-stamp">
+                                <span>Sello</span>
+                            </div>
+                            <div class="digital-stamp-content">
+                                <span t-esc="rec.get('SelloCFDI')"/>
+                            </div>
+                            <div class="digital-stamp">
+                                <span>Sello SAT</span>
+                            </div>
+                            <div class="digital-stamp-content">
+                                <span t-esc="rec.get('SelloSAT')"/>
+                            </div>
+                            <div class="digital-stamp">
+                                <span>Cadena Original</span>
+                            </div>
+                            <div class="digital-stamp-content">
+                                <span class="nowrap" t-esc="rec.get('CadenaOriginal')"/>
+                            </div>
+                            <div class="digital-stamp-content text-center">
+                                <strong>This document is a printed representation of a CFDI</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <template id="report_hr_payslip_mx">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="l10n_mx_payroll_cfdi.report_hr_payslip_mx_document" />
+                </t>
+            </t>
+        </template>
+
+        <!-- QWeb Reports -->
+        <report 
+            id="hr_payslip_mx"
+            model="hr.payslip"
+            string="Nomina CFDI"
+            report_type="qweb-pdf"
+            name="l10n_mx_payroll_cfdi.report_hr_payslip_mx"
+            file="l10n_mx_payroll_cfdi.report_hr_payslip_mx"
+            usage="default"
+            header="False"
+            attachment_use="True"
+            attachment="(object.state in ('done')) and ('NOM'+(object.number or '').replace('/','')+'.pdf')"  />
+
+        <!--
+        <record id="hr_payslip_mx" model="ir.actions.report.xml">
+            <field name="paperformat_id" ref="l10n_mx_payroll_cfdi.paperformat_us_portrait"/>
+        </record>
+        -->
+
+
+    </data>
+</odoo>

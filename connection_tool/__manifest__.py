@@ -15,6 +15,6 @@
     'data': [
         'security/ir.model.access.csv',
         'data/action_server_data.xml',
-        'views/connection_tool_configure.xml',
+        'views/connection_tool_configure.xml'
     ],
 }

@@ -782,7 +782,6 @@ class Configure(models.Model):
     def _convert_import_data(self, options, datas):
         import_fields = []
         rows_to_import = self._read_file(options, datas)
-        print("---------- _convert_import_data ", rows_to_import)
         data = list(itertools.islice(rows_to_import, 0, None))
         return data
 
@@ -1079,12 +1078,5 @@ class Configure(models.Model):
                       statement_id.journal_id.name,
                       statement_id.company_id.name)
                     this.send_msg_channel(body=msg)
-
-            """
-            for statement in results.get('messages') or []:
-                statement_id = statement.get('statement_id') or False
-                for stm_id in bankstatement.browse( statement_id ):
-                    stm_id.process_bank_statement_etl_line()
-            """
 
         return True

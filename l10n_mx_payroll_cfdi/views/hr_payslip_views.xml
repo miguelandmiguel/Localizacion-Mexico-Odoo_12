@@ -1,0 +1,71 @@
+<odoo>
+    <data>
+
+        <record id="hr_payslip_run_cfdi_form" model="ir.ui.view">
+            <field name="name">hr_payslip_run_cfdi_form</field>
+            <field name="model">hr.payslip.run</field>
+            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+            <field name="arch" type="xml">
+                <field name="credit_note" position="before">
+                    <field name="company_id" />
+                    <field name="cfdi_date_payment" />
+                    <field name="cfdi_tipo_nomina_especial" />
+                    <field name="cfdi_tipo_nomina" />
+                </field>
+                <xpath expr="//form/sheet" position="after">
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_hr_payslip_cfdichatter_form" model="ir.ui.view">
+            <field name="name">view_hr_payslip_cfdichatter_form</field>
+            <field name="model">hr.payslip</field>
+            <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form/sheet" position="after">
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+
+        <record id="view_hr_payslip_cfdi_form" model="ir.ui.view">
+            <field name="name">view_hr_payslip_cfdi_form</field>
+            <field name="model">hr.payslip</field>
+            <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
+            <field name="arch" type="xml">
+                <field name="name" position="after">
+                    <field name="date_invoice" />
+                    <field name="cfdi_timeinvoice" />
+                    <field name="cfdi_date_payment" />
+                    <field name="cfdi_tipo_nomina_especial" />
+                    <field name="cfdi_tipo_nomina" />
+                    <field name="l10n_mx_edi_pac_status" />
+                </field>
+            </field>
+        </record>
+
+        <record id="view_hr_payslip_btn_form" model="ir.ui.view">
+            <field name="name">hr.payslip.btn.form</field>
+            <field name="model">hr.payslip</field>
+            <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
+            <field name="arch" type="xml">
+                <button name="refund_sheet" position="replace"></button>
+                <button name="action_payslip_cancel" position="replace">
+                    <button string="Cancel Payslip" name="action_payslip_cancel_nomina" type="object" states="draft,hr_check,confirm,verify,done" class="oe_highlight"/>
+                </button>
+                <field name="state">
+                    <field name="state" widget="statusbar" statusbar_visible="draft,cancel,confirm"/>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</odoo>
