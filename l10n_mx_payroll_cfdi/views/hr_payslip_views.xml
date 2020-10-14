@@ -35,6 +35,17 @@
             </field>
         </record>
 
+        <record id="hr_contract_type_cfdi_view_form" model="ir.ui.view">
+            <field name="name">hr_contract_type_cfdi_view_form</field>
+            <field name="model">hr.contract.type</field>
+            <field name="inherit_id" ref="hr_contract.hr_contract_type_view_form"/>
+            <field name="arch" type="xml">
+                <field name="name" position="after">
+                    <field name="code" />
+                </field>
+            </field>
+        </record>
+
 
         <record id="view_hr_payslip_cfdi_form" model="ir.ui.view">
             <field name="name">view_hr_payslip_cfdi_form</field>
@@ -47,7 +58,24 @@
                     <field name="cfdi_date_payment" />
                     <field name="cfdi_tipo_nomina_especial" />
                     <field name="cfdi_tipo_nomina" />
-                    <field name="l10n_mx_edi_pac_status" />
+
+                    <label for="l10n_mx_edi_pac_status" states="open,paid,cancel"/>
+                    <div class="o_row">
+                        <field name="l10n_mx_edi_pac_status" states="open,paid,cancel"/>
+                        <button name="l10n_mx_edi_update_pac_status" string="Retry" class="oe_link" type="object" groups="account.group_account_invoice" attrs="{'invisible':[('l10n_mx_edi_pac_status', 'in', ['signed', 'cancelled', False])]}"/>
+                    </div>
+                    <label for="l10n_mx_edi_sat_status" states="open,paid,cancel"/>
+                    <div class="o_row">
+                        <field name="l10n_mx_edi_sat_status" states="open,paid,cancel"/>
+                        <button name="l10n_mx_edi_update_sat_status" string="Retry" class="oe_link" type="object" groups="account.group_account_invoice" attrs="{'invisible':['|', ('l10n_mx_edi_pac_status', 'in', ['retry', 'to_sign', 'to_cancel', False]), ('state', '=', 'draft')]}"/>
+                    </div>
+                    <label for="l10n_mx_edi_cfdi_uuid" states="open,paid,cancel"/>
+                    <div class="o_row">
+                        <field name="l10n_mx_edi_cfdi_uuid" states="open,paid,cancel"/>
+                    </div>
+                    <field name="l10n_mx_edi_origin"/>
+
+
                 </field>
             </field>
         </record>

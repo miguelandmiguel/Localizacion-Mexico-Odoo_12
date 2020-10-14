@@ -81,7 +81,7 @@
                             t-att-TipoContrato="record.contract_id.type_id and record.contract_id.type_id.code"
                             t-att-Sindicalizado="'Sí' if customer.cfdi_sindicalizado else 'No'"
                             t-att-TipoJornada="customer.cfdi_tipojornada_id and customer.cfdi_tipojornada_id.code"
-                            t-att-TipoRegimen="customer.contract_id.cfdi_regimencontratacion_id and customer.contract_id.cfdi_regimencontratacion_id.code"
+                            t-att-TipoRegimen="record.contract_id.cfdi_regimencontratacion_id and record.contract_id.cfdi_regimencontratacion_id.code"
                             t-att-NumEmpleado="customer.cfdi_code_emp"
                             t-att-Departamento="customer.department_id and customer.department_id.name.replace('/', '')"
                             t-att-Puesto="customer.job_id and customer.job_id.name.replace('/', '')"

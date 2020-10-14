@@ -969,7 +969,6 @@ class Configure(models.Model):
         body = [
         ]
         journal_id = False
-        
         openBalance = 0.0
         balance = 0.0
         encoding = 'utf-8'

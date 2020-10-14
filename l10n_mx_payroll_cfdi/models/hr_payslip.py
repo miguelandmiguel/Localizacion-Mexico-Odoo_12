@@ -13,6 +13,7 @@ import pprint
 from lxml import etree
 from lxml.objectify import fromstring
 from suds.client import Client
+from suds.plugin import MessagePlugin
 import pprint
 
 from odoo import _, api, fields, models, tools
@@ -21,12 +22,25 @@ from odoo.tools import DEFAULT_SERVER_TIME_FORMAT
 from odoo.tools import float_round
 from odoo.exceptions import UserError
 from odoo.tools.float_utils import float_repr
-
 from odoo.addons.l10n_mx_edi.tools.run_after_commit import run_after_commit
 
 import logging
 
 _logger = logging.getLogger(__name__)
+
+class LogPlugin(MessagePlugin):
+    def pretty_log(self, xml_content):
+        try:
+            tree = fromstring( '%s'%xml_content )
+            xml = etree.tostring(tree, xml_declaration=True, encoding='UTF-8')
+            _logger.info( '%s'%xml )
+        except:
+            _logger.info( '%s'%xml_content)
+
+    def sending(self, context):
+        self.pretty_log( '%s'%context.envelope )
+    def received(self, context):
+        self.pretty_log( '%s'%context.reply)
 
 
 CFDI_TEMPLATE_33 = 'l10n_mx_payroll_cfdi.cfdipayslipv33'
@@ -592,7 +606,7 @@ class HrPayslip(models.Model):
             cfdi = [rec.l10n_mx_edi_cfdi.decode('UTF-8')]
             # _logger.info('---- CFDI %s '%cfdi )
             try:
-                client = Client(url, timeout=20)
+                client = Client(url, cache=None, timeout=80, plugins=[LogPlugin()])
                 response = client.service.stamp(cfdi, username, password)
                 _logger.info('-- _nomina_cfdi-reques: Values received:\n%s', pprint.pformat(response))
             except Exception as e:
@@ -611,7 +625,7 @@ class HrPayslip(models.Model):
                 rec._l10n_mx_edi_post_sign_process(xml_signed, code, msg)
                 body_msg = _('The sign service requested failed')
                 self.message_post(
-                    body=body_msg + create_list_html(msg))
+                    body=body_msg + create_list_html([msg]))
                 return {
                     'error': msg
                 }
@@ -745,7 +759,8 @@ class HrPayslip(models.Model):
             'i': Model.get_object("l10n_mx_payroll", "catalogo_tipo_incapacidad").id,
             'o': Model.get_object("l10n_mx_payroll", "catalogo_tipo_otro_pago").id
         }
-        lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype] and r.salary_rule_id.cfdi_appears_onpayslipreport == True)
+        # lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype] and r.salary_rule_id.cfdi_appears_onpayslipreport == True)
+        lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype])
         return lines
 
     def _get_agrupadorsat_type(self, ttype):
@@ -801,7 +816,7 @@ class HrPayslip(models.Model):
         totalSueldosP = 0.0
         totalSepIndem = 0.0
         totalJubilacion = 0.0
-        percepciones = {}
+        percepciones = None
         nodo_p = self._get_lines_type('p')
         if nodo_p:
             percepciones = {
@@ -939,7 +954,7 @@ class HrPayslip(models.Model):
 
     def getOtrosPagos(self):
         tz = self.env.user.tz
-        TipoRegimen = self.employee_id.contract_id.cfdi_regimencontratacion_id and self.employee_id.contract_id.cfdi_regimencontratacion_id.code or False
+        TipoRegimen = self.contract_id.cfdi_regimencontratacion_id and self.contract_id.cfdi_regimencontratacion_id.code or False
         fecha_utc =  datetime.now(timezone("UTC"))
         fecha_local = fecha_utc.astimezone(timezone(tz)).strftime("%Y-%m-%dT%H:%M:%S")
 
@@ -948,9 +963,12 @@ class HrPayslip(models.Model):
         otros_pagos = None
         if nodo_o:
             otros_pagos = {
-                'lines': []
+                'lines': [],
+                'totalOtrosPagos': 0.0
             }
             for otro_pago in nodo_o:
+                if otro_pago.total == 0.0:
+                    continue
                 tipo_otro_pago, nombre_otro_pago = self._get_code(otro_pago)
                 nombre_otro_pago = otro_pago.name or ''
                 attrs = {
@@ -985,6 +1003,8 @@ class HrPayslip(models.Model):
                     'CompensacionSaldosAFavor': CompensacionSaldosAFavor,
                     'totalOtrosPagos': totalOtrosPagos
                 })
+        if otros_pagos:
+            otros_pagos['totalOtrosPagos'] = totalOtrosPagos
 
         if TipoRegimen == '02' and otros_pagos == None:
             tipo_otro_pago = '002'
@@ -1027,10 +1047,10 @@ class HrPayslip(models.Model):
         self.ensure_one()
         empleado = self.employee_id
         company = self.company_id
-        fecha_alta = empleado.cfdi_date_start or empleado.contract_id.date_start or False
+        fecha_alta = empleado.cfdi_date_start or self.contract_id.date_start or False
         antiguedad = getAntiguedad('%s'%fecha_alta, '%s'%self.date_to)
         RiesgoPuesto = empleado.job_id and empleado.job_id.cfdi_riesgopuesto_id and empleado.job_id.cfdi_riesgopuesto_id.code or False
-        periodicidad_pago = empleado.contract_id.cfdi_periodicidadpago_id and empleado.contract_id.cfdi_periodicidadpago_id.code or ""
+        periodicidad_pago = self.contract_id.cfdi_periodicidadpago_id and self.contract_id.cfdi_periodicidadpago_id.code or ""
         banco = False
         num_cuenta = False
         if empleado.bank_account_id:
@@ -1042,7 +1062,7 @@ class HrPayslip(models.Model):
         HorasExtra = None
 
         EntidadSNCF = self.getEntidadSNCF()
-        Percepciones = self.getPercepciones()
+        Percepciones = self.getPercepciones() if (self.getPercepciones() and self.getPercepciones()['lines']) else {}
         JubilacionPensionRetiro = Percepciones.get('JubilacionPensionRetiro')
         SeparacionIndemnizacion = Percepciones.get('SeparacionIndemnizacion')
         Deducciones = self.getDeducciones()
@@ -1075,7 +1095,7 @@ class HrPayslip(models.Model):
             'TotalDeducciones': "%.2f"%TotalDeducciones,
             'TotalOtrosPagos': "%.2f"%TotalOtrosPagos if TotalOtrosPagos != None else None,
             'EntidadSNCF': EntidadSNCF,
-            'Percepciones': Percepciones,
+            'Percepciones': Percepciones or None,
             'JubilacionPensionRetiro': JubilacionPensionRetiro,
             'SeparacionIndemnizacion': SeparacionIndemnizacion,
             'Deducciones': Deducciones,
@@ -1132,8 +1152,8 @@ class HrPayslip(models.Model):
         tree.attrib[node_sello] = certificate_id.sudo().get_encrypted_cadena(cadena)
         # Check with xsd
 
-        # xmlDatas = etree.tostring(tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')
-        # _logger.info('xmlDatas %s '%xmlDatas )
+        xmlDatas = etree.tostring(tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')
+        _logger.info('------------------xmlDatas %s '%xmlDatas )
         if xsd_datas:
             try:
                 with BytesIO(xsd_datas) as xsd:
@@ -1148,9 +1168,60 @@ class HrPayslip(models.Model):
         # return {'cfdi': etree.tostring(tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')}
 
     @api.multi
+    def l10n_mx_edi_update_pac_status(self):
+        '''Synchronize both systems: Odoo & PAC if the invoices need to be signed or cancelled.
+        '''
+        for record in self:
+            if record.l10n_mx_edi_pac_status in ('to_sign', 'retry'):
+                record.l10n_mx_edi_retry()
+            elif record.l10n_mx_edi_pac_status == 'to_cancel':
+                record._l10n_mx_edi_cancel()
+
+    @api.multi
+    def action_payslip_cfdivalues(self):
+        self.ensure_one()
+        post_msg = []
+        body_msg = _('Error: Validacion XML')
+        fechaAlta = self.employee_id.cfdi_date_start or self.employee_id.contract_id.date_start or False
+        riesgoPuesto = self.employee_id.job_id and self.employee_id.job_id.cfdi_riesgopuesto_id and self.employee_id.job_id.cfdi_riesgopuesto_id.code or False
+        salarioDiarioIntegrado = self.employee_id.cfdi_sueldo_diario and '%.2f'%self.employee_id.cfdi_sueldo_diario or False
+        
+        tipoContrato = self.contract_id.type_id and self.contract_id.type_id.code or ''
+        periodicidadPago = self.contract_id.cfdi_periodicidadpago_id and self.contract_id.cfdi_periodicidadpago_id.code or ''
+        tipoRegimen = self.contract_id.cfdi_regimencontratacion_id and self.contract_id.cfdi_regimencontratacion_id.code or ''
+
+        _logger.info('---------- Validacion %s -'%(self.contract_id.cfdi_periodicidadpago_id) )
+
+        res = False
+        if not self.employee_id.cfdi_rfc:
+            post_msg.extend([_('El Empleado no tiene "RFC" ')])
+        if not tipoContrato:
+            post_msg.extend([_('El Empleado no tiene "Tipo Contrato" ')])
+        if not periodicidadPago:
+            post_msg.extend([_('El Empleado no tiene "Periodicidad Pago" ')])
+        if not tipoRegimen:
+            post_msg.extend([_('El Empleado no tiene "Tipo Regimen" ')])
+        if not self.employee_id.cfdi_imss:
+            post_msg.extend([_('El Empleado no tiene "No. IMSS" ')])
+        if not fechaAlta:
+            post_msg.extend([_('El Empleado no tiene "Fecha Alta"')])
+        if not riesgoPuesto:
+            post_msg.extend([_('El Empleado no tiene "Riesgo Puesto" ')])
+        if not salarioDiarioIntegrado:
+            post_msg.extend([_('El Empleado no tiene "Salario Diario Integrado" ')])
+        if post_msg:
+            self.message_post(body=body_msg + create_list_html(post_msg))
+            res = True
+        return res
+
+    @api.multi
     def l10n_mx_edi_retry(self):
         '''Try to generate the cfdi attachment and then, sign it.
         '''
+        self.ensure_one()
+        res = self.action_payslip_cfdivalues()
+        if res:
+            return {}
         version = self.l10n_mx_edi_get_pac_version()
         for payslip in self:
             number = payslip.number.replace('SLIP','').replace('/','')
@@ -1182,23 +1253,24 @@ class HrPayslip(models.Model):
                 attachment_ids=[attachment_id.id],
                 subtype='account.mt_invoice_validated')
             # payslip._l10n_mx_edi_sign()
+            cfdi_values = payslip._l10n_mx_edi_sign()
         return {}
 
     @api.multi
     def action_payslip_done(self):
         error = None
+        res = self.action_payslip_cfdivalues()
+        if res:
+            return False
         res = super(HrPayslip, self).action_payslip_done()
         for rec in self:
             if rec.contract_id.is_cfdi:
                 result = rec.l10n_mx_edi_retry()
                 if result.get('error'):
                     return result
-                cfdi_values = rec._l10n_mx_edi_sign()
                 # if error:
                 #     return error
         return res
-
-    
 
     @api.one
     def action_payslip_cancel_nomina(self):
@@ -1208,7 +1280,6 @@ class HrPayslip(models.Model):
             self.move_id.reverse_moves()
             self.state = 'cancel'
             return True
-
         # Manda Cancelar
         message = ''
         res = self.cancel()
