@@ -49,5 +49,16 @@
             file="report_txt_wiz"
             attachment_use="False" />
 
+
+        <report
+            id="report_zip_wiz"
+            model="report.zip.wiz"
+            string="Print to ZIP"
+            report_type="zip"
+            name="bias_base_report.report_zip_wiz"
+            file="report_zip_wiz"
+            attachment_use="False" />
+
+
     </data>
 </odoo>
