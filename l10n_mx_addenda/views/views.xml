@@ -76,15 +76,32 @@
                 </field>
                 <notebook position="inside">
                     <page string="Addenda Coppel" attrs="{'invisible':[('l10n_mx_edi_inv_addenda', '=', False)]}">
-                        <group>
-                            <group name="Datos Generales">
-                                <field name="l10n_mx_edi_coppel_deliverydate" required="0" />
-                                <field name="l10n_mx_edi_coppel_refid" />
-                                <field name="l10n_mx_edi_coppel_refdate" />
+                        <group attrs="{'invisible':[('l10n_mx_edi_cfdi_uuid', '=', False)]}" > 
+                            <group>
+                                <button name="action_generate_addendacoppel" type="object" string="Generar Addenda Coppel" class="oe_highlight" groups="account.group_account_invoice"/>
                             </group>
-                            <group name="Identificación de Referencia">
+                        </group>
+                        <group>
+                            <group string="Datos Generales">
+                                <field name="l10n_mx_edi_coppel_type" attrs="{'required':[('l10n_mx_edi_inv_addenda', '!=', False)]}" />
+                                <field name="l10n_mx_edi_coppel_deliverydate" attrs="{'required':[('l10n_mx_edi_inv_addenda', '!=', False)]}" />
+                                <field name="l10n_mx_edi_coppel_refid" attrs="{'required':[('l10n_mx_edi_inv_addenda', '!=', False)]}" />
+                                <field name="l10n_mx_edi_coppel_refdate" attrs="{'required':[('l10n_mx_edi_inv_addenda', '!=', False)]}" />
+                            </group>
+                            <group string="Identificación de Referencia">
                                 <field name="l10n_mx_edi_coppel_shipto_id" domain="[('l10n_mx_edi_coppel_esbodega', '=', True)]" />
-                                <field name="l10n_mx_edi_coppel_totallotes" />
+                                <field name="l10n_mx_edi_coppel_totallotes" attrs="{'required':[('l10n_mx_edi_inv_addenda', '!=', False)]}" />
+                            </group>
+                            <group string="Muebles" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}">
+                                <field name="l10n_mx_edi_coppel_fechapromesaent" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
+                                <field name="l10n_mx_edi_coppel_bodegadest" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
+                                <field name="l10n_mx_edi_coppel_bodegarecep" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
+                                <field name="l10n_mx_edi_coppel_fleteCaja" string="Nombre Fletero" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
+                            </group>
+                            <group string="Cargos / Desc. Muebles" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}">
+                                <field name="l10n_mx_edi_coppel_allowancecharge" />
+                                <field name="l10n_mx_edi_coppel_allowancechargetype" string="Tipo" />
+                                <field name="l10n_mx_edi_coppel_allowancechargeservice" string="Tipo de Servicio" />
                             </group>
                         </group>
                         <group>
@@ -93,7 +110,7 @@
                             </group>
                         </group>
                         <group>
-                            <field colspan="4" col="4" name="coppel_line_ids" nolabel="1">
+                            <field colspan="4" col="4" name="coppel_line_ids" nolabel="1" attrs="{'required':[('l10n_mx_edi_inv_addenda', '!=', False)]}">
                                 <tree string="Coppel lines">
                                     <field name="invoice_id" />
                                     <field name="line_id" />

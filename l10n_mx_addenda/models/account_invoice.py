@@ -6,6 +6,8 @@ import requests
 import pprint
 
 from lxml import etree, objectify
+from lxml.objectify import fromstring
+
 from werkzeug import url_quote
 from os.path import join
 from odoo.tools import float_round
@@ -14,16 +16,38 @@ from odoo import api, fields, models, tools, SUPERUSER_ID
 
 _logger = logging.getLogger(__name__)
 
+BODEGAMUEBLES = [
+    (30001, '[30001] CULIACAN'),
+    (30002, '[30002] LEON'),
+    (30003, '[30003] HERMOSILLO'),
+    (30004, '[30004] LAGUNA'),
+    (30006, '[30006] MONTERREY'),
+    (30007, '[30007] GUADALAJARA'),
+    (30008, '[30008] AZCAPOTZALCO'),
+    (30009, '[30009] PUEBLA'),
+    (30010, '[30010] VILLA HERMOSA'),
+    (30011, '[30011] IZTAPALAPA'),
+    (30012, '[30012] IMP_MXL2'),
+    (30013, '[30013] MEXICALI'),
+    (30014, '[30014] IZCALLI'),
+    (30015, '[30015] IXTAPALUCA'),
+    (30016, '[30016] TECAMAC'),
+    (30017, '[30017] MERIDA'),
+    (30018, '[30018] LOS MOCHIS'),
+    (30019, '[30019] VERACRUZ'),
+    (30020, '[30020] GUADALAJARA II '),
+    (30021, '[30021] IXTAPALUCA IMP'),
+    (30022, '[30022] TOLUCA'),
+    (30030, '[30030] TECAMAC II'),
+    (30031, '[30031] PUEBLA II'),
+]
+
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     l10n_mx_edi_coppel_alternateid = fields.Char(string='Alternate Identification (Coppel) *')
     l10n_mx_edi_coppel_codigo = fields.Char(string='Codigo (Coppel) *')
     l10n_mx_edi_coppel_talla = fields.Char(string='Talla (Coppel) *')
-
-
-
-
 
 class AccountInvoiceLineCoppel(models.Model):
     _name = 'account.invoice.line.coppel'
@@ -73,8 +97,32 @@ class AccountInvoice(models.Model):
     l10n_mx_edi_coppel_shipto_id = fields.Many2one('res.partner', string='Entrega Mercancia ')
     l10n_mx_edi_coppel_refdate = fields.Date(string='Fecha de Orden de compra ')
     l10n_mx_edi_coppel_totallotes = fields.Integer(string='Num Paquetes / Lotes ', store=True, compute='_compute_edi_totallotes', readonly=False)
-    coppel_line_ids = fields.One2many('account.invoice.line.coppel', 'invoice_id', string='Coppel Lines', copy=True)    
+    coppel_line_ids = fields.One2many('account.invoice.line.coppel', 'invoice_id', string='Coppel Lines', copy=True)
 
+    l10n_mx_edi_coppel_bodegadest = fields.Selection(BODEGAMUEBLES, string='Bodega Destino')
+    l10n_mx_edi_coppel_bodegarecep = fields.Selection(BODEGAMUEBLES, string='Bodega Receptora')
+    l10n_mx_edi_coppel_fechapromesaent = fields.Date(string='Fecha Promesa Entrega ')
+    l10n_mx_edi_coppel_fleteCaja = fields.Char(string='Flete Caja ')
+    l10n_mx_edi_coppel_allowancecharge = fields.Selection([
+            ('ALLOWANCE_GLOBAL', 'Descuento Global'),
+            ('CHARGE_GLOBAL', 'Cargo Global')
+        ], string='Cargo / Descuento', default='ALLOWANCE_GLOBAL')
+    l10n_mx_edi_coppel_allowancechargetype = fields.Selection([
+            ('BILL_BACK', '[BILL_BACK] Reclamacion'),
+            ('OFF_INVOICE', '[OFF_INVOICE] Fuera de Factura')
+        ], string='Tipo Cargo / Descuento', default='BILL_BACK')
+    l10n_mx_edi_coppel_allowancechargeservice = fields.Selection([
+            ('AA', '[AA] Abono por Publicidad'),
+            ('EAB', '[EAB] Descuento por pronto pago'),
+            ('DXDIST', '[DXDIST] Descuento por distribuir la mercancia de bodega a tienda.'),
+            ('DXALM', '[DXALM] Descuento por resguardar la mercancia'),
+            ('DXECEN', '[DXECEN] Descuento por entregar en una sola bodega'),
+        ], string='Tipo Cargo / Descuento', default='EAB')
+
+    l10n_mx_edi_coppel_type = fields.Selection([
+            ('1', 'Mueble'),
+            ('2', 'Ropa')
+        ], string="Tipo Proveedor", default='1')
 
     def action_generate_linescoppel(self):
         if self.state not in ['draft', 'open']:
@@ -105,6 +153,7 @@ class AccountInvoice(models.Model):
         Moneda = cfdi.get('Moneda') if cfdi is not None else None
         Total = cfdi.get('Total') if cfdi is not None else None
         SubTotal = cfdi.get('SubTotal') if cfdi is not None else None
+        Descuento = cfdi.get('Descuento', 0.0) if cfdi is not None else None
         TipoCambio = cfdi.get('TipoCambio', '1.000000') if cfdi is not None else None
         TotalImpuestosTrasladados = cfdi.Impuestos.get('TotalImpuestosTrasladados') or 0.0
 
@@ -156,23 +205,34 @@ class AccountInvoice(models.Model):
         if self.type == 'out_refund':
             entityType = 'CREDIT_NOTE'
         uniqueCreatorIdentification = '%s%s'%(Serie, Folio)
-        DeliveryDate = str(self.l10n_mx_edi_coppel_deliverydate or '').replace('-', '')
-        ReferenceDate = str(self.l10n_mx_edi_coppel_refdate or '').replace('-', '')
+        
+        
         streetAddressOne = '%s %s %s '%( shipTo.street_name, shipTo.street_number, shipTo.l10n_mx_edi_colony  )
         city = '%s'%( shipTo.l10n_mx_edi_locality or shipTo.city_id.name or '' )
         TotalLotes = self.l10n_mx_edi_coppel_totallotes if (self.l10n_mx_edi_coppel_totallotes >= 1) else lenTotalLotes
         cadena = self._get_l10n_mx_edi_cadena()
+
+        DeliveryDate = str(self.l10n_mx_edi_coppel_deliverydate or '').replace('-', '')
+
+        FechaPromesaEnt = False
+        ReferenceDate = self.l10n_mx_edi_coppel_refdate
+        if self.l10n_mx_edi_coppel_type == '2':
+            ReferenceDate = str(self.l10n_mx_edi_coppel_refdate or '').replace('-', '')
+            FechaPromesaEnt = self.l10n_mx_edi_coppel_fechapromesaent
+
         res = {
+            'adendaType': self.l10n_mx_edi_coppel_type,
             'documentStatus': documentStatus,
             'DeliveryDate': DeliveryDate or '',
             'entityType': entityType,
             'uniqueCreatorIdentification': uniqueCreatorIdentification[:17],
             'referenceIdentification': self.l10n_mx_edi_coppel_refid or '',
             'ReferenceDate': ReferenceDate or '',
+            'FechaPromesaEnt': FechaPromesaEnt,
 
             'gln': company_id.l10n_mx_edi_coppel_gln or '',
             'alternatePartyIdentification': company_id.l10n_mx_edi_coppel_alternateid or '',
-            'IndentificaTipoProv': company_id.l10n_mx_edi_coppel_tipoprov or '2',
+            'IndentificaTipoProv': self.l10n_mx_edi_coppel_type or company_id.l10n_mx_edi_coppel_tipoprov or '2',
 
             'shipto_gln': shipTo.l10n_mx_edi_coppel_gln or '',
             'shipto_name': (shipTo.name or '')[:35],
@@ -180,6 +240,13 @@ class AccountInvoice(models.Model):
             'city': city,
             'postalCode': shipTo.zip,
             'bodegaEnt': shipTo.l10n_mx_edi_coppel_bodegaent or '',
+            'bodegaDestino': self.l10n_mx_edi_coppel_bodegadest or False,
+            'bodegaReceptora': self.l10n_mx_edi_coppel_bodegarecep or False,
+
+            'fleteCaja': self.l10n_mx_edi_coppel_fleteCaja or False,
+            'allowanceChargeType': self.l10n_mx_edi_coppel_allowancecharge or 'ALLOWANCE_GLOBAL',
+            'settlementType': self.l10n_mx_edi_coppel_allowancechargetype or 'BILL_BACK',
+            'specialServicesType': self.l10n_mx_edi_coppel_allowancechargeservice or 'EAB',
 
             'currencyISOCode': Moneda or 'MXN',
             'rateOfChange': TipoCambio,
@@ -202,8 +269,41 @@ class AccountInvoice(models.Model):
                 'record': self,
             }
             add_str = addenda.render(values=values)
-            print('-------- add_str', add_str)
             raise UserError(add_str)
         else:
             raise UserError("No existe addenda relacionada")
+        return True
+
+    @api.multi
+    def action_generate_addendacoppel(self):
+        self.ensure_one()
+        if not self.action_generate_addendacoppel:
+            return True
+        addenda = (
+            self.partner_id.l10n_mx_edi_addenda or
+            self.partner_id.commercial_partner_id.l10n_mx_edi_addenda)
+        if not addenda:
+            return True
+        values = {
+            'record': self,
+        }
+        addenda_node_str = addenda.render(values=values).strip()
+        if not addenda_node_str:
+            return True
+        
+        addenda_node = fromstring(addenda_node_str)
+        if addenda_node.tag != '{http://www.sat.gob.mx/cfd/3}Addenda':
+            node = etree.Element(etree.QName(
+                'http://www.sat.gob.mx/cfd/3', 'Addenda'))
+            node.append(addenda_node)
+            addenda_node = node
+
+        cfdi = self.l10n_mx_edi_get_xml_etree()
+        cfdi.Addenda = addenda_node
+        xml_signed = base64.encodestring(etree.tostring( cfdi, pretty_print=True, xml_declaration=True, encoding='UTF-8'))
+        attachment_id = self.l10n_mx_edi_retrieve_last_attachment()
+        attachment_id.write({
+            'datas': xml_signed,
+            'mimetype': 'application/xml'
+        })
         return True

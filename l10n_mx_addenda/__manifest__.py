@@ -10,7 +10,7 @@
     'author': "OpenBias",
     'website': "https://www.bias.com.mx",
     'category': 'Uncategorized',
-    'version': '0.1',
+    'version': '0.2',
     'depends': ['base', 'account', 'l10n_mx_edi'],
     'data': [
         'security/ir.model.access.csv',

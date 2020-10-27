@@ -101,8 +101,25 @@ class HrPayslipEmployees(models.TransientModel):
 class HrPayslipRun(models.Model):
     _inherit = "hr.payslip.run"
 
+    @api.one
+    @api.depends('slip_ids', 'slip_ids.state', 'slip_ids.l10n_mx_edi_cfdi_uuid')
+    def _compute_state(self):
+        eval_state = True if self.eval_state else False
+        state = 'draft'
+        if len(self.slip_ids) == 0:
+            state = 'draft'
+        elif any(slip.state == 'draft' for slip in self.slip_ids):  # TDE FIXME: should be all ?
+            state = 'draft'
+        elif all(slip.state in ['cancel', 'done'] for slip in self.slip_ids):
+            state = 'close'
+        else:
+            state = 'draft'
+        self.state = state
+        return True
+
     company_id = fields.Many2one('res.company', related='journal_id.company_id', string='Company', readonly=False,
         index=True, store=True, copy=False)  # related is required
+    eval_state = fields.Boolean('Eval State', compute='_compute_state')
 
 
 class HrPayslip(models.Model):

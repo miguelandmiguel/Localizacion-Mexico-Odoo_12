@@ -18,11 +18,12 @@
                 <orderIdentification>
                     <referenceIdentification type="ON"><t t-esc="rec['referenceIdentification']"/></referenceIdentification>
                     <ReferenceDate><t t-esc="rec['ReferenceDate']"/></ReferenceDate>
+                    <FechaPromesaEnt t-if="rec['adendaType'] == '1' and rec['FechaPromesaEnt']"><t t-esc="rec['FechaPromesaEnt']"/></FechaPromesaEnt>
                 </orderIdentification>
                 <seller>
                     <gln><t t-esc="rec['gln']"/></gln>
                     <alternatePartyIdentification type="SELLER_ASSIGNED_IDENTIFIER_FOR_A_PARTY"><t t-esc="rec['alternatePartyIdentification']"/></alternatePartyIdentification>
-                    <IndentificaTipoProv><t t-esc="rec['IndentificaTipoProv']"/></IndentificaTipoProv>
+                    <IndentificaTipoProv><t t-esc="rec['adendaType']"/></IndentificaTipoProv>
                 </seller>
                 <shipTo>
                     <gln><t t-esc="rec['shipto_gln']"/></gln>
@@ -31,16 +32,34 @@
                         <streetAddressOne><t t-esc="rec['streetAddressOne']"/></streetAddressOne>
                         <city><t t-esc="rec['city']"/></city>
                         <postalCode><t t-esc="rec['postalCode']"/></postalCode>
-                        <bodegaEnt><t t-esc="rec['bodegaEnt']"/></bodegaEnt>
+                        <bodegaEnt t-if="rec['adendaType'] == '2' and rec['bodegaEnt']"><t t-esc="rec['bodegaEnt']"/></bodegaEnt>
+                        <BodegaDestino t-if="rec['adendaType'] == '1' and rec['bodegaDestino']"><t t-esc="rec['bodegaDestino']"/></BodegaDestino>
+                        <BodegaReceptora t-if="rec['adendaType'] == '1' and rec['bodegaReceptora']"><t t-esc="rec['bodegaReceptora']"/></BodegaReceptora>
                     </nameAndAddress>
+                    <bodegaEnt t-if="rec['adendaType'] == '2' and rec['bodegaEnt']"><t t-esc="rec['bodegaEnt']"/></bodegaEnt>
+                    <BodegaDestino t-if="rec['adendaType'] == '1' and rec['bodegaDestino']"><t t-esc="rec['bodegaDestino']"/></BodegaDestino>
+                    <BodegaReceptora t-if="rec['adendaType'] == '1' and rec['bodegaReceptora']"><t t-esc="rec['bodegaReceptora']"/></BodegaReceptora>
                 </shipTo>
                 <currency t-att-currencyISOCode="rec['currencyISOCode']">
                     <currencyFunction>BILLING_CURRENCY</currencyFunction>
                     <rateOfChange><t t-esc="rec['rateOfChange']"/></rateOfChange>
                 </currency>
-                <TotalLotes>
-                    <cantidad><t t-esc="rec['TotalLotes']"/></cantidad>
-                </TotalLotes>
+                <FleteCaja t-if="rec['adendaType'] == '1' and rec['fleteCaja']" type="SELLER_PROVIDED"><t t-esc="rec['fleteCaja']" /></FleteCaja>
+                <t t-if="rec['adendaType'] == '1'">
+                    <allowanceCharge t-att-settlementType="rec['settlementType']" t-att-allowanceChargeType="rec['allowanceChargeType']">
+                        <specialServicesType><t t-esc="rec['specialServicesType']"/></specialServicesType>
+                        <monetaryAmountOrPercentage>
+                            <rate base="INVOICE_VALUE">
+                                <percentage>0.000000</percentage>
+                            </rate>
+                        </monetaryAmountOrPercentage>
+                    </allowanceCharge>
+                </t>
+                <t t-if="rec['adendaType'] == '2'">
+                    <TotalLotes>
+                        <cantidad><t t-esc="rec['TotalLotes']"/></cantidad>
+                    </TotalLotes>
+                </t>
                 <t t-foreach="rec['Conceptos']" t-as="line">
                     <lineItem t-att-type="line['tipo']" t-att-number="line['numero']">
                         <tradeItemIdentification>

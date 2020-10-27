@@ -19,3 +19,9 @@ model_id.action_create_report_data('reporte_uno.txt', dataReport1)
 dataReport2 = 'id|Nombre Completo|RFC|CURP\n1|Juan Perez Cruz|XAXX010101000|XAXX010101000'
 model_id.action_create_report_data('reporte_dos.txt', dataReport2)
 action = model_id.action_report_zip()
+
+1. Se crea el Wizard: "report.zip.wiz"
+
+2. Se crea el contenido del reporte 1, en formato TXT
+---- action_create_report_data.
+---- Recibe el nombre del archivo txt, y el contenido
