@@ -40,6 +40,18 @@
                     <BodegaDestino t-if="rec['adendaType'] == '1' and rec['bodegaDestino']"><t t-esc="rec['bodegaDestino']"/></BodegaDestino>
                     <BodegaReceptora t-if="rec['adendaType'] == '1' and rec['bodegaReceptora']"><t t-esc="rec['bodegaReceptora']"/></BodegaReceptora>
                 </shipTo>
+                <t t-if="rec['adendaType'] == '1'">
+                    <t t-if="rec['RegionCel'] != False ">
+                        <RegionCel>
+                            <Región><t t-esc="rec['RegionCel']"/></Región>
+                        </RegionCel>
+                    </t>
+                    <t t-if="rec['noPedimento'] != False ">
+                        <Customs>
+                            <alternatePartyIdentification type="TN"><t t-esc="rec['noPedimento']"/></alternatePartyIdentification>
+                        </Customs>
+                    </t>
+                </t>
                 <currency t-att-currencyISOCode="rec['currencyISOCode']">
                     <currencyFunction>BILLING_CURRENCY</currencyFunction>
                     <rateOfChange><t t-esc="rec['rateOfChange']"/></rateOfChange>

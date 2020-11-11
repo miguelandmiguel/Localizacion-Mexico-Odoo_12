@@ -97,6 +97,8 @@
                                 <field name="l10n_mx_edi_coppel_bodegadest" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
                                 <field name="l10n_mx_edi_coppel_bodegarecep" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
                                 <field name="l10n_mx_edi_coppel_fleteCaja" string="Nombre Fletero" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
+                                <field name="l10n_mx_edi_coppel_regioncel" />
+                                <field name="l10n_mx_edi_coppel_nopedimento" string="Aduana" attrs="{'required':[('l10n_mx_edi_coppel_type', '=', 1)]}" />
                             </group>
                             <group string="Cargos / Desc. Muebles" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}">
                                 <field name="l10n_mx_edi_coppel_allowancecharge" />

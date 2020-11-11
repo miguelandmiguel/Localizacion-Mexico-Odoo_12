@@ -148,7 +148,6 @@ class AccountBankStatement(models.Model):
         if use_new_cursor:
             cr = registry(self._cr.dbname).cursor()
             self = self.with_env(self.env(cr=cr))
-
         statementLines = self.env['account.bank.statement.line']
         Account = self.env["account.account"]
         LayoutLine = self.env['bank.statement.export.layout.line']
@@ -157,17 +156,14 @@ class AccountBankStatement(models.Model):
         AccountAnalytic = self.env["account.analytic.account"]
         Tag = self.env["account.analytic.tag"]
         Codes = self.env['account.code.bank.statement']
-
         self._end_balance()
         if use_new_cursor:
             cr.commit()
-
         codigo = {}
         for codes_id in Codes.search([('company_id', '=', self.company_id.id), ('journal_id', '=', self.journal_id.id)]):
             for code in codes_id.code_line_ids:
                 codigo[ code.name ] = code.account_id and code.account_id.id or False
                 # codigo[ code.name.ljust(3, " ") ] = code.account_id and code.account_id.id or False
-        
         extra_code = []
         ctx = dict(self._context, force_price_include=False)
         len_line_ids = len(self.line_ids.filtered(lambda l: not l.journal_entry_ids))
@@ -179,18 +175,15 @@ class AccountBankStatement(models.Model):
         for indx, st_line in enumerate(self.line_ids.filtered(lambda l: not l.journal_entry_ids)):
             if st_line.journal_entry_ids:
                 continue
-
             if limit != 0:
                 milliseconds_now_02 = millis()
                 milliseconds_tmp = (milliseconds_now_02 - milliseconds_now)
                 if milliseconds_tmp >= milliseconds:
                     break
-
             transaccion = st_line.note.split("|")
             codigo_transaccion = transaccion and transaccion[0].strip() or ""
             concepto_transaccion = transaccion and transaccion[1].strip() or ""
             ref = st_line.ref
-
             if codigo_transaccion in ['T17'] and ref: 
                 ref = ref.replace('0000001','')
                 std_ids = statementLines.search_read(
@@ -208,25 +201,20 @@ class AccountBankStatement(models.Model):
                 ref = ''
             _logger.info("-------- codigo_transaccion %s %s  "%(codigo_transaccion, ref) )
             folioOdoo = ref and ref[:10] or ''
-
             if codigo_transaccion in ['T06']:
                 folioOdoo = ref[7:17]
-
             if codigo_transaccion in ["P14"]:
                 folioOdoo = ref.replace('REF:', '').replace('CIE:1', '').replace('CIE:0', '').strip()
-
             account_id = False
             _logger.info("02 *********** COUNT: %s | Process Line %s/%s - CODE %s -%s"%(counter, indx, len_line_ids, codigo_transaccion, st_line.name))
             counter += 1
             # if counter > 1:
             #     break
-
             res = False
             for layoutline_id in LayoutLine.search_read([('name', '=', folioOdoo)], 
                     fields=['id', 'name', 'cuenta_cargo', 'cuenta_abono', 'motivo_pago', 'referencia_numerica', 
                             'layout_id', 'movel_line_ids', 'partner_id', 'importe']
                 ):
-
                 movel_line_ids = layoutline_id.get('movel_line_ids') and layoutline_id['movel_line_ids'] or []
                 move_lines = AccountMoveLine.browse(movel_line_ids)
                 line_residual = st_line.currency_id and st_line.amount_currency or st_line.amount
@@ -242,12 +230,10 @@ class AccountBankStatement(models.Model):
                 for aml in move_lines:
                     if aml.full_reconcile_id:
                         continue
-                    #
                     # Convertir a la moneda...
                     #
                     if aml.currency_id:
                         break
-                        
                     amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
                     if round(amount_total, 2) >= round(abs(amount), 2):
                         amount_total -= abs(amount)

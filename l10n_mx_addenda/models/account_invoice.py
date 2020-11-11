@@ -42,6 +42,19 @@ BODEGAMUEBLES = [
     (30031, '[30031] PUEBLA II'),
 ]
 
+REGIONCEL = [
+    (1, 'La Paz, Tijuana, Mexicali'),
+    (2, 'Culiacán, Hermosillo, Los Mochis.'),
+    (3, 'Laguna.'),
+    (4, 'Monterrey.'),
+    (5, 'Guadalajara.'),
+    (6, 'León, Izcalli.'),
+    (7, 'Puebla.'),
+    (8, 'Villahermosa, Merida.'),
+    (9, 'México, Iztapalapa, Izcalli, Ixtapaluca, Tecamac.'),
+]
+
+
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
@@ -123,6 +136,8 @@ class AccountInvoice(models.Model):
             ('1', 'Mueble'),
             ('2', 'Ropa')
         ], string="Tipo Proveedor", default='1')
+    l10n_mx_edi_coppel_regioncel = fields.Selection(REGIONCEL, string="Region Celular")
+    l10n_mx_edi_coppel_nopedimento = fields.Char(string='Numero de Pedimento ')
 
     def action_generate_linescoppel(self):
         if self.state not in ['draft', 'open']:
@@ -242,6 +257,8 @@ class AccountInvoice(models.Model):
             'bodegaEnt': shipTo.l10n_mx_edi_coppel_bodegaent or '',
             'bodegaDestino': self.l10n_mx_edi_coppel_bodegadest or False,
             'bodegaReceptora': self.l10n_mx_edi_coppel_bodegarecep or False,
+            'RegionCel': self.l10n_mx_edi_coppel_regioncel or False,
+            'noPedimento': self.l10n_mx_edi_coppel_nopedimento or False,
 
             'fleteCaja': self.l10n_mx_edi_coppel_fleteCaja or False,
             'allowanceChargeType': self.l10n_mx_edi_coppel_allowancecharge or 'ALLOWANCE_GLOBAL',
