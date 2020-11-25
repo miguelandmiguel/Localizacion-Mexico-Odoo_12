@@ -1,26 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
     <data>
-
-
-        <record id="paperformat_us_portrait" model="report.paperformat">
-            <field name="page_height">0</field>
-            <field name="page_width">0</field>
-            <field name="header_spacing">35</field>
-            <field name="margin_top">10</field>
-            <field name="margin_right">7</field>
-            <field name="margin_bottom">20</field>
-            <field name="margin_left">7</field>
-            <field name="header_line" eval="False" />
-            <field name="name">US Letter Portrait</field>
-            <field name="orientation">Portrait</field>
-            <field name="dpi">90</field>
-            <field name="default" eval="True" />
-            <field name="format">Letter</field>
-        </record>
-
-
-
         <template id="report_hr_payslip_mx_document">
             <t t-call="web.external_layout">
                 <div class="page">
@@ -415,6 +396,8 @@
             </t>
         </template>
 
+    </data>
+    <data>
         <!-- QWeb Reports -->
         <report 
             id="hr_payslip_mx"
@@ -424,15 +407,9 @@
             name="l10n_mx_payroll_cfdi.report_hr_payslip_mx"
             file="l10n_mx_payroll_cfdi.report_hr_payslip_mx"
             usage="default"
-            header="False"
             attachment_use="True"
-            attachment="(object.state in ('done')) and ('NOM'+(object.number or '').replace('/','')+'.pdf')"  />
-
-        <!--
-        <record id="hr_payslip_mx" model="ir.actions.report.xml">
-            <field name="paperformat_id" ref="l10n_mx_payroll_cfdi.paperformat_us_portrait"/>
-        </record>
-        -->
+            attachment="'NOM-%s - %s.pdf' % (object.number.replace('/',''), object.employee_id.name )"
+            print_report_name="'NOM-%s - %s' % (object.number.replace('/',''), object.employee_id.name)"  />
 
 
     </data>

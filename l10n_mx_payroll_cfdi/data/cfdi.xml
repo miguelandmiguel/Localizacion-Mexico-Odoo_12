@@ -142,7 +142,6 @@
                                 </t>
                             </nomina12:Percepciones>
                         </t>
-
                         <t t-if="Deducciones is not None">
                             <t t-set="attrDeducciones" t-value="Deducciones.get('attrs')"/>
                             <nomina12:Deducciones 

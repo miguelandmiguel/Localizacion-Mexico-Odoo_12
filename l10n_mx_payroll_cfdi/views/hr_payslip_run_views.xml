@@ -1,0 +1,57 @@
+<odoo>
+    <data>
+
+        <!-- HR Payslip  -->
+        <record id="hr_payslip_run_total_tree" model="ir.ui.view">
+            <field name="name">hr.payslip.run.total.tree</field>
+            <field name="model">hr.payslip.run</field>
+            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_tree"/>
+            <field name="arch" type="xml">
+                <field name="state" position="after">
+                    <field name="eval_state" invisible="1" />
+                    <button string="Confirm Payslips" name="confirm_sheet_run" type="object" states="draft" icon="fa-cogs" />
+                </field>
+            </field>
+        </record>
+        <record id="hr_payslip_run_cfdi_form" model="ir.ui.view">
+            <field name="name">hr_payslip_run_cfdi_form</field>
+            <field name="model">hr.payslip.run</field>
+            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+            <field name="arch" type="xml">
+                <button name="close_payslip_run" position="before" >
+                    <button string="Confirm Payslips" name="confirm_sheet_run" type="object" states="draft" class="oe_highlight" icon="fa-cogs" />
+                    <button string="Refund Payslips" name="refund_sheet_run" type="object" states="close" class="oe_highlight" icon="fa-cogs" />
+                    <button string=" Enviar Nomina" name="enviar_nomina" type="object" class="oe_highlight" icon="fa-envelope-o"/>
+                </button>
+                <button name="close_payslip_run" position="replace"></button>
+                <field name="state" position="before" >
+                    <field name="eval_state" invisible="1" />
+                </field>
+                <field name="credit_note" position="before">
+                    <field name="company_id" />
+                    <field name="struct_id" />
+                    <field name="cfdi_date_payment" />
+                    <field name="cfdi_tipo_nomina_especial" />
+                    <field name="cfdi_tipo_nomina" />
+                </field>
+                <xpath expr="//form/sheet" position="after">
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+        <record id="hr_payslip_run_form_company" model="ir.ui.view">
+            <field name="name">hr.payslip.run.form.company</field>
+            <field name="model">hr.payslip.run</field>
+            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='slip_ids']" position="attributes">
+                    <attribute name="domain">[('company_id', '=', company_id)]</attribute>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

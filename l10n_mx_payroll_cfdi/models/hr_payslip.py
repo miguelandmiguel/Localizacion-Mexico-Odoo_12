@@ -15,6 +15,7 @@ from lxml.objectify import fromstring
 from suds.client import Client
 from suds.plugin import MessagePlugin
 import pprint
+import logging
 
 from odoo import _, api, fields, models, tools
 from odoo.tools.xml_utils import _check_with_xsd
@@ -24,9 +25,12 @@ from odoo.exceptions import UserError
 from odoo.tools.float_utils import float_repr
 from odoo.addons.l10n_mx_edi.tools.run_after_commit import run_after_commit
 
-import logging
+from odoo.tools.safe_eval import safe_eval
+
 
 _logger = logging.getLogger(__name__)
+
+CATALOGO_TIPONOMINA = [('O','Ordinaria'), ('E','Extraordinaria')]
 
 class LogPlugin(MessagePlugin):
     def pretty_log(self, xml_content):
@@ -41,7 +45,6 @@ class LogPlugin(MessagePlugin):
         self.pretty_log( '%s'%context.envelope )
     def received(self, context):
         self.pretty_log( '%s'%context.reply)
-
 
 CFDI_TEMPLATE_33 = 'l10n_mx_payroll_cfdi.cfdipayslipv33'
 CFDI_XSLT_CADENA = 'l10n_mx_edi/data/3.3/cadenaoriginal.xslt'
@@ -95,32 +98,6 @@ class HrPayslipEmployees(models.TransientModel):
 
     employee_ids = fields.Many2many('hr.employee', 'hr_employee_group_rel', 'payslip_id', 'employee_id', 'Employees',
                                     default=lambda self: self._get_employees(), required=True)
-
-
-
-class HrPayslipRun(models.Model):
-    _inherit = "hr.payslip.run"
-
-    @api.one
-    @api.depends('slip_ids', 'slip_ids.state', 'slip_ids.l10n_mx_edi_cfdi_uuid')
-    def _compute_state(self):
-        eval_state = True if self.eval_state else False
-        state = 'draft'
-        if len(self.slip_ids) == 0:
-            state = 'draft'
-        elif any(slip.state == 'draft' for slip in self.slip_ids):  # TDE FIXME: should be all ?
-            state = 'draft'
-        elif all(slip.state in ['cancel', 'done'] for slip in self.slip_ids):
-            state = 'close'
-        else:
-            state = 'draft'
-        self.state = state
-        return True
-
-    company_id = fields.Many2one('res.company', related='journal_id.company_id', string='Company', readonly=False,
-        index=True, store=True, copy=False)  # related is required
-    eval_state = fields.Boolean('Eval State', compute='_compute_state')
-
 
 class HrPayslip(models.Model):
     _name = 'hr.payslip'
@@ -191,6 +168,15 @@ class HrPayslip(models.Model):
         states={'draft': [('readonly', False)]},
         help="Keep empty to use the current México central time")
 
+    cfdi_es_sncf = fields.Boolean(string='Entidad SNCF')
+    cfdi_source_sncf = fields.Selection([
+            ('IP', 'Ingresos propios'),
+            ('IF', 'Ingreso federales'),
+            ('IM', 'Ingresos mixtos')],
+        string="Recurso Entidad SNCF", oldname="source_sncf")
+    cfdi_amount_sncf = fields.Monetary(string="Monto Recurso SNCF", oldname="amount_sncf")
+    cfdi_monto = fields.Monetary(string="Monto CFDI", copy=False, oldname="monto_cfdi")
+
 
     @api.multi
     @api.depends('l10n_mx_edi_cfdi_name')
@@ -221,10 +207,29 @@ class HrPayslip(models.Model):
             rec.l10n_mx_edi_cfdi_certificate_id = self.env['l10n_mx_edi.certificate'].sudo().search(
                 [('serial_number', '=', certificate)], limit=1)
 
+    # YTI TODO To rename. This method is not really an onchange, as it is not in any view
+    # employee_id and contract_id could be browse records
+    @api.multi
+    def onchange_employee_id(self, date_from, date_to, employee_id=False, contract_id=False):
+        res = super(HrPayslip, self).onchange_employee_id(date_from=date_from, date_to=date_to, employee_id=employee_id, contract_id=contract_id)
+        model = self.env.context.get('active_model')
+        active_id = self.env.context.get('active_id')
+        if model == 'hr.payslip.run':
+            payslip_run_id = self.env[model].browse(active_id)
+            struct = payslip_run_id.struct_id
+            if not struct:
+                return res
+            res['value'].update({
+                'struct_id': struct.id,
+            })
+        return res
+
+
+
+
     # -------------------------------------------------------------------------
     # HELPERS
     # -------------------------------------------------------------------------
-
     @api.model
     def _get_l10n_mx_edi_cadena(self):
         self.ensure_one()
@@ -249,17 +254,16 @@ class HrPayslip(models.Model):
         :param cfdi_as_tree: The cfdi converted as a tree
         :return: A string computed with the invoice data called the cadena
         '''
-        xslt_root = etree.parse(tools.file_open(xslt_path))
+        res = tools.file_open(xslt_path)
+        xslt_root = etree.parse(res)
         return str(etree.XSLT(xslt_root)(cfdi_as_tree))        
 
     def getDatasXmlPayslip(self):
-        
         RegimenModel = self.env['l10n_mx_payroll.regimen_contratacion']
         RiesgoModel = self.env['l10n_mx_payroll.riesgo_puesto']
         JornadaModel = self.env['l10n_mx_payroll.tipojornada']
         PeriodicidadModel = self.env['l10n_mx_payroll.periodicidad_pago']
         TypeModel = self.env['hr.contract.type']
-
 
         cfdi = self.l10n_mx_edi_get_xml_etree()
         cfdi = cfdi if cfdi is not None else {}
@@ -292,7 +296,6 @@ class HrPayslip(models.Model):
             'FechaTimbrado': tfd.get('FechaTimbrado'),
             'AmountText': self.l10n_mx_edi_amount_to_text( Total )
         }
-
         if Nomina is not None:
             NomEmisor = None
             NomReceptor = None
@@ -323,11 +326,10 @@ class HrPayslip(models.Model):
                     'TotalGravado': float(nom.Percepciones.get('TotalGravado', 0.0)),
                     'TotalExento': float(nom.Percepciones.get('TotalExento', 0.0)),
                     'Lines': []
-                }              
+                }
                 pindx = 0
                 for perc in nom.Percepciones.Percepcion:
                     pindx += 1
-
                     psat = nodo_p.get( perc.get('TipoPercepcion') )
                     TipoPercepcion = '[%s] %s'%( psat.get('code'), psat.get('name')  )
                     perc_tmp = {
@@ -339,7 +341,6 @@ class HrPayslip(models.Model):
                         'TipoPercepcion': TipoPercepcion
                     }
                     Percepciones['Lines'].append(perc_tmp)
-                
                 Deducciones = {
                     'TotalOtrasDeducciones': float(nom.Deducciones.get('TotalOtrasDeducciones', 0.0)),
                     'TotalImpuestosRetenidos': float(nom.Deducciones.get('TotalImpuestosRetenidos', 0.0)),
@@ -357,7 +358,6 @@ class HrPayslip(models.Model):
                         'Importe': float(deduc.get('Importe')),
                     }
                     Deducciones['Lines'].append(deduc_tmp)
-
                 OtrosPagos = []
                 if nom.OtrosPagos is not None:
                     oindx = 0
@@ -376,7 +376,6 @@ class HrPayslip(models.Model):
                 if inca is not None:
                     Incapacidad = inca.get('ImporteMonetario')
                 break
-
             TipoRegimen = NomReceptor.get('TipoRegimen')
             if TipoRegimen is not None:
                 reg = RegimenModel.search([('code', '=', TipoRegimen)], limit=1)
@@ -401,9 +400,7 @@ class HrPayslip(models.Model):
             if PeriodicidadPago is not None:
                 periodo = PeriodicidadModel.search([('code', '=', PeriodicidadPago)], limit=1)
                 PeriodicidadPago = '[%s] %s'%( periodo.code, periodo.name )
-
             TipoNomina = Nomina.get('TipoNomina')
-
             resNomina = {
                 'RegistroPatronal': NomEmisor.get('RegistroPatronal'),
                 'RfcPatronOrigen': NomEmisor.get('RfcPatronOrigen'),
@@ -479,7 +476,7 @@ class HrPayslip(models.Model):
         domain = [
             ('res_id', '=', self.id),
             ('res_model', '=', self._name),
-            ('name', '=', self.l10n_mx_edi_cfdi_name)]
+            ('name', '=', self.l10n_mx_edi_cfdi_name )]
         return self.env['ir.attachment'].search(domain)
 
     @api.model
@@ -499,7 +496,8 @@ class HrPayslip(models.Model):
         self.ensure_one()
         if cfdi is None:
             cfdi = base64.decodestring(self.l10n_mx_edi_cfdi)
-        return fromstring(cfdi)
+        res = fromstring(cfdi)
+        return res
 
     @api.model
     def l10n_mx_edi_get_tfd_etree(self, cfdi):
@@ -566,11 +564,6 @@ class HrPayslip(models.Model):
             self.cfdi_timeinvoice = date_mx.strftime(DEFAULT_SERVER_TIME_FORMAT)
         return True
 
-
-
-
-
-
     @api.multi
     def _l10n_mx_edi_post_sign_process(self, xml_signed, code=None, msg=None):
         """Post process the results of the sign service.
@@ -607,7 +600,6 @@ class HrPayslip(models.Model):
     def l10n_mx_edi_log_error(self, message):
         self.ensure_one()
         self.message_post(body=_('Error during the process: %s') % message)
-
 
     @api.multi
     def _l10n_mx_edi_finkok_sign(self, pac_info):
@@ -805,7 +797,6 @@ class HrPayslip(models.Model):
         from l10n_mx_edi_origin, hope the next structure:
             relation type|UUIDs separated by ,"""
         self.ensure_one()
-        _logger.info(' self.l10n_mx_edi_origin --- %s '%self.l10n_mx_edi_origin )
         if self.l10n_mx_edi_origin == False:
             return {}
         origin = self.l10n_mx_edi_origin.split('|')
@@ -1163,14 +1154,13 @@ class HrPayslip(models.Model):
         attachment = self.env.ref('l10n_mx_edi.xsd_cached_cfdv33_xsd', False)
         xsd_datas = base64.b64decode(attachment.datas) if attachment else b''
         # -Compute cadena
-
         tree = self.l10n_mx_edi_get_xml_etree(cfdi)
         cadena = self.l10n_mx_edi_generate_cadena(CFDI_XSLT_CADENA, tree)
         tree.attrib[node_sello] = certificate_id.sudo().get_encrypted_cadena(cadena)
         # Check with xsd
 
         xmlDatas = etree.tostring(tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')
-        _logger.info('------------------xmlDatas %s '%xmlDatas )
+        # _logger.info('------------------xmlDatas %s '%xmlDatas )
         if xsd_datas:
             try:
                 with BytesIO(xsd_datas) as xsd:
@@ -1202,13 +1192,9 @@ class HrPayslip(models.Model):
         fechaAlta = self.employee_id.cfdi_date_start or self.employee_id.contract_id.date_start or False
         riesgoPuesto = self.employee_id.job_id and self.employee_id.job_id.cfdi_riesgopuesto_id and self.employee_id.job_id.cfdi_riesgopuesto_id.code or False
         salarioDiarioIntegrado = self.employee_id.cfdi_sueldo_diario and '%.2f'%self.employee_id.cfdi_sueldo_diario or False
-        
         tipoContrato = self.contract_id.type_id and self.contract_id.type_id.code or ''
         periodicidadPago = self.contract_id.cfdi_periodicidadpago_id and self.contract_id.cfdi_periodicidadpago_id.code or ''
         tipoRegimen = self.contract_id.cfdi_regimencontratacion_id and self.contract_id.cfdi_regimencontratacion_id.code or ''
-
-        _logger.info('---------- Validacion %s -'%(self.contract_id.cfdi_periodicidadpago_id) )
-
         res = False
         if not self.employee_id.cfdi_rfc:
             post_msg.extend([_('El Empleado no tiene "RFC" ')])
@@ -1257,6 +1243,8 @@ class HrPayslip(models.Model):
             ctx = self.env.context.copy()
             ctx.pop('default_type', False)
             payslip.l10n_mx_edi_cfdi_name = filename
+
+            # Guarda XML
             attachment_id = self.env['ir.attachment'].with_context(ctx).create({
                 'name': filename,
                 'res_id': payslip.id,
@@ -1269,9 +1257,28 @@ class HrPayslip(models.Model):
                 body=_('CFDI document generated (may be not signed)'),
                 attachment_ids=[attachment_id.id],
                 subtype='account.mt_invoice_validated')
-            # payslip._l10n_mx_edi_sign()
             cfdi_values = payslip._l10n_mx_edi_sign()
+            payslip.action_payslip_print_report()
         return {}
+
+    @api.multi
+    def action_payslip_print_report(self):
+        for payslip in self:
+            # Guarda PDF
+            try:
+                if not payslip.struct_id or not payslip.struct_id.report_id:
+                    report = self.env.ref('hr_payroll.action_report_payslip', False)
+                else:
+                    report = payslip.struct_id.report_id
+                    aa = report.render_qweb_pdf(payslip.id)
+                pdf_content, content_type = report.render_qweb_pdf(payslip.id)
+                if payslip.struct_id.report_id.print_report_name:
+                    pdf_name = safe_eval(payslip.struct_id.report_id.print_report_name, {'object': payslip})
+                else:
+                    pdf_name = _("Payslip")
+            except Exception as e:
+                payslip.message_post(body='Error al imprimir : %s '%(e)  )
+        return True
 
     @api.multi
     def action_payslip_done(self):
@@ -1285,8 +1292,6 @@ class HrPayslip(models.Model):
                 result = rec.l10n_mx_edi_retry()
                 if result.get('error'):
                     return result
-                # if error:
-                #     return error
         return res
 
     @api.one
@@ -1399,5 +1404,30 @@ class HrPayslip(models.Model):
         self.message_post(
             body=body_msg + create_list_html(post_msg))
         return cancelled
+
+    @api.multi
+    def send_nomina(self):
+        self.ensure_one()
+        template = self.env.ref('l10n_mx_payroll_cfdi.email_template_payroll', False)
+        compose_form = self.env.ref('mail.email_compose_message_wizard_form', False)
+        ctx = dict()
+        ctx.update({
+            'default_model': 'hr.payslip',
+            'default_res_id': self.id,
+            'default_use_template': bool(template),
+            'default_template_id': template.id,
+            'default_composition_mode': 'comment',
+        })
+        return {
+            'name': _('Compose Email'),
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'mail.compose.message',
+            'views': [(compose_form.id, 'form')],
+            'view_id': compose_form.id,
+            'target': 'new',
+            'context': ctx,
+        }
 
 # http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/GuiaNomina11102019.pdf

@@ -1,48 +1,6 @@
 <odoo>
     <data>
 
-        <!-- HR Payslip  -->
-        <record id="hr_payslip_run_form_company" model="ir.ui.view">
-            <field name="name">hr.payslip.run.form.company</field>
-            <field name="model">hr.payslip.run</field>
-            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
-            <field name="arch" type="xml">
-                <xpath expr="//field[@name='slip_ids']" position="attributes">
-                    <attribute name="domain">[('company_id', '=', company_id)]</attribute>
-                </xpath>
-            </field>
-        </record>
-        <record id="hr_payslip_run_total_tree" model="ir.ui.view">
-            <field name="name">hr.payslip.run.total.tree</field>
-            <field name="model">hr.payslip.run</field>
-            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_tree"/>
-            <field name="arch" type="xml">
-                <field name="state" position="after">
-                    <field name="eval_state" invisible="1" />
-                    <button string="Confirm Payslips" name="confirm_sheet_run" type="object" states="draft" icon="fa-cogs" />
-                </field>
-            </field>
-        </record>
-        <record id="hr_payslip_run_cfdi_form" model="ir.ui.view">
-            <field name="name">hr_payslip_run_cfdi_form</field>
-            <field name="model">hr.payslip.run</field>
-            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
-            <field name="arch" type="xml">
-                <field name="credit_note" position="before">
-                    <field name="company_id" />
-                    <field name="cfdi_date_payment" />
-                    <field name="cfdi_tipo_nomina_especial" />
-                    <field name="cfdi_tipo_nomina" />
-                </field>
-                <xpath expr="//form/sheet" position="after">
-                    <div class="oe_chatter">
-                        <field name="message_follower_ids" widget="mail_followers"/>
-                        <field name="message_ids" widget="mail_thread"/>
-                    </div>
-                </xpath>
-            </field>
-        </record>
-
         <record id="view_hr_payslip_cfdichatter_form" model="ir.ui.view">
             <field name="name">view_hr_payslip_cfdichatter_form</field>
             <field name="model">hr.payslip</field>
@@ -68,36 +26,40 @@
             </field>
         </record>
 
-
         <record id="view_hr_payslip_cfdi_form" model="ir.ui.view">
             <field name="name">view_hr_payslip_cfdi_form</field>
             <field name="model">hr.payslip</field>
             <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
             <field name="arch" type="xml">
+                <notebook position="inside">
+                    <page string="Info SAT">
+                        <group col="4">
+                            <field name="cfdi_date_payment" />
+                            <field name="cfdi_tipo_nomina_especial" />
+                            <field name="cfdi_tipo_nomina" />
+                        </group>
+                        <group col="4">
+                            <field name="date_invoice" readonly="1" />
+                            <field name="cfdi_timeinvoice" readonly="1" />
+                            <label for="l10n_mx_edi_pac_status"/>
+                            <div class="o_row">
+                                <field name="l10n_mx_edi_pac_status"/>
+                                <button name="l10n_mx_edi_update_pac_status" string="Retry" class="oe_link" type="object" groups="account.group_account_invoice" attrs="{'invisible':[('l10n_mx_edi_pac_status', 'in', ['signed', 'cancelled', False])]}"/>
+                            </div>
+                            <label for="l10n_mx_edi_sat_status"/>
+                            <div class="o_row">
+                                <field name="l10n_mx_edi_sat_status"/>
+                                <button name="l10n_mx_edi_update_pac_status" string="Retry" class="oe_link" type="object" groups="account.group_account_invoice" attrs="{'invisible':['|', ('l10n_mx_edi_pac_status', 'in', ['retry', 'to_sign', 'to_cancel', False]), ('state', '=', 'draft')]}"/>
+                            </div>
+                            <label for="l10n_mx_edi_cfdi_uuid"/>
+                            <div class="o_row">
+                                <field name="l10n_mx_edi_cfdi_uuid"/>
+                            </div>
+                            <field name="l10n_mx_edi_origin"/>
+                        </group>
+                    </page>
+                </notebook>
                 <field name="name" position="after">
-                    <field name="date_invoice" />
-                    <field name="cfdi_timeinvoice" />
-                    <field name="cfdi_date_payment" />
-                    <field name="cfdi_tipo_nomina_especial" />
-                    <field name="cfdi_tipo_nomina" />
-
-                    <label for="l10n_mx_edi_pac_status" states="open,paid,cancel"/>
-                    <div class="o_row">
-                        <field name="l10n_mx_edi_pac_status" states="open,paid,cancel"/>
-                        <button name="l10n_mx_edi_update_pac_status" string="Retry" class="oe_link" type="object" groups="account.group_account_invoice" attrs="{'invisible':[('l10n_mx_edi_pac_status', 'in', ['signed', 'cancelled', False])]}"/>
-                    </div>
-                    <label for="l10n_mx_edi_sat_status" states="open,paid,cancel"/>
-                    <div class="o_row">
-                        <field name="l10n_mx_edi_sat_status" states="open,paid,cancel"/>
-                        <button name="l10n_mx_edi_update_sat_status" string="Retry" class="oe_link" type="object" groups="account.group_account_invoice" attrs="{'invisible':['|', ('l10n_mx_edi_pac_status', 'in', ['retry', 'to_sign', 'to_cancel', False]), ('state', '=', 'draft')]}"/>
-                    </div>
-                    <label for="l10n_mx_edi_cfdi_uuid" states="open,paid,cancel"/>
-                    <div class="o_row">
-                        <field name="l10n_mx_edi_cfdi_uuid" states="open,paid,cancel"/>
-                    </div>
-                    <field name="l10n_mx_edi_origin"/>
-
-
                 </field>
             </field>
         </record>
@@ -110,6 +72,7 @@
                 <button name="refund_sheet" position="replace"></button>
                 <button name="action_payslip_cancel" position="replace">
                     <button string="Cancel Payslip" name="action_payslip_cancel_nomina" type="object" states="draft,hr_check,confirm,verify,done" class="oe_highlight"/>
+                    <button name="send_nomina" class="oe_highlight" string="Enviar por correo" type="object"/>
                 </button>
                 <field name="state">
                     <field name="state" widget="statusbar" statusbar_visible="draft,cancel,confirm"/>
