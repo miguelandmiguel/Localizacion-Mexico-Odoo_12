@@ -14,6 +14,32 @@ import csv
 _logger = logging.getLogger(__name__)
 
 
+class HrRuleInput(models.Model):
+    _inherit = 'hr.rule.input'
+    _description = 'Salary Rule Input'
+
+
+    @api.multi
+    def name_get(self):
+        result = []
+        for rec in self:
+            result.append((rec.id, "[%s] %s" % (rec.code, rec.name or '')))
+        return result
+
+    @api.model
+    def name_search(self, name, args=None, operator='ilike', limit=100):
+        recs = super(HrRuleInput, self).name_search(name, args=args, operator=operator, limit=limit)
+        args = args or []
+        recs = self.browse()
+        if name:
+            recs = self.search([('code', operator, name)] + args, limit=limit)
+        if not recs:
+            recs = self.search([('name', operator, name)] + args, limit=limit)
+        return recs.name_get()
+
+
+
+
 class HrRuleInputCode(models.Model):
     _name = 'hr.rule.input.code'
     _description = 'Salary Rule Input Code'
