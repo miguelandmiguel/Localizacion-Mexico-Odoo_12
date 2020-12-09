@@ -17,16 +17,17 @@ from suds.plugin import MessagePlugin
 import pprint
 import logging
 
-from odoo import _, api, fields, models, tools
+from odoo import _, api, fields, models, tools, registry
 from odoo.tools.xml_utils import _check_with_xsd
 from odoo.tools import DEFAULT_SERVER_TIME_FORMAT
 from odoo.tools import float_round
-from odoo.exceptions import UserError
 from odoo.tools.float_utils import float_repr
+from odoo.tools.misc import split_every
+from odoo.tools.safe_eval import safe_eval
+from odoo.exceptions import UserError
 from odoo.addons.l10n_mx_edi.tools.run_after_commit import run_after_commit
 
-from odoo.tools.safe_eval import safe_eval
-
+import threading
 
 _logger = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ class HrPayslipEmployees(models.TransientModel):
     _description = 'Generate payslips for all selected employees'
 
     def _get_available_contracts_domain(self):
-        return [('contract_ids.state', 'in', ('open', 'close')), ('company_id', '=', self.env.user.company_id.id)]
+        return [('contract_id.state', 'in', ('open', 'close')), ('company_id', '=', self.env.user.company_id.id)]
 
     def _get_employees(self):
         # YTI check dates too
@@ -98,6 +99,115 @@ class HrPayslipEmployees(models.TransientModel):
 
     employee_ids = fields.Many2many('hr.employee', 'hr_employee_group_rel', 'payslip_id', 'employee_id', 'Employees',
                                     default=lambda self: self._get_employees(), required=True)
+
+    @api.model
+    def _run_compute_sheet_tasks(self, use_new_cursor=False, active_id=False, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+
+            payslipModel = self.env['hr.payslip']
+            payslips = []
+            for employees_chunk in split_every(20, employee_ids):
+                for employee in self.env['hr.employee'].browse(employees_chunk):
+                    _logger.info('--- Nomina Procesando Employees %s', employees_chunk )
+                    slip_data = self.env['hr.payslip'].onchange_employee_id(from_date, to_date, employee.id, contract_id=False)
+                    res = {
+                        'employee_id': employee.id,
+                        'name': slip_data['value'].get('name'),
+                        'struct_id': slip_data['value'].get('struct_id'),
+                        'contract_id': slip_data['value'].get('contract_id'),
+                        'payslip_run_id': active_id,
+                        'input_line_ids': [(0, 0, x) for x in slip_data['value'].get('input_line_ids')],
+                        'worked_days_line_ids': [(0, 0, x) for x in slip_data['value'].get('worked_days_line_ids')],
+                        'date_from': from_date,
+                        'date_to': to_date,
+                        'credit_note': credit_note,
+                        'company_id': employee.company_id.id,
+                    }
+                    payslip_id = self.env['hr.payslip'].create(res)
+                    payslips.append(payslip_id.id)
+                    if use_new_cursor:
+                        self._cr.commit()
+            _logger.info('--- Nomina payslips %s ', len(payslips) )
+            for slip_chunk in split_every(5, payslips):
+                _logger.info('--- Nomina payslip_ids %s ', slip_chunk )
+                try:
+                    payslipModel.with_context(slip_chunk=True).browse(slip_chunk).compute_sheet()
+                    if use_new_cursor:
+                        self._cr.commit()
+                except:
+                    pass
+            if use_new_cursor:
+                self._cr.commit()
+
+        finally:
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return {}
+
+    def _compute_sheet_threading(self, active_id, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['hr.payslip.employees']._run_compute_sheet_tasks(
+                use_new_cursor=self._cr.dbname,
+                active_id=active_id, from_date=from_date, to_date=to_date, credit_note=credit_note, employee_ids=employee_ids)
+            new_cr.close()
+            return {}
+
+    @api.multi
+    def compute_sheet(self):
+        [data] = self.read()
+        active_id = self.env.context.get('active_id')
+        if active_id:
+            [run_data] = self.env['hr.payslip.run'].browse(active_id).read(['date_start', 'date_end', 'credit_note'])
+        from_date = run_data.get('date_start')
+        to_date = run_data.get('date_end')
+        if not data['employee_ids']:
+            raise UserError(_("You must select employee(s) to generate payslip(s)."))
+        threaded_calculation = threading.Thread(target=self._compute_sheet_threading, args=( active_id, from_date, to_date, run_data.get('credit_note'), data['employee_ids'] ))
+        threaded_calculation.start()
+        return {'type': 'ir.actions.act_window_close'}
+
+    @api.multi
+    def compute_sheet_old(self):
+        payslips = self.env['hr.payslip']
+        [data] = self.read()
+        active_id = self.env.context.get('active_id')
+        if active_id:
+            [run_data] = self.env['hr.payslip.run'].browse(active_id).read(['date_start', 'date_end', 'credit_note'])
+        from_date = run_data.get('date_start')
+        to_date = run_data.get('date_end')
+        if not data['employee_ids']:
+            raise UserError(_("You must select employee(s) to generate payslip(s)."))
+        for employee in self.env['hr.employee'].browse(data['employee_ids']):
+            slip_data = self.env['hr.payslip'].onchange_employee_id(from_date, to_date, employee.id, contract_id=False)
+            res = {
+                'employee_id': employee.id,
+                'name': slip_data['value'].get('name'),
+                'struct_id': slip_data['value'].get('struct_id'),
+                'contract_id': slip_data['value'].get('contract_id'),
+                'payslip_run_id': active_id,
+                'input_line_ids': [(0, 0, x) for x in slip_data['value'].get('input_line_ids')],
+                'worked_days_line_ids': [(0, 0, x) for x in slip_data['value'].get('worked_days_line_ids')],
+                'date_from': from_date,
+                'date_to': to_date,
+                'credit_note': run_data.get('credit_note'),
+                'company_id': employee.company_id.id,
+                'cfdi_source_sncf': slip_data['value'].get('cfdi_source_sncf'),
+                'cfdi_amount_sncf': slip_data['value'].get('cfdi_amount_sncf'),
+                'cfdi_tipo_nomina': slip_data['value'].get('cfdi_tipo_nomina'),
+                'cfdi_tipo_nomina_especial': slip_data['value'].get('cfdi_tipo_nomina_especial')
+            }
+            payslips += self.env['hr.payslip'].create(res)
+        payslips.compute_sheet()
+        return {'type': 'ir.actions.act_window_close'}
+
 
 class HrPayslip(models.Model):
     _name = 'hr.payslip'
@@ -170,11 +280,12 @@ class HrPayslip(models.Model):
 
     cfdi_es_sncf = fields.Boolean(string='Entidad SNCF')
     cfdi_source_sncf = fields.Selection([
+            ('', ''),
             ('IP', 'Ingresos propios'),
             ('IF', 'Ingreso federales'),
             ('IM', 'Ingresos mixtos')],
         string="Recurso Entidad SNCF", oldname="source_sncf")
-    cfdi_amount_sncf = fields.Monetary(string="Monto Recurso SNCF", oldname="amount_sncf")
+    cfdi_amount_sncf = fields.Monetary(string="Monto Recurso SNCF", oldname="amount_sncf", default=False)
     cfdi_monto = fields.Monetary(string="Monto CFDI", copy=False, oldname="monto_cfdi")
 
 
@@ -216,6 +327,13 @@ class HrPayslip(models.Model):
         active_id = self.env.context.get('active_id')
         if model == 'hr.payslip.run':
             payslip_run_id = self.env[model].browse(active_id)
+            cfdi_tipo_nomina = 'O' if payslip_run_id.cfdi_tipo_nomina_especial == 'ord' else 'E'
+            res['value'].update({
+                "cfdi_source_sncf": payslip_run_id.cfdi_source_sncf,
+                "cfdi_amount_sncf": payslip_run_id.cfdi_amount_sncf,
+                "cfdi_tipo_nomina": cfdi_tipo_nomina,
+                "cfdi_tipo_nomina_especial": payslip_run_id.cfdi_tipo_nomina_especial
+            })
             struct = payslip_run_id.struct_id
             if not struct:
                 return res
@@ -265,11 +383,23 @@ class HrPayslip(models.Model):
         PeriodicidadModel = self.env['l10n_mx_payroll.periodicidad_pago']
         TypeModel = self.env['hr.contract.type']
 
+        self._compute_cfdi_values()
+        attachment_id = self.l10n_mx_edi_retrieve_last_attachment()
+        print('---- attachment_id ', attachment_id)
+        if not attachment_id:
+            return {}
+
         cfdi = self.l10n_mx_edi_get_xml_etree()
         cfdi = cfdi if cfdi is not None else {}
         Emisor = cfdi.Emisor
         Nomina = self.l10n_mx_edi_get_nomina12_etree(cfdi)
         tfd = self.l10n_mx_edi_get_tfd_etree(cfdi)
+
+        if not cfdi:
+            print('--------asdasdassada ')
+            return {
+                'Serie': ''
+            }
 
         nodo_p = self._get_agrupadorsat_type('p')
         nodo_d = self._get_agrupadorsat_type('d')
@@ -471,12 +601,13 @@ class HrPayslip(models.Model):
         :return: An ir.attachment recordset
         """
         self.ensure_one()
-        if not self.l10n_mx_edi_cfdi_name:
-            return []
+        # if not self.l10n_mx_edi_cfdi_name:
+        #     return []
         domain = [
             ('res_id', '=', self.id),
             ('res_model', '=', self._name),
-            ('name', '=', self.l10n_mx_edi_cfdi_name )]
+            ('name', 'like', '.xml' )
+        ]
         return self.env['ir.attachment'].search(domain)
 
     @api.model
@@ -1098,7 +1229,6 @@ class HrPayslip(models.Model):
             'periodicidad_pago': periodicidad_pago,
             'banco': banco,
             'num_cuenta': num_cuenta,
-            
             'TotalPercepciones': "%.2f"%TotalPercepciones,
             'TotalDeducciones': "%.2f"%TotalDeducciones,
             'TotalOtrosPagos': "%.2f"%TotalOtrosPagos if TotalOtrosPagos != None else None,

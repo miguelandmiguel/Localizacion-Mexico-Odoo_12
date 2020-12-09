@@ -18,11 +18,12 @@
             <field name="model">hr.payslip.run</field>
             <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
             <field name="arch" type="xml">
-                <button name="close_payslip_run" position="before" >
+                <field name="state" position="before" >
                     <button string="Confirm Payslips" name="confirm_sheet_run" type="object" states="draft" class="oe_highlight" icon="fa-cogs" />
                     <button string="Refund Payslips" name="refund_sheet_run" type="object" states="close" class="oe_highlight" icon="fa-cogs" />
                     <button string=" Enviar Nomina" name="enviar_nomina" type="object" class="oe_highlight" icon="fa-envelope-o"/>
-                </button>
+                    <button string=" Calcular Nomina" name="cumpute_sheet_run" type="object" class="oe_highlight" icon="fa-list-alt"/>
+                </field>
                 <button name="close_payslip_run" position="replace"></button>
                 <field name="state" position="before" >
                     <field name="eval_state" invisible="1" />

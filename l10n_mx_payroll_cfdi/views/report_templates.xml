@@ -1,0 +1,59 @@
+<odoo>
+    <data>
+        <template id="report_assets_common_nomina" name="report_assets_common_nomina assets" inherit_id="web.report_assets_common">
+            <xpath expr="." position="inside">
+                <link rel="stylesheet" type="text/scss" href="/l10n_mx_payroll_cfdi/static/src/scss/layout_nomina.scss"/>
+            </xpath>
+        </template>
+
+        <template id="external_layout_nomina">
+            <div class="header" t-att-style="report_header_style">
+                <div class="o_nomina_header">
+                    <div class="float-right">
+                        <h3 class="mt0 text-right" t-field="company.report_header"/>
+                    </div>
+                    <div class="row mb8">
+                        <div class="col-3">
+                            <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" alt="Logo" />
+                        </div>
+                        <div class="col-9 text-right mb4">
+                            <div>
+                                <strong t-field="company.partner_id.name"/>
+                            </div>
+                            <div name="company_address" class="mb4">
+                                <span class="company_address" t-field="company.partner_id"
+                                    t-options='{"widget": "contact", "fields": ["address"], "no_marker": true}'/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix mb8"/>
+                </div>
+            </div>
+            <div class="article o_report_layout_nomina"  t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id" t-att-data-oe-lang="o and o.env.context.get('lang')">
+                <t t-call="web.address_layout"/>
+                <t t-raw="0"/>
+            </div>
+            <div class="footer o_nomina_footer">
+            </div>
+        </template>
+
+        <!-- Public api: layout to t-call from report payslips -->
+        <template id="nomina_external_layout">
+            <t t-if="not o" t-set="o" t-value="doc"/>
+            <t t-if="not company">
+                <!-- Multicompany -->
+                <t t-if="company_id">
+                    <t t-set="company" t-value="company_id"/>
+                </t>
+                <t t-elif="o and 'company_id' in o">
+                    <t t-set="company" t-value="o.company_id.sudo()"/>
+                </t>
+                <t t-else="else">
+                    <t t-set="company" t-value="res_company"/>
+                </t>
+            </t>
+            <t t-call="l10n_mx_payroll_cfdi.external_layout_nomina"><t t-raw="0"/></t>
+        </template>
+
+    </data>
+</odoo>

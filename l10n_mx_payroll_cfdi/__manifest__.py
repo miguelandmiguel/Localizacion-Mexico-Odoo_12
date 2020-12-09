@@ -13,6 +13,7 @@
     'version': '1.3',
     'depends': ['base_setup', 'hr', 'hr_payroll', 'hr_payroll_account', 'l10n_mx_payroll'],
     'data': [
+        'views/report_templates.xml',
         'data/data_report.xml',
         'data/cfdi.xml',
         'report/report_menu_xml.xml',

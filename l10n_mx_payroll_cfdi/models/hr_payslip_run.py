@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
+import threading
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
-from odoo import _, api, fields, models, tools
+from odoo import _, api, fields, models, tools, registry
 from odoo.tools.xml_utils import _check_with_xsd
 from odoo.tools import DEFAULT_SERVER_TIME_FORMAT
 from odoo.tools import float_round
@@ -26,28 +27,29 @@ def create_list_html(array):
 class HrPayslipRun(models.Model):
     _inherit = "hr.payslip.run"
 
-    @api.one
     @api.depends('slip_ids', 'slip_ids.state', 'slip_ids.l10n_mx_edi_cfdi_uuid')
     def _compute_state(self):
-        eval_state = True if self.eval_state else False
-        state = 'draft'
-        if len(self.slip_ids) == 0:
+        for rec in self:
+            eval_state = True if rec.eval_state else False
             state = 'draft'
-        elif any(slip.state == 'draft' for slip in self.slip_ids):  # TDE FIXME: should be all ?
-            state = 'draft'
-        elif all(slip.state in ['cancel', 'done'] for slip in self.slip_ids):
-            state = 'close'
-        else:
-            state = 'draft'
-        self.state = state
+            if len(rec.slip_ids) == 0:
+                state = 'draft'
+            elif any(slip.state == 'draft' for slip in rec.slip_ids):  # TDE FIXME: should be all ?
+                state = 'draft'
+            elif all(slip.state in ['cancel', 'done'] for slip in rec.slip_ids):
+                state = 'close'
+            else:
+                state = 'draft'
+            rec.state = state
         return True
 
     company_id = fields.Many2one('res.company', related='journal_id.company_id', string='Company', readonly=False,
         index=True, store=True, copy=False)  # related is required
 
     eval_state = fields.Boolean('Eval State', compute='_compute_state')
-    cfdi_es_sncf = fields.Boolean(string='Entidad SNCF', readonly=True, compute='_compute_cfdi_sncf', oldname="es_sncf")
+    cfdi_es_sncf = fields.Boolean(string='Entidad SNCF', readonly=True, default=False, oldname="es_sncf")
     cfdi_source_sncf = fields.Selection([
+            ('', ''),
             ('IP', 'Ingresos propios'),
             ('IF', 'Ingreso federales'),
             ('IM', 'Ingresos mixtos')],
@@ -60,7 +62,7 @@ class HrPayslipRun(models.Model):
             ('ext_nom', 'Nomina Extraordinaria'),
             ('ext_agui', 'Extraordinaria Aguinaldo')],
         string="Tipo Nomina Especial", default="ord", oldname="tipo_nomina_especial")
-    cfdi_tipo_nomina = fields.Selection(selection=CATALOGO_TIPONOMINA, string=u"Tipo Nómina", default='O', compute='_compute_cfdi_sncf', oldname="tipo_nomina")
+    cfdi_tipo_nomina = fields.Selection(selection=CATALOGO_TIPONOMINA, string=u"Tipo Nómina", default='O', oldname="tipo_nomina")
     struct_id = fields.Many2one('hr.payroll.structure', string='Structure',
         readonly=True, states={'draft': [('readonly', False)], 'verify': [('readonly', False)]},
         help='Defines the rules that have to be applied to this payslip, accordingly '
@@ -68,41 +70,178 @@ class HrPayslipRun(models.Model):
              'mandatory anymore and thus the rules applied will be all the rules set on the '
              'structure of all contracts of the employee valid for the chosen period')
 
-    @api.one
-    @api.depends('slip_ids', 'cfdi_source_sncf', 'cfdi_amount_sncf', 'cfdi_tipo_nomina_especial')
+    @api.multi
+    def write(self, vals):
+        line_vals = {}
+        if 'cfdi_source_sncf' in vals:
+            vals['cfdi_es_sncf'] = True if vals['cfdi_source_sncf'] else False
+            line_vals.update({
+                'cfdi_source_sncf': vals['cfdi_source_sncf']
+            })
+        if 'cfdi_amount_sncf' in vals:
+            line_vals.update({
+                'cfdi_amount_sncf': vals['cfdi_amount_sncf']
+            })
+        if 'cfdi_tipo_nomina_especial' in vals:
+            vals['cfdi_tipo_nomina'] = 'O' if vals['cfdi_tipo_nomina_especial'] == 'ord' else 'E'
+            line_vals.update({
+                'cfdi_tipo_nomina': 'O' if vals['cfdi_tipo_nomina_especial'] == 'ord' else 'E',
+                'cfdi_tipo_nomina_especial': vals['cfdi_tipo_nomina_especial']
+            })
+        result = super(HrPayslipRun, self).write(vals)
+        if line_vals:
+            for rec in self:
+                rec.slip_ids.write(line_vals)
+        return result
+
+    """
+    @api.depends('cfdi_source_sncf', 'cfdi_amount_sncf')
     def _compute_cfdi_sncf(self):
-        cfdi_tipo_nomina = 'O' if self.cfdi_tipo_nomina_especial == 'ord' else 'E'
-        self.cfdi_es_sncf = True if self.cfdi_source_sncf else False
-        self.cfdi_tipo_nomina = cfdi_tipo_nomina
-        self.sudo().slip_ids.write({
-            "cfdi_source_sncf": self.cfdi_source_sncf,
-            "cfdi_amount_sncf": self.cfdi_amount_sncf,
-            "cfdi_tipo_nomina": cfdi_tipo_nomina,
-            "cfdi_tipo_nomina_especial": self.cfdi_tipo_nomina_especial
-        })
+        for rec in self:
+            print('--------------  _compute_cfdi_sncf')
+            rec.cfdi_es_sncf = True if rec.cfdi_source_sncf else False
+            rec.slip_ids.write({
+                "cfdi_source_sncf": rec.cfdi_source_sncf or '',
+                "cfdi_amount_sncf": rec.cfdi_amount_sncf or 0.0
+            })
+
+    @api.depends('cfdi_tipo_nomina_especial')
+    def _compute_cfdi_tipo_nomina(self):
+        for rec in self:
+            print('--------- cfdi_tipo_nomina_especial')
+            cfdi_tipo_nomina = 'O' if rec.cfdi_tipo_nomina_especial == 'ord' else 'E'
+            rec.cfdi_tipo_nomina = cfdi_tipo_nomina
+            rec.slip_ids.write({
+                "cfdi_tipo_nomina": cfdi_tipo_nomina,
+                "cfdi_tipo_nomina_especial": rec.cfdi_tipo_nomina_especial
+            })
+    """
+
+    """
+    @api.depends('cfdi_source_sncf', 'cfdi_amount_sncf', 'cfdi_tipo_nomina_especial')
+    def _compute_cfdi_sncf(self):
+        for rec in self:
+            cfdi_tipo_nomina = 'O' if rec.cfdi_tipo_nomina_especial == 'ord' else 'E'
+            rec.cfdi_tipo_nomina = cfdi_tipo_nomina
+            rec.slip_ids.write({
+                "cfdi_source_sncf": rec.cfdi_source_sncf,
+                "cfdi_amount_sncf": rec.cfdi_amount_sncf,
+                "cfdi_tipo_nomina": cfdi_tipo_nomina,
+                "cfdi_tipo_nomina_especial": rec.cfdi_tipo_nomina_especial
+            })
         return True
+    """
+
+    #---------------------------------------
+    #  Confirmar y Timbrar Nominas
+    #---------------------------------------
+    @api.model
+    def _confirm_sheet_run_task(self, use_new_cursor=False, active_id=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+
+            runModel = self.env['hr.payslip.run']
+            payslipModel = self.env['hr.payslip']
+            for run_id in runModel.browse(active_id):
+                for payslip_id in run_id.slip_ids.ids:
+                    try:
+                        cr.execute('SAVEPOINT model_payslip_confirm_cfdi_save')
+                        payslip = payslipModel.browse(payslip_id)
+                        if payslip.state in ['draft','verify']:
+                            _logger.info('------------ confirm_sheet_run %s - %s '%(payslip.id, payslip.number) )
+                            try:
+                                payslip.action_payslip_done()
+                            except Exception as e:
+                                print('------------ errror timbrar ', e)
+                                payslip.message_post(body='Error al procesar: %s '%(e)  )
+                        cr.execute('RELEASE SAVEPOINT model_payslip_confirm_cfdi_save')
+                    except Exception as e:
+                        _logger.exception('----- Error timbrar gral : %s '%(e) )
+                        cr.execute('ROLLBACK TO SAVEPOINT model_payslip_confirm_cfdi_save')
+                        pass
+                    if use_new_cursor:
+                        self._cr.commit()
+        finally:
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return {}
+
+    def _confirm_sheet_run_threading(self, active_id):
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['hr.payslip.run']._confirm_sheet_run_task(use_new_cursor=self._cr.dbname, active_id=active_id)
+            new_cr.close()
+        return {}
 
     @api.multi
     def confirm_sheet_run(self):
-        self.ensure_one()
-        cr = self._cr
-        payslip_obj = self.env['hr.payslip']
-        for payslip_id in self.slip_ids.ids:
-            try:
-                cr.execute('SAVEPOINT model_payslip_confirm_cfdi_save')
-                payslip = payslip_obj.browse(payslip_id)
-                if payslip.state in ['draft','verify']:
-                    _logger.info('------------ confirm_sheet_run %s - %s '%(payslip.id, payslip.number) )
+        for run_id in self:
+            threaded_calculation = threading.Thread(target=self._confirm_sheet_run_threading, args=(run_id.id, ), name='timbrarrunid_%s'%run_id.id)
+            threaded_calculation.start()
+        return {}
+
+
+
+
+
+    #---------------------------------------
+    #  Calcular Nominas
+    #---------------------------------------
+    @api.model
+    def _compute_sheet_run_task(self, use_new_cursor=False, active_id=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+
+            runModel = self.env['hr.payslip.run']
+            payslipModel = self.env['hr.payslip']
+            for run_id in runModel.browse(active_id):
+                for payslip in payslipModel.search([('state', '=', 'draft'), ('payslip_run_id', '=', run_id.id)]):
                     try:
-                        payslip.action_payslip_done()
+                        cr.execute('SAVEPOINT model_payslip_compute_cfdi_save')
+                        _logger.info('------------ compute_sheet_run %s - %s '%(payslip.id, payslip.number) )
+                        try:
+                            r = payslip.compute_sheet()
+                        except Exception as e:
+                            print('------------ errror timbrar ', e)
+                            payslip.message_post(body='Error al calcular nomina: %s '%(e)  )
+                        cr.execute('RELEASE SAVEPOINT model_payslip_compute_cfdi_save')
                     except Exception as e:
-                        payslip.message_post(body='Error al procesar: %s '%(e)  )
-                cr.execute('RELEASE SAVEPOINT model_payslip_confirm_cfdi_save')
-            except Exception as e:
-                _logger.exception('----- Error: %s '%(e) )
-                cr.execute('ROLLBACK TO SAVEPOINT model_payslip_confirm_cfdi_save')
-                pass
-        return
+                        _logger.exception('----- Error timbrar gral : %s '%(e) )
+                        cr.execute('ROLLBACK TO SAVEPOINT model_payslip_compute_cfdi_save')
+                        pass
+                    if use_new_cursor:
+                        self._cr.commit()
+        finally:
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return {}
+
+    def _compute_sheet_run_threading(self, active_id):
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['hr.payslip.run']._compute_sheet_run_task(use_new_cursor=self._cr.dbname, active_id=active_id)
+            new_cr.close()
+        return {}
+
+    @api.multi
+    def cumpute_sheet_run(self):
+        for run_id in self:
+            threaded_calculation = threading.Thread(target=self._compute_sheet_run_threading, args=(run_id.id, ), name='calcularrunid_%s'%run_id.id)
+            threaded_calculation.start()
+        return {}
+
 
     @api.multi
     def enviar_nomina(self):
