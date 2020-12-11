@@ -68,11 +68,16 @@
     <record id="hr_payslip_run_inportinputs_form" model="ir.ui.view">
         <field name="name">hr_payslip_run_inportinputs_form</field>
         <field name="model">hr.payslip.run</field>
-        <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+        <field name="inherit_id" ref="l10n_mx_payroll_cfdi.hr_payslip_run_cfdi_btn_form"/>
         <field name="arch" type="xml">
-            <field name="state" position="before" >
-                <button type="action" name="%(l10n_mx_payroll_cfdi.hr_payslip_run_import_inputs_action)d" class="btn btn-primary" string="Importar Base de Incidencias" icon="fa-file-excel-o" />
-            </field>
+            <button name="cumpute_sheet_run" position="after">
+                <button type="action" 
+                    name="%(l10n_mx_payroll_cfdi.hr_payslip_run_import_inputs_action)d" 
+                    class="oe_stat_button"
+                    icon="fa-file-excel-o">
+                    <span>Importar Base de Incidencias</span>
+                </button>
+            </button>
         </field>
     </record>
 

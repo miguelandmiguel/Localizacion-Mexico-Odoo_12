@@ -1,6 +1,22 @@
 <odoo>
     <data>
 
+        <record id="view_hr_payslip_hiddename_tree" model="ir.ui.view">
+            <field name="name">hr.payslip.hiddename.tree</field>
+            <field name="model">hr.payslip</field>
+            <field name="inherit_id" ref="hr_payroll.view_hr_payslip_tree"/>
+            <field name="arch" type="xml">
+                <field name="name" position="replace">
+                    <field name="name" invisible="1" />
+                </field>
+                <field name="state" position="after">
+                    <field name="l10n_mx_edi_cfdi_uuid" />
+                </field>
+            </field>
+        </record>
+
+
+
         <record id="view_hr_payslip_cfdichatter_form" model="ir.ui.view">
             <field name="name">view_hr_payslip_cfdichatter_form</field>
             <field name="model">hr.payslip</field>

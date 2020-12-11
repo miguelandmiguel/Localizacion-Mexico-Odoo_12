@@ -13,17 +13,65 @@
                 </field>
             </field>
         </record>
+        <record id="hr_payslip_run_cfdi_btn_form" model="ir.ui.view">
+            <field name="name">hr_payslip_run_cfdi_btn_form</field>
+            <field name="model">hr.payslip.run</field>
+            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form/sheet/label[@class='oe_edit_only']" position="before">
+                    <div class="oe_button_box" name="button_box">
+                        <button name="confirm_sheet_run"
+                            class="oe_stat_button"
+                            icon="fa-cogs"
+                            type="object" >
+                            <span>Confirmar Nominas</span>
+                        </button>
+                        <button name="refund_sheet_run"
+                            id="refund_sheet_run_button"
+                            class="oe_stat_button"
+                            icon="fa-cogs"
+                            type="object" states="close" >
+                            <span>Cancelar Nominas</span>
+                        </button>
+                        <button name="enviar_nomina"
+                            id="enviar_nomina_button"
+                            class="oe_stat_button"
+                            icon="fa-envelope-o"
+                            type="object" >
+                            <span>Enviar Nomina</span>
+                        </button>
+                        <button name="cumpute_sheet_run"
+                            id="cumpute_sheet_run_button"
+                            class="oe_stat_button"
+                            icon="fa-list-alt"
+                            type="object" >
+                            <span>Calcular Nomina</span>
+                        </button>
+                        <button name="unlink_sheet_run"
+                            id="unlink_sheet_run_button"
+                            class="oe_stat_button"
+                            icon="fa-trash"
+                            type="object" >
+                            <span>Borrar Nomina S/Incidencias</span>
+                        </button>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
         <record id="hr_payslip_run_cfdi_form" model="ir.ui.view">
             <field name="name">hr_payslip_run_cfdi_form</field>
             <field name="model">hr.payslip.run</field>
             <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
             <field name="arch" type="xml">
+                <!--
                 <field name="state" position="before" >
                     <button string="Confirm Payslips" name="confirm_sheet_run" type="object" states="draft" class="oe_highlight" icon="fa-cogs" />
                     <button string="Refund Payslips" name="refund_sheet_run" type="object" states="close" class="oe_highlight" icon="fa-cogs" />
                     <button string=" Enviar Nomina" name="enviar_nomina" type="object" class="oe_highlight" icon="fa-envelope-o"/>
                     <button string=" Calcular Nomina" name="cumpute_sheet_run" type="object" class="oe_highlight" icon="fa-list-alt"/>
                 </field>
+                -->
                 <button name="close_payslip_run" position="replace"></button>
                 <field name="state" position="before" >
                     <field name="eval_state" invisible="1" />

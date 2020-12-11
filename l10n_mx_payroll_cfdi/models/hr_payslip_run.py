@@ -289,7 +289,6 @@ class HrPayslipRun(models.Model):
                 except Exception:
                     pass
         return {}
-
     def _enviar_nomina_threading(self, active_id):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
@@ -297,7 +296,6 @@ class HrPayslipRun(models.Model):
             self.env['hr.payslip.run']._enviar_nomina_threading_task(use_new_cursor=self._cr.dbname, active_id=active_id)
             new_cr.close()
         return {}
-
     @api.multi
     def enviar_nomina(self):
         for run_id in self:
@@ -307,20 +305,43 @@ class HrPayslipRun(models.Model):
 
 
 
+    #---------------------------------------
+    #  Borrar Nominas en 0
+    #---------------------------------------
+    @api.model
+    def _unlink_sheet_run_threading_task(self, use_new_cursor=False, active_id=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+
+            ctx = self._context.copy()
+            runModel = self.env['hr.payslip.run']
+            for run_id in runModel.browse(active_id):
+                try:
+                    line_ids = run_id.slip_ids.filtered(lambda line: line.state in ['draft'] and line.get_salary_line_total('C99') == 0.0 )
+                    line_ids.unlink()
+                    if use_new_cursor:
+                        self._cr.commit()
+                except:
+                    pass
+        finally:
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return {}
+    def _unlink_sheet_run_threading(self, active_id):
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['hr.payslip.run']._unlink_sheet_run_threading_task(use_new_cursor=self._cr.dbname, active_id=active_id)
+            new_cr.close()
+        return {}
     @api.multi
-    def enviar_nomina_old(self):
-        self.ensure_one()
-        ctx = self._context.copy()
-        template = self.env.ref('l10n_mx_payroll_cfdi.email_template_payroll', False)
-        for payslip in self.slip_ids: 
-            ctx.update({
-                'default_model': 'hr.payslip',
-                'default_res_id': payslip.id,
-                'default_use_template': bool(template),
-                'default_template_id': template.id,
-                'default_composition_mode': 'comment',
-            })
-            vals = self.env['mail.compose.message'].onchange_template_id(template.id, 'comment', 'hr.payslip', payslip.id)
-            mail_message  = self.env['mail.compose.message'].with_context(ctx).create(vals.get('value',{}))
-            mail_message.action_send_mail()
-        return True
+    def unlink_sheet_run(self):
+        for run_id in self:
+            threaded_calculation = threading.Thread(target=self._unlink_sheet_run_threading, args=(run_id.id, ), name='unlinknominarunid_%s'%run_id.id)
+            threaded_calculation.start()
+        return {}

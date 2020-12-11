@@ -287,9 +287,15 @@ class HrPayslip(models.Model):
         string="Recurso Entidad SNCF", oldname="source_sncf")
     cfdi_amount_sncf = fields.Monetary(string="Monto Recurso SNCF", oldname="amount_sncf", default=False)
     cfdi_monto = fields.Monetary(string="Monto CFDI", copy=False, oldname="monto_cfdi")
+    cfdi_total = fields.Float(string="Total", copy=False, compute='_compute_total_payslip', oldname="total")
+
+    @api.one
+    @api.depends('line_ids', 'line_ids.code')
+    def _compute_total_payslip(self):
+        self.cfdi_total = self.get_salary_line_total('C99')
 
 
-    @api.multi
+    @api.one
     @api.depends('l10n_mx_edi_cfdi_name')
     def _compute_cfdi_values(self):
         """Fill the invoice fields from the cfdi values."""
@@ -310,6 +316,7 @@ class HrPayslip(models.Model):
             tfd_node = rec.l10n_mx_edi_get_tfd_etree(tree)
             if tfd_node is not None:
                 rec.l10n_mx_edi_cfdi_uuid = tfd_node.get('UUID')
+
             rec.l10n_mx_edi_cfdi_supplier_rfc = tree.Emisor.get(
                 'Rfc', tree.Emisor.get('rfc'))
             rec.l10n_mx_edi_cfdi_customer_rfc = tree.Receptor.get(
@@ -341,9 +348,6 @@ class HrPayslip(models.Model):
                 'struct_id': struct.id,
             })
         return res
-
-
-
 
     # -------------------------------------------------------------------------
     # HELPERS
@@ -385,7 +389,6 @@ class HrPayslip(models.Model):
 
         self._compute_cfdi_values()
         attachment_id = self.l10n_mx_edi_retrieve_last_attachment()
-        print('---- attachment_id ', attachment_id)
         if not attachment_id:
             return {}
 
@@ -396,7 +399,6 @@ class HrPayslip(models.Model):
         tfd = self.l10n_mx_edi_get_tfd_etree(cfdi)
 
         if not cfdi:
-            print('--------asdasdassada ')
             return {
                 'Serie': ''
             }
@@ -548,7 +550,7 @@ class HrPayslip(models.Model):
                 'TipoJornada': TipoJornada,
                 'Antiguedad': NomReceptor.get('Antigüedad'),
                 'FechaInicioRelLaboral': NomReceptor.get('FechaInicioRelLaboral'),
-                'SalarioDiarioIntegrado': NomReceptor.get('SalarioDiarioIntegrado'),
+                'F': NomReceptor.get('SalarioDiarioIntegrado'),
                 'ClaveEntFed': NomReceptor.get('ClaveEntFed'),
                 'PeriodicidadPago': PeriodicidadPago,
                 'SalarioBaseCotApor': NomReceptor.get('SalarioBaseCotApor'),
@@ -601,12 +603,12 @@ class HrPayslip(models.Model):
         :return: An ir.attachment recordset
         """
         self.ensure_one()
-        # if not self.l10n_mx_edi_cfdi_name:
-        #     return []
+        if not self.l10n_mx_edi_cfdi_name:
+            return []
         domain = [
             ('res_id', '=', self.id),
             ('res_model', '=', self._name),
-            ('name', 'like', '.xml' )
+            ('name', 'like', self.l10n_mx_edi_cfdi_name )
         ]
         return self.env['ir.attachment'].search(domain)
 
@@ -822,8 +824,8 @@ class HrPayslip(models.Model):
         return {
             'url': url,
             'multi': False,  # TODO: implement multi
-            'username': 'antonio.padilla@bias.com.mx' if test else username,
-            'password': 'Api!1234' if test else password,
+            'username': 'cfdi@vauxoo.com' if test else username,
+            'password': 'vAux00__' if test else password,
         }
 
 
@@ -1181,6 +1183,18 @@ class HrPayslip(models.Model):
                     
         return incapacidades
 
+
+    def _get_SalarioBaseCotApor(self):
+        _logger.info('---------- Table exists %s '%( tools.table_exists(self._cr, 'x_hr_employee_wage') ) )
+        if tools.table_exists(self._cr, 'x_hr_employee_wage'):
+            wage_id = self.env['x_hr_employee_wage'].sudo().search([('x_employee_id','=', self.employee_id.id), ('x_state','=','actual')])
+            if wage_id:
+                return wage_id.x_cfdi_sueldo_diario or 0.0
+            else:
+                return 0.0
+        else:
+            return self.employee_id.cfdi_sueldo_diario and '%.2f'%self.employee_id.cfdi_sueldo_diario or None
+
     @api.multi
     def _l10n_mx_edi_create_cfdi_values(self):
         self.ensure_one()
@@ -1419,9 +1433,14 @@ class HrPayslip(models.Model):
         res = super(HrPayslip, self).action_payslip_done()
         for rec in self:
             if rec.contract_id.is_cfdi:
+                version = self.l10n_mx_edi_get_pac_version()
+                number = rec.number.replace('SLIP','').replace('/','')
+                rec.l10n_mx_edi_cfdi_name = ('%s-%s-MX-Payslip-%s.xml' % (
+                    rec.journal_id.code, number, version.replace('.', '-'))).replace('/', '')
                 result = rec.l10n_mx_edi_retry()
                 if result.get('error'):
                     return result
+
         return res
 
     @api.one
