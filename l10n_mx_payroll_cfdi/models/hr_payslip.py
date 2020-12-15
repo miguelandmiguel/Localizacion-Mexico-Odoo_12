@@ -213,6 +213,20 @@ class HrPayslipEmployees(models.TransientModel):
         return {'type': 'ir.actions.act_window_close'}
 
 
+    @api.multi
+    def compute_sheet_all(self):
+        for rec in self:
+            employee_ids = self.env['hr.employee'].search([
+                ('company_id', '=', rec.company_id.id),
+                ('contract_id.state', 'in', ['open', 'close'])
+            ])
+            print('---- employee_ids ', employee_ids.ids)
+            rec.write({
+                'employee_ids': [(6, 0, employee_ids.ids)]
+            })
+            rec.compute_sheet()
+
+
 class HrPayslip(models.Model):
     _name = 'hr.payslip'
     _inherit = ['hr.payslip', 'l10n_mx_edi.pac.sw.mixin', 'mail.thread']
