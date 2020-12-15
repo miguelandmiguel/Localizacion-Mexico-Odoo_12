@@ -97,8 +97,9 @@ class HrPayslipEmployees(models.TransientModel):
         # YTI check dates too
         return self.env['hr.employee'].search(self._get_available_contracts_domain())
 
-    employee_ids = fields.Many2many('hr.employee', 'hr_employee_group_rel', 'payslip_id', 'employee_id', 'Employees',
-                                    default=lambda self: self._get_employees(), required=True)
+    # employee_ids = fields.Many2many('hr.employee', 'hr_employee_group_rel', 'payslip_id', 'employee_id', 'Employees', default=lambda self: self._get_employees(), required=True)
+    company_id = fields.Many2one('res.company', string='Company', readonly=True, copy=False,
+        default=lambda self: self.env['res.company']._company_default_get() )
 
     @api.model
     def _run_compute_sheet_tasks(self, use_new_cursor=False, active_id=False, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
@@ -106,13 +107,12 @@ class HrPayslipEmployees(models.TransientModel):
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-
             payslipModel = self.env['hr.payslip']
             payslips = []
             for employees_chunk in split_every(20, employee_ids):
+                _logger.info('--- Nomina Procesando Employees %s', employees_chunk )
                 for employee in self.env['hr.employee'].browse(employees_chunk):
-                    _logger.info('--- Nomina Procesando Employees %s', employees_chunk )
-                    slip_data = self.env['hr.payslip'].onchange_employee_id(from_date, to_date, employee.id, contract_id=False)
+                    slip_data = payslipModel.onchange_employee_id(from_date, to_date, employee.id, contract_id=False)
                     res = {
                         'employee_id': employee.id,
                         'name': slip_data['value'].get('name'),
@@ -125,8 +125,12 @@ class HrPayslipEmployees(models.TransientModel):
                         'date_to': to_date,
                         'credit_note': credit_note,
                         'company_id': employee.company_id.id,
+                        'cfdi_source_sncf': slip_data['value'].get('cfdi_source_sncf'),
+                        'cfdi_amount_sncf': slip_data['value'].get('cfdi_amount_sncf'),
+                        'cfdi_tipo_nomina': slip_data['value'].get('cfdi_tipo_nomina'),
+                        'cfdi_tipo_nomina_especial': slip_data['value'].get('cfdi_tipo_nomina_especial')
                     }
-                    payslip_id = self.env['hr.payslip'].create(res)
+                    payslip_id = payslipModel.create(res)
                     payslips.append(payslip_id.id)
                     if use_new_cursor:
                         self._cr.commit()
@@ -287,7 +291,7 @@ class HrPayslip(models.Model):
         string="Recurso Entidad SNCF", oldname="source_sncf")
     cfdi_amount_sncf = fields.Monetary(string="Monto Recurso SNCF", oldname="amount_sncf", default=False)
     cfdi_monto = fields.Monetary(string="Monto CFDI", copy=False, oldname="monto_cfdi")
-    cfdi_total = fields.Float(string="Total", copy=False, compute='_compute_total_payslip', oldname="total")
+    cfdi_total = fields.Float(string="Total", copy=False, oldname="total")
 
     @api.one
     @api.depends('line_ids', 'line_ids.code')
@@ -1189,7 +1193,7 @@ class HrPayslip(models.Model):
         if tools.table_exists(self._cr, 'x_hr_employee_wage'):
             wage_id = self.env['x_hr_employee_wage'].sudo().search([('x_employee_id','=', self.employee_id.id), ('x_state','=','actual')])
             if wage_id:
-                return wage_id.x_cfdi_sueldo_diario or 0.0
+                return '%.2f'%wage_id.x_cfdi_sueldo_diario or 0.0
             else:
                 return 0.0
         else:
@@ -1209,7 +1213,7 @@ class HrPayslip(models.Model):
         if empleado.bank_account_id:
             banco = empleado.bank_account_id and empleado.bank_account_id.bank_id.bic or ''
             nocuenta = empleado.bank_account_id and empleado.bank_account_id.acc_number or ''
-            num_cuenta = nocuenta[len(nocuenta)-16:]
+            # num_cuenta = nocuenta[len(nocuenta)-16:]
 
         AccionesOTitulos = None
         HorasExtra = None
@@ -1323,7 +1327,9 @@ class HrPayslip(models.Model):
         '''Synchronize both systems: Odoo & PAC if the invoices need to be signed or cancelled.
         '''
         for record in self:
-            if record.l10n_mx_edi_pac_status in ('to_sign', 'retry'):
+            if record.state in ['done'] and record.contract_id.is_cfdi:
+                record.l10n_mx_edi_retry()
+            elif record.l10n_mx_edi_pac_status in ('to_sign', 'retry'):
                 record.l10n_mx_edi_retry()
             elif record.l10n_mx_edi_pac_status == 'to_cancel':
                 record._l10n_mx_edi_cancel()
@@ -1579,5 +1585,36 @@ class HrPayslip(models.Model):
             'target': 'new',
             'context': ctx,
         }
+
+
+    #--------------------------------
+    # Proceso timbrado batch
+    #--------------------------------
+    @api.multi
+    def _calculation_confirm_sheet(self, ids, use_new_cursor=False):
+        message = ''
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))
+        message = ""
+        try:
+            cr.execute('SAVEPOINT model_payslip_confirm_cfdi_save')
+            payslip_id = self.env['hr.payslip'].browse(ids)
+            payslip_id.action_payslip_done()
+            _logger.info('--- Timbrado payslip_id %s '%( payslip_id.id ) )
+        except ValueError as e:
+            _logger.info('----- Error Timbrado %s %s '%( ids, e ) )
+            cr.execute('RELEASE SAVEPOINT model_payslip_confirm_cfdi_save')
+            message = str(e)
+        except Exception as e:
+            _logger.info('----- Error Timbrado %s %s '%( ids, e ) )
+            message = str(e)
+        if message:
+            _logger.info('-------- Error Timbrado %s '%(message) )
+            cr.execute('ROLLBACK TO SAVEPOINT model_payslip_confirm_cfdi_save')
+        if use_new_cursor:
+            cr.commit()
+            cr.close()
+        return {}    
 
 # http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/GuiaNomina11102019.pdf

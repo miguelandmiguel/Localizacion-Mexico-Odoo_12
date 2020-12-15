@@ -70,6 +70,11 @@ class HrPayslipRun(models.Model):
              'mandatory anymore and thus the rules applied will be all the rules set on the '
              'structure of all contracts of the employee valid for the chosen period')
 
+    cfdi_btn_compute = fields.Boolean()
+    cfdi_btn_confirm = fields.Boolean()
+    cfdi_btn_sendemail = fields.Boolean()
+    cfdi_btn_clear = fields.Boolean()
+
     @api.multi
     def write(self, vals):
         line_vals = {}
@@ -133,59 +138,6 @@ class HrPayslipRun(models.Model):
     """
 
     #---------------------------------------
-    #  Confirmar y Timbrar Nominas
-    #---------------------------------------
-    @api.model
-    def _confirm_sheet_run_task(self, use_new_cursor=False, active_id=False):
-        try:
-            if use_new_cursor:
-                cr = registry(self._cr.dbname).cursor()
-                self = self.with_env(self.env(cr=cr))  # TDE FIXME
-
-            runModel = self.env['hr.payslip.run']
-            payslipModel = self.env['hr.payslip']
-            for run_id in runModel.browse(active_id):
-                for payslip_id in run_id.slip_ids.ids:
-                    try:
-                        cr.execute('SAVEPOINT model_payslip_confirm_cfdi_save')
-                        payslip = payslipModel.browse(payslip_id)
-                        if payslip.state in ['draft','verify']:
-                            _logger.info('------------ confirm_sheet_run %s - %s '%(payslip.id, payslip.number) )
-                            try:
-                                payslip.action_payslip_done()
-                            except Exception as e:
-                                payslip.message_post(body='Error al procesar: %s '%(e)  )
-                        cr.execute('RELEASE SAVEPOINT model_payslip_confirm_cfdi_save')
-                    except Exception as e:
-                        _logger.exception('----- Error timbrar gral : %s '%(e) )
-                        cr.execute('ROLLBACK TO SAVEPOINT model_payslip_confirm_cfdi_save')
-                        pass
-                    if use_new_cursor:
-                        self._cr.commit()
-        finally:
-            if use_new_cursor:
-                try:
-                    self._cr.close()
-                except Exception:
-                    pass
-        return {}
-
-    def _confirm_sheet_run_threading(self, active_id):
-        with api.Environment.manage():
-            new_cr = self.pool.cursor()
-            self = self.with_env(self.env(cr=new_cr))
-            self.env['hr.payslip.run']._confirm_sheet_run_task(use_new_cursor=self._cr.dbname, active_id=active_id)
-            new_cr.close()
-        return {}
-
-    @api.multi
-    def confirm_sheet_run(self):
-        for run_id in self:
-            threaded_calculation = threading.Thread(target=self._confirm_sheet_run_threading, args=(run_id.id, ), name='timbrarrunid_%s'%run_id.id)
-            threaded_calculation.start()
-        return {}
-
-    #---------------------------------------
     #  Calcular Nominas
     #---------------------------------------
     @api.model
@@ -194,23 +146,16 @@ class HrPayslipRun(models.Model):
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-
             runModel = self.env['hr.payslip.run']
             payslipModel = self.env['hr.payslip']
             for run_id in runModel.browse(active_id):
                 for payslip in payslipModel.search([('state', '=', 'draft'), ('payslip_run_id', '=', run_id.id)]):
                     try:
-                        cr.execute('SAVEPOINT model_payslip_compute_cfdi_save')
-                        _logger.info('------------ compute_sheet_run %s - %s '%(payslip.id, payslip.number) )
-                        try:
-                            r = payslip.compute_sheet()
-                        except Exception as e:
-                            payslip.message_post(body='Error al calcular nomina: %s '%(e)  )
-                        cr.execute('RELEASE SAVEPOINT model_payslip_compute_cfdi_save')
+                        _logger.info('------- Compute Payslip %s '%(payslip.id) )
+                        payslip.compute_sheet()
                     except Exception as e:
-                        _logger.exception('----- Error timbrar gral : %s '%(e) )
-                        cr.execute('ROLLBACK TO SAVEPOINT model_payslip_compute_cfdi_save')
-                        pass
+                        payslip.message_post(body='Error Al calcular la Nomina: %s '%( e ) )
+                        _logger.info('------ Error Al Calcular  la Nomina %s '%( e ) )
                     if use_new_cursor:
                         self._cr.commit()
         finally:
@@ -237,7 +182,48 @@ class HrPayslipRun(models.Model):
         return {}
 
 
+    #---------------------------------------
+    #  Confirmar y Timbrar Nominas
+    #---------------------------------------
+    @api.model
+    def _confirm_sheet_run_task(self, use_new_cursor=False, active_id=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+            runModel = self.env['hr.payslip.run']
+            payslipModel = self.env['hr.payslip']
+            for run_id in runModel.browse(active_id):
+                for payslip in payslipModel.search([('state', 'in', ['draft','verify']), ('payslip_run_id', '=', run_id.id)]):
+                    try:
+                        _logger.info('------- Payslip Done %s '%(payslip.id) )
+                        payslip.action_payslip_done()
+                    except Exception as e:
+                        payslip.message_post(body='Error Al timbrar la Nomina: %s '%( e ) )
+                        _logger.info('------ Error Al timbrar  la Nomina %s '%( e ) )
+                    if use_new_cursor:
+                        self._cr.commit()
+        finally:
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return {}
 
+    def _confirm_sheet_run_threading(self, active_id):
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['hr.payslip.run']._confirm_sheet_run_task(use_new_cursor=self._cr.dbname, active_id=active_id)
+            new_cr.close()
+        return {}
+    @api.multi
+    def confirm_sheet_run(self):
+        for run_id in self:
+            threaded_calculation = threading.Thread(target=run_id._confirm_sheet_run_threading, args=([run_id.id]), name='timbrarrunid_%s'%run_id.id)
+            threaded_calculation.start()
+        return {}
 
 
     #---------------------------------------
@@ -249,7 +235,6 @@ class HrPayslipRun(models.Model):
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-
             ctx = self._context.copy()
             template = self.env.ref('l10n_mx_payroll_cfdi.email_template_payroll', False)
             runModel = self.env['hr.payslip.run']
@@ -258,28 +243,21 @@ class HrPayslipRun(models.Model):
             for run_id in runModel.browse(active_id):
                 for payslip in payslipModel.search([('state', '=', 'done'), ('payslip_run_id', '=', run_id.id)]):
                     try:
-                        cr.execute('SAVEPOINT model_payslip_sendemail_cfdi_save')
-                        _logger.info('------------ sendemail_run %s - %s '%(payslip.id, payslip.number) )
-                        try:
-                            print('---- payslip.l10n_mx_edi_cfdi_uuid ', payslip.l10n_mx_edi_cfdi_uuid)
-                            if payslip.l10n_mx_edi_cfdi_uuid:
-                                ctx.update({
-                                    'default_model': 'hr.payslip',
-                                    'default_res_id': payslip.id,
-                                    'default_use_template': bool(template),
-                                    'default_template_id': template.id,
-                                    'default_composition_mode': 'comment',
-                                })
-                                vals = mailModel.onchange_template_id(template.id, 'comment', 'hr.payslip', payslip.id)
-                                mail_message  = mailModel.with_context(ctx).create(vals.get('value',{}))
-                                mail_message.action_send_mail()
-                        except Exception as e:
-                            payslip.message_post(body='Error al calcular nomina: %s '%(e)  )
-                        cr.execute('RELEASE SAVEPOINT model_payslip_sendemail_cfdi_save')
+                        if payslip.l10n_mx_edi_cfdi_uuid:
+                            _logger.info('------- Payslip Email %s '%(payslip.id) )
+                            ctx.update({
+                                'default_model': 'hr.payslip',
+                                'default_res_id': payslip.id,
+                                'default_use_template': bool(template),
+                                'default_template_id': template.id,
+                                'default_composition_mode': 'comment',
+                            })
+                            vals = mailModel.onchange_template_id(template.id, 'comment', 'hr.payslip', payslip.id)
+                            mail_message  = mailModel.with_context(ctx).create(vals.get('value',{}))
+                            mail_message.action_send_mail()
                     except Exception as e:
-                        _logger.exception('----- Error timbrar gral : %s '%(e) )
-                        cr.execute('ROLLBACK TO SAVEPOINT model_payslip_sendemail_cfdi_save')
-                        pass
+                        payslip.message_post(body='Error Al enviar Email Nomina: %s '%( e ) )
+                        _logger.info('------ Error Al enviar Email Nomina %s '%( e ) )
                     if use_new_cursor:
                         self._cr.commit()
         finally:
@@ -289,6 +267,7 @@ class HrPayslipRun(models.Model):
                 except Exception:
                     pass
         return {}
+
     def _enviar_nomina_threading(self, active_id):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
@@ -296,6 +275,7 @@ class HrPayslipRun(models.Model):
             self.env['hr.payslip.run']._enviar_nomina_threading_task(use_new_cursor=self._cr.dbname, active_id=active_id)
             new_cr.close()
         return {}
+
     @api.multi
     def enviar_nomina(self):
         for run_id in self:
@@ -314,17 +294,21 @@ class HrPayslipRun(models.Model):
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-
-            ctx = self._context.copy()
             runModel = self.env['hr.payslip.run']
+            payslipModel = self.env['hr.payslip']
             for run_id in runModel.browse(active_id):
-                try:
-                    line_ids = run_id.slip_ids.filtered(lambda line: line.state in ['draft'] and line.get_salary_line_total('C99') == 0.0 )
-                    line_ids.unlink()
+                payslip_ids = payslipModel.search([('state', '=', 'draft'), ('payslip_run_id', '=', run_id.id)])
+                line_ids = payslip_ids.filtered(lambda line: line.get_salary_line_total('C99') == 0.0)
+                _logger.info('-------- Payslip  Unlik %s '%( len(line_ids) ) )
+                for payslip in line_ids:
+                    try:
+                        _logger.info('------- Payslip Unlink %s '%(payslip.id) )
+                        payslip.unlink()
+                    except Exception as e:
+                        payslip.message_post(body='Error Al borrar la Nomina: %s '%( e ) )
+                        _logger.info('------ Error Al borrar  la Nomina %s '%( e ) )
                     if use_new_cursor:
                         self._cr.commit()
-                except:
-                    pass
         finally:
             if use_new_cursor:
                 try:
@@ -332,6 +316,7 @@ class HrPayslipRun(models.Model):
                 except Exception:
                     pass
         return {}
+
     def _unlink_sheet_run_threading(self, active_id):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
@@ -339,6 +324,7 @@ class HrPayslipRun(models.Model):
             self.env['hr.payslip.run']._unlink_sheet_run_threading_task(use_new_cursor=self._cr.dbname, active_id=active_id)
             new_cr.close()
         return {}
+
     @api.multi
     def unlink_sheet_run(self):
         for run_id in self:

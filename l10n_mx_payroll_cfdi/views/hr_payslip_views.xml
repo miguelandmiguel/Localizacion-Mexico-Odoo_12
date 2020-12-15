@@ -1,6 +1,18 @@
 <odoo>
     <data>
 
+        <record id="view_hr_payslip_by_employees_cfdi" model="ir.ui.view">
+            <field name="name">view_hr_payslip_by_employees_cfdi</field>
+            <field name="model">hr.payslip.employees</field>
+            <field name="inherit_id" ref="hr_payroll.view_hr_payslip_by_employees"/>
+            <field name="arch" type="xml">
+                <field name="employee_ids" position="replace">
+                    <field name="company_id" colspan="4" />
+                    <field name="employee_ids" nolabel="1" colspan="4" domain="[('company_id', '=', company_id), ('contract_id.state', 'in', ['open', 'close'])]" />
+                </field>
+            </field>
+        </record>
+
         <record id="view_hr_payslip_hiddename_tree" model="ir.ui.view">
             <field name="name">hr.payslip.hiddename.tree</field>
             <field name="model">hr.payslip</field>
@@ -14,8 +26,6 @@
                 </field>
             </field>
         </record>
-
-
 
         <record id="view_hr_payslip_cfdichatter_form" model="ir.ui.view">
             <field name="name">view_hr_payslip_cfdichatter_form</field>

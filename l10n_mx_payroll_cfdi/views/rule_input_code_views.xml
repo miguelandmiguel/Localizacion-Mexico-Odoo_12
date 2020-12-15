@@ -51,7 +51,8 @@
                             string="Upload Files" nolabel="1"/>
                 </group>
                 <footer>
-                    <button string="Import" name="action_create_inputsline" type="object" class="oe_highlight"/>
+                    <button string="Importar Incidencias" name="action_create_inputsline" type="object" class="oe_highlight"/>
+                    <button string="Crear - Calcular - Importar Incidencias" name="action_create_compute_inputsline" type="object" class="oe_highlight"/>
                     <button string="Cancel" class="btn btn-default" special="cancel"/>
                 </footer>
             </form>

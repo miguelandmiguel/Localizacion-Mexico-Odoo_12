@@ -13,11 +13,19 @@
                 </field>
             </field>
         </record>
+
+        <!-- attrs="{'invisible':[('cfdi_btn_compute', '!=', False)]}"  -->
         <record id="hr_payslip_run_cfdi_btn_form" model="ir.ui.view">
             <field name="name">hr_payslip_run_cfdi_btn_form</field>
             <field name="model">hr.payslip.run</field>
             <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form"/>
             <field name="arch" type="xml">
+                <field name="credit_note" position="after">
+                    <field name="cfdi_btn_confirm" invisible="1" />
+                    <field name="cfdi_btn_sendemail" invisible="1" />
+                    <field name="cfdi_btn_clear" invisible="1" />
+                    <field name="cfdi_btn_compute" invisible="1" />
+                </field>
                 <xpath expr="//form/sheet/label[@class='oe_edit_only']" position="before">
                     <div class="oe_button_box" name="button_box">
                         <button name="confirm_sheet_run"
