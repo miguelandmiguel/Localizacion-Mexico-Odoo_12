@@ -13,3 +13,10 @@ class HrPayrollStructure(models.Model):
 
     report_id = fields.Many2one('ir.actions.report',
         string="Report", domain="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]", default=_get_default_report_id)
+
+
+class HrPayslipLine(models.Model):
+    _name = 'hr.payslip.line'
+    _inherit = 'hr.payslip.line'
+
+    slip_id = fields.Many2one('hr.payslip', string='Pay Slip', required=True, ondelete='cascade', index=True)

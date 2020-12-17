@@ -141,6 +141,18 @@ class HrPayslipRun(models.Model):
     #  Calcular Nominas
     #---------------------------------------
     @api.model
+    def _compute_sheet_run_task_payslip(self, use_new_cursor=False, active_id=False):
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))
+            _logger.info('------ Calcular Nomina %s '%(active_id) )
+            payslipModel = self.env['hr.payslip'].browse(active_id).compute_sheet()
+            if use_new_cursor:
+                cr.commit()
+                cr.close()
+        return {}
+
+    @api.model
     def _compute_sheet_run_task(self, use_new_cursor=False, active_id=False):
         try:
             if use_new_cursor:
@@ -150,6 +162,8 @@ class HrPayslipRun(models.Model):
             payslipModel = self.env['hr.payslip']
             for run_id in runModel.browse(active_id):
                 for payslip in payslipModel.search([('state', '=', 'draft'), ('payslip_run_id', '=', run_id.id)]):
+                    self._compute_sheet_run_task_payslip(use_new_cursor=use_new_cursor, active_id=payslip.id)
+                    """
                     try:
                         _logger.info('------- Compute Payslip %s '%(payslip.id) )
                         payslip.compute_sheet()
@@ -158,6 +172,7 @@ class HrPayslipRun(models.Model):
                         _logger.info('------ Error Al Calcular  la Nomina %s '%( e ) )
                     if use_new_cursor:
                         self._cr.commit()
+                    """
         finally:
             if use_new_cursor:
                 try:
