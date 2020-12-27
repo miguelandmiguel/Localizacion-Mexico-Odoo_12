@@ -1141,9 +1141,10 @@ class HrPayslip(models.Model):
                 'totalOtrosPagos': 0.0
             }
             for otro_pago in nodo_o:
-                if otro_pago.total == 0.0:
-                    continue
                 tipo_otro_pago, nombre_otro_pago = self._get_code(otro_pago)
+                if otro_pago.total == 0.0 and tipo_otro_pago != '002':
+                    continue
+                
                 nombre_otro_pago = otro_pago.name or ''
                 attrs = {
                     'TipoOtroPago': tipo_otro_pago,
@@ -1180,7 +1181,8 @@ class HrPayslip(models.Model):
         if otros_pagos:
             otros_pagos['totalOtrosPagos'] = totalOtrosPagos
 
-        if TipoRegimen == '02' and otros_pagos == None:
+        if TipoRegimen == '02' and (otros_pagos == None or otros_pagos.get('lines', []) == [] ):
+        # if TipoRegimen == '02' and otros_pagos == None:
             tipo_otro_pago = '002'
             nombre_otro_pago = 'Subsidio para el empleo'
             otros_pagos = {
@@ -1213,7 +1215,6 @@ class HrPayslip(models.Model):
                         "ImporteMonetario": "%.2f"%abs(incapacidad.total),
                     }
                     incapacidades.append(nodo_incapacidad)
-                    
         return incapacidades
 
 
