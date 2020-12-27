@@ -307,11 +307,26 @@ class HrPayslip(models.Model):
     cfdi_monto = fields.Monetary(string="Monto CFDI", copy=False, oldname="monto_cfdi")
     cfdi_total = fields.Float(string="Total", copy=False, oldname="total")
 
-    @api.one
-    @api.depends('line_ids', 'line_ids.code')
-    def _compute_total_payslip(self):
-        self.cfdi_total = self.get_salary_line_total('C99')
+    #--------------------
+    # Layout Dispersion
+    #--------------------
+    layout_nomina = fields.Selection([
+            ('banorte', 'Banorte'),
+            ('bbva', 'BBVA Bancomer'),
+            ('efectivo', 'Efectivo')
+        ], string='Plantilla Nomina', default='efectivo', compute='_compute_dispersionnomina')
 
+
+    @api.multi
+    def _compute_dispersionnomina(self):
+        for payslip in self:
+            layout_nomina = 'efectivo'
+            bic = payslip.employee_id.bank_account_id and payslip.employee_id.bank_account_id.bank_id and payslip.employee_id.bank_account_id.bank_id.bic or False
+            if bic and bic == '012':
+                layout_nomina = 'bbva'
+            elif bic and bic != '012':
+                layout_nomina = 'banorte'
+            payslip.layout_nomina = layout_nomina
 
     @api.one
     @api.depends('l10n_mx_edi_cfdi_name')
@@ -1468,7 +1483,7 @@ class HrPayslip(models.Model):
     def action_payslip_cancel_nomina(self):
         if self.state == 'draft':
             self.cancel = 'cancel'
-        if not self.l10n_mx_edi_cfdi_name:
+        if not self.l10n_mx_edi_cfdi_uuid:
             self.move_id.reverse_moves()
             self.state = 'cancel'
             return True

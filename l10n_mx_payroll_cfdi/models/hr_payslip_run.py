@@ -75,6 +75,11 @@ class HrPayslipRun(models.Model):
     cfdi_btn_sendemail = fields.Boolean()
     cfdi_btn_clear = fields.Boolean()
 
+    #----------------------
+    # Aplicacion Banorte
+    #----------------------
+    application_date_banorte = fields.Date('Fecha Aplicacion Pago (Banorte)', required=False, index=True)
+
     @api.multi
     def write(self, vals):
         line_vals = {}
@@ -99,43 +104,6 @@ class HrPayslipRun(models.Model):
                 rec.slip_ids.write(line_vals)
         return result
 
-    """
-    @api.depends('cfdi_source_sncf', 'cfdi_amount_sncf')
-    def _compute_cfdi_sncf(self):
-        for rec in self:
-            print('--------------  _compute_cfdi_sncf')
-            rec.cfdi_es_sncf = True if rec.cfdi_source_sncf else False
-            rec.slip_ids.write({
-                "cfdi_source_sncf": rec.cfdi_source_sncf or '',
-                "cfdi_amount_sncf": rec.cfdi_amount_sncf or 0.0
-            })
-
-    @api.depends('cfdi_tipo_nomina_especial')
-    def _compute_cfdi_tipo_nomina(self):
-        for rec in self:
-            print('--------- cfdi_tipo_nomina_especial')
-            cfdi_tipo_nomina = 'O' if rec.cfdi_tipo_nomina_especial == 'ord' else 'E'
-            rec.cfdi_tipo_nomina = cfdi_tipo_nomina
-            rec.slip_ids.write({
-                "cfdi_tipo_nomina": cfdi_tipo_nomina,
-                "cfdi_tipo_nomina_especial": rec.cfdi_tipo_nomina_especial
-            })
-    """
-
-    """
-    @api.depends('cfdi_source_sncf', 'cfdi_amount_sncf', 'cfdi_tipo_nomina_especial')
-    def _compute_cfdi_sncf(self):
-        for rec in self:
-            cfdi_tipo_nomina = 'O' if rec.cfdi_tipo_nomina_especial == 'ord' else 'E'
-            rec.cfdi_tipo_nomina = cfdi_tipo_nomina
-            rec.slip_ids.write({
-                "cfdi_source_sncf": rec.cfdi_source_sncf,
-                "cfdi_amount_sncf": rec.cfdi_amount_sncf,
-                "cfdi_tipo_nomina": cfdi_tipo_nomina,
-                "cfdi_tipo_nomina_especial": rec.cfdi_tipo_nomina_especial
-            })
-        return True
-    """
 
     #---------------------------------------
     #  Calcular Nominas
@@ -162,17 +130,7 @@ class HrPayslipRun(models.Model):
             payslipModel = self.env['hr.payslip']
             for run_id in runModel.browse(active_id):
                 for payslip in payslipModel.search([('state', '=', 'draft'), ('payslip_run_id', '=', run_id.id)]):
-                    self._compute_sheet_run_task_payslip(use_new_cursor=use_new_cursor, active_id=payslip.id)
-                    """
-                    try:
-                        _logger.info('------- Compute Payslip %s '%(payslip.id) )
-                        payslip.compute_sheet()
-                    except Exception as e:
-                        payslip.message_post(body='Error Al calcular la Nomina: %s '%( e ) )
-                        _logger.info('------ Error Al Calcular  la Nomina %s '%( e ) )
-                    if use_new_cursor:
-                        self._cr.commit()
-                    """
+                    run_id._compute_sheet_run_task_payslip(use_new_cursor=use_new_cursor, active_id=payslip.id)
         finally:
             if use_new_cursor:
                 try:
@@ -299,7 +257,6 @@ class HrPayslipRun(models.Model):
         return {}
 
 
-
     #---------------------------------------
     #  Borrar Nominas en 0
     #---------------------------------------
@@ -346,3 +303,103 @@ class HrPayslipRun(models.Model):
             threaded_calculation = threading.Thread(target=self._unlink_sheet_run_threading, args=(run_id.id, ), name='unlinknominarunid_%s'%run_id.id)
             threaded_calculation.start()
         return {}
+
+    #---------------------------------------
+    #  Dispersion Nominas Banorte
+    #---------------------------------------
+    @api.multi
+    def dispersion_banorte_datas(self):
+        for run_id in self:
+            #---------------
+            # Header Data 
+            #---------------
+            banco_header = run_id.company_id.clave_emisora or ''
+            run_id.application_date_banorte or 'AAAAMMDD'
+            date1 = run_id.application_date_banorte.strftime("%Y%m%d")
+            indx = 1
+            monto_banco = 0.0
+            # ---------------
+            # Detalle
+            # ---------------
+            res_banco = []
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'banorte')
+            _logger.info('---------- Layout Banorte %s '%( len(p_ids) ) )
+            for slip in p_ids:
+                total = slip.get_salary_line_total('C99')
+                if total <= 0:
+                    continue
+                employee_id = slip.employee_id or False
+                bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
+                if not bank_account_id:
+                    continue
+                    # raise UserError(_("El empleado %s No tiene cuenta bancaria . "%(employee_id.cfdi_complete_name) ))
+                bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
+                if not bank_number:
+                    continue
+                    # raise UserError(_("El Banco Receptor %s no tiene codigo. "%(bank_account_id.name) ))
+                bank_type = '01'
+                if bank_number != '072':
+                    bank_type = '40'
+                cuenta = bank_account_id and bank_account_id.acc_number or ''
+                monto_banco += total
+                pp_total = '%.2f'%(total)
+                pp_total = str(pp_total).replace('.', '')
+                res_banco.append((
+                    'D',
+                    '%s'%( date1 ),
+                    '%s'%( str( employee_id.cfdi_code_emp or '' ).rjust(10, "0") ),
+                    '%s'%( str(' ').rjust(40, " ") ),
+                    '%s'%( str(' ').rjust(40, " ") ),
+                    '%s'%( pp_total.rjust(15, "0") ),
+                    '%s'%( bank_number ),
+                    '%s'%( bank_type ),
+                    '%s'%( cuenta.rjust(18, "0") ),
+                    '0',
+                    ' ',
+                    '00000000',
+                    '%s'%( str(' ').rjust(18, " ") ),
+                ))
+                indx += 1
+
+            monto_banco = '%.2f'%(monto_banco)
+            monto_banco = str(monto_banco).replace('.', '')
+            res_banco_header = [(
+                'H',
+                'NE',
+                '%s'%( banco_header ),
+                '%s'%( date1 ),
+                '01',
+                '%s'%( str(indx).rjust(6, "0") ),
+                '%s'%( monto_banco.rjust(15, "0") ),
+                '000000',
+                '000000000000000',
+                '000000',
+                '000000000000000',
+                '000000',
+                '0',
+                '%s'%( str(' ').rjust(77, " ") )
+            )]
+            banco_datas = self._save_txt(res_banco_header + res_banco)
+            return banco_datas
+
+    def _save_txt(self, data):
+        file_value = ''
+        for items in data:
+            file_row = ''
+            for indx, item in enumerate(items):
+                file_row += u'%s'%item
+            file_value += file_row + '\r\n'
+        return file_value
+
+
+
+class ReportTxt(models.AbstractModel):
+    _name = 'report.l10n_mx_payroll_cfdi.dispersionbanortetxt'
+    _inherit = 'report.report_txt.abstract'
+
+    def __init__(self, pool, cr):
+        self.sheet_header = None
+
+    def generate_txt_report(self, txtfile, data, objects):
+        body = objects.dispersion_banorte_datas()
+        txtfile.write(b'%s'%body.encode('utf-8'))
