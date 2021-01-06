@@ -12,6 +12,7 @@ _logger = logging.getLogger(__name__)
 
 class CurrencyWizard(models.TransientModel):
     _name = "currency_rate_update_wizard"
+    _description = "Actualizar Tipo de Cambio"
 
     date_start = fields.Date(string="Fecha Inicial", required=True)
     date_stop = fields.Date(string="Fecha Final", required=True)
@@ -24,7 +25,6 @@ class CurrencyWizard(models.TransientModel):
 
 
     def action_update_rate(self):
-
         currencyModel = self.env['res.currency']
 
         url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/"

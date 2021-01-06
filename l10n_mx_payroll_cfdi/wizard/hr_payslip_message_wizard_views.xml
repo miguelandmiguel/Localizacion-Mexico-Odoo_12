@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+        <record id="hr_payslip_message_wizard_form" model="ir.ui.view">
+            <field name="name">hr.payslip.message.wizard.form</field>
+            <field name="model">hr.payslip.message.wizard</field>
+            <field name="arch" type="xml">
+            <form string="Mensajes en Timbrado">
+                <group colspan="4">
+                    <field name="run_id" readonly="1" />
+                    <field name="lines_ids" nolabel="1" colspan="4">
+                        <tree>
+                            <field name="name" />
+                            <field name="payslip_id" />
+                            <field name="body" />
+                        </tree>
+                    </field>
+                </group>
+                <footer>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+            </field>
+        </record>
+
+        <record id="action_hr_payslip_message_wizard" model="ir.actions.act_window">
+            <field name="name">Mensajes en Timbrado</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hr.payslip.message.wizard</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="binding_model_id" ref="model_hr_payslip_run" />
+            <field name="binding_type">action</field>
+        </record>
+
+</odoo>

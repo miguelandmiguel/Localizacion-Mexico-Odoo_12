@@ -24,6 +24,7 @@
         'views/hr_payroll_structure_views.xml',
         'views/rule_input_code_views.xml',
         'data/mail_template_data.xml',
+        'wizard/hr_payslip_message_wizard_views.xml'
     ],
     'installable': True,
     'application': False,
