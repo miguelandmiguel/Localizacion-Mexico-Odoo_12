@@ -127,5 +127,14 @@
             file="dispersionbanortetxt"
             attachment_use="True" />
 
+        <report
+            id="dispersionbbvatxt"
+            model="hr.payslip.run"
+            string="Dispersion BBVA"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.dispersionbbvatxt"
+            file="dispersionbbvatxt"
+            attachment_use="True" />
+
     </data>
 </odoo>

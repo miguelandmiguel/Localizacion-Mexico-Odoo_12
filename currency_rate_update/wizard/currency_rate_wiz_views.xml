@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    
+        <record model="ir.ui.view" id="currency_rate_update_wizard_form">
+            <field name="name">currency_rate_update_wizard_form</field>
+            <field name="model">currency_rate_update_wizard</field>
+            <field name="arch" type="xml">
+                <form string="Actualizar Tipo de Cambio (Datos Oportunos) ">
+                    <group col="4">
+                        <field name="date_start"/>
+                        <field name="date_stop"/>
+                        <field name="serie_id" />
+                    </group>
+                    <footer>
+                        <button type="special" special="cancel" string="Cerrar" icon="fa-times-circle-o"/>
+                        <button type="object" string="Actualizar" name="action_update_rate" icon="fa-cogs"/>
+                    </footer>
+                </form>
+            </field>
+        </record>    
+        <record id="action_currency_rate_update_wizard" model="ir.actions.act_window">
+            <field name="name">Actualizar Tipo de Cambio</field>
+            <field name="res_model">currency_rate_update_wizard</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="view_type">form</field>
+            <field name="view_id" ref="currency_rate_update_wizard_form"/>
+            <field name="target">new</field>
+        </record>        
+        <menuitem id="menu_currency_rate_update_wizard" 
+            parent="account.account_account_menu"
+            action="action_currency_rate_update_wizard"/>
+
+    </data>
+</odoo>

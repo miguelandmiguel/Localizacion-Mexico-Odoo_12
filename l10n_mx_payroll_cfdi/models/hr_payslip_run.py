@@ -170,7 +170,7 @@ class HrPayslipRun(models.Model):
                 for payslip in payslipModel.search([('state', 'in', ['draft','verify']), ('payslip_run_id', '=', run_id.id)]):
                     try:
                         _logger.info('------- Payslip Done %s '%(payslip.id) )
-                        payslip.action_payslip_done()
+                        payslip.with_context(without_compute_sheet=True).action_payslip_done()
                     except Exception as e:
                         payslip.message_post(body='Error Al timbrar la Nomina: %s '%( e ) )
                         _logger.info('------ Error Al timbrar  la Nomina %s '%( e ) )
@@ -304,6 +304,8 @@ class HrPayslipRun(models.Model):
             threaded_calculation.start()
         return {}
 
+
+
     #---------------------------------------
     #  Dispersion Nominas Banorte
     #---------------------------------------
@@ -391,9 +393,50 @@ class HrPayslipRun(models.Model):
             file_value += file_row + '\r\n'
         return file_value
 
+    #---------------------------------------
+    #  Dispersion Nominas BBVA
+    #---------------------------------------
+    @api.multi
+    def dispersion_bbva_datas(self):
+        for run_id in self:
+            res_banco = []
+            indx = 1
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'bbva')
+            for slip in p_ids:
+                total = slip.get_salary_line_total('C99')
+                if total <= 0:
+                    continue
+
+                employee_id = slip.employee_id or False
+                bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
+                if not bank_account_id:
+                    continue
+
+                bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
+                if not bank_number:
+                    continue
 
 
-class ReportTxt(models.AbstractModel):
+                cta_bank_number = bank_number[-10:]
+                pp_total = '%.2f'%(total)
+                pp_total = str(pp_total).replace('.', '')
+                res_banco.append((
+                    '%s'%( str(indx).rjust(9, "0") ),
+                    '                99',
+                    '%s'%( cta_bank_number.rjust(10, "0") ),
+                    '%s'%( str(' ').ljust(10, " ") ),
+                    '%s'%( pp_total.rjust(15, "0") ),
+                    '%s'%( employee_id.cfdi_complete_name.ljust(40, " ") ),
+                    '001001'
+                ))
+
+
+
+            banco_datas = self._save_txt(res_banco)
+            return banco_datas
+
+
+class ReportBanorteTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionbanortetxt'
     _inherit = 'report.report_txt.abstract'
 
@@ -402,4 +445,16 @@ class ReportTxt(models.AbstractModel):
 
     def generate_txt_report(self, txtfile, data, objects):
         body = objects.dispersion_banorte_datas()
+        txtfile.write(b'%s'%body.encode('utf-8'))
+
+
+class ReportBBVATxt(models.AbstractModel):
+    _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvatxt'
+    _inherit = 'report.report_txt.abstract'
+
+    def __init__(self, pool, cr):
+        self.sheet_header = None
+
+    def generate_txt_report(self, txtfile, data, objects):
+        body = objects.dispersion_bbva_datas()
         txtfile.write(b'%s'%body.encode('utf-8'))

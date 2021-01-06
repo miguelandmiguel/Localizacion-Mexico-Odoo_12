@@ -50,6 +50,46 @@ class Currency(models.Model):
         return results
 
 
+    def getTipoCambioUrl(self, url, fechaIni, fechaFin):
+        token = self.env['ir.config_parameter'].sudo().get_param('bmx.token', default='')
+        urlHost = '%s/%s/%s'%(url, fechaIni, fechaFin)
+        response = requests.get(
+            urlHost,
+            params={'token': token},
+            headers={'Accept': 'application/json', 'Bmx-Token': token, 'Accept-Encoding': 'gzip'},
+        )
+        json_response = response.json()
+        tipoCambios = {}
+        for bmx in json_response:
+            series = json_response[bmx].get('series') or []
+            for serie in series:
+                idSerie = serie.get('idSerie') or ''
+                if idSerie == 'SF60653':
+                    idSerie = 'MXN'
+                elif idSerie == 'SF46410':
+                    idSerie = 'EUR'
+                elif idSerie == 'SF46407':
+                    idSerie = 'GBP'
+                tipoCambios[idSerie] = []
+                for dato in serie.get('datos', []):
+                    fecha = datetime.datetime.strptime(dato.get('fecha'), '%d/%m/%Y').date()
+                    importe = float(dato.get('dato'))
+                    tipoCambios[idSerie].append({
+                        'fecha': '%s'%fecha,
+                        'importe': importe
+                    })
+        for tipoeur in tipoCambios.get('EUR', []):
+            tipomxn = next(tipomxn for tipomxn in tipoCambios.get('MXN') if tipomxn["fecha"] == tipoeur['fecha'] )
+            tipoeur['importe_real'] = tipoeur.get('importe')
+            tipoeur['importe'] = tipomxn.get('importe', 0.0) / tipoeur.get('importe', 0.0)
+
+        for tipogbp in tipoCambios.get('GBP', []):
+            tipomxn = next(tipomxn for tipomxn in tipoCambios.get('MXN') if tipomxn["fecha"] == tipogbp['fecha'] )
+            tipogbp['importe_real'] = tipogbp.get('importe')
+            tipogbp['importe'] = tipomxn.get('importe', 0.0) / tipogbp.get('importe', 0.0)
+
+        return tipoCambios
+
     def getTipoCambio(self, fechaIni, fechaFin, token):
         # url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653,SF46410/datos"
         url = "https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF60653,SF46410/datos"
@@ -98,15 +138,12 @@ class Currency(models.Model):
                         'rate': tipo['importe'],
                         'company_id': None
                     }
-                    print("-----------------currency_id", currency_id)
                     if not rate_brw:
                         CurrencyRate.sudo().create(vals)
                         _logger.info('  ** Create currency %s -- date %s --rate %s ',currency_id.name, tipo['fecha'], tipo['importe'])
                     else:
                         rate_brw.sudo().write(vals)
                         _logger.info('  ** Update currency %s -- date %s --rate %s',currency_id.name, tipo['fecha'], tipo['importe'])
-
-
         return True
 
     def run_update_currency_bmx(self, use_new_cursor=False):

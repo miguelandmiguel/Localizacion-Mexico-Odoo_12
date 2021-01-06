@@ -13,6 +13,7 @@
     'data': [
         # 'security/ir.model.access.csv',
         "data/action_server_data.xml",
+        'wizard/currency_rate_wiz_views.xml'
     ],
     "post_init_hook": "post_init_hook",
 }
