@@ -29,17 +29,15 @@ class hrPayslipMessageWizard(models.TransientModel):
             run_id = self.env['hr.payslip.run'].browse( self.env.context.get('active_id') )
             vals = []
             for payslip in run_id.slip_ids.filtered(lambda line: line.state == 'done' and not line.l10n_mx_edi_cfdi_uuid ):
-                message_id = messageModel.search([
+                for message_id in messageModel.search([
                         ('model', '=', 'hr.payslip'), 
                         ('res_id', '=', payslip.id),
-                        ('body', 'like', u'El cfdi generado no es válido')
-                    ], limit=1)
-                _logger.info('-------- message_id %s '%(message_id) )
-                if message_id:
+                        ('body', 'like', u'El cfdi generado no es válido')], limit=1):
                     body = message_id.body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_COMPLEX_TYPE_4: Element '{http://www.sat.gob.mx/nomina12}""", "'")
                     body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_MININCLUSIVE_VALID: Element '{http://www.sat.gob.mx/cfd/3}""", "")
                     body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_PATTERN_VALID: Element '{http://www.sat.gob.mx/cfd/3}""", '')
                     body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_DATATYPE_VALID_1_2_1: Element '{http://www.sat.gob.mx/cfd/3}""", "")
+                    _logger.info('-------- message_id %s '%(message_id) )
                     vals_tmp = {
                         'name': payslip.number,
                         'wizrun_id': self.id,
@@ -48,7 +46,25 @@ class hrPayslipMessageWizard(models.TransientModel):
                         'body': '%s'%( body )
                     }
                     vals.append((0, 0, vals_tmp))
-                    res.update({'lines_ids': vals})
+            for payslip in run_id.slip_ids.filtered(lambda line: line.state in ['draft', 'verify']):
+                for message_id in messageModel.search([
+                        ('model', '=', 'hr.payslip'), 
+                        ('res_id', '=', payslip.id),
+                        ('body', 'like', u'Error: Validacion XML')], limit=1):
+                    body = message_id.body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_COMPLEX_TYPE_4: Element '{http://www.sat.gob.mx/nomina12}""", "'")
+                    body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_MININCLUSIVE_VALID: Element '{http://www.sat.gob.mx/cfd/3}""", "")
+                    body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_PATTERN_VALID: Element '{http://www.sat.gob.mx/cfd/3}""", '')
+                    body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_DATATYPE_VALID_1_2_1: Element '{http://www.sat.gob.mx/cfd/3}""", "")
+                    _logger.info('-------- message_id %s '%(message_id) )
+                    vals_tmp = {
+                        'name': payslip.number,
+                        'wizrun_id': self.id,
+                        'payslip_id': payslip.id,
+                        'message_id': message_id.id,
+                        'body': '%s'%( body )
+                    }
+                    vals.append((0, 0, vals_tmp))
+            res.update({'lines_ids': vals})
         return res
 
 

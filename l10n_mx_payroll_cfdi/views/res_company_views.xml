@@ -19,7 +19,7 @@
                                 </div>
                                 <field name="company_partner_id" invisible="1" />
                                 <field name="bank_banorte_id" widget="selection"
-                                    domain="[('bank_id.bic', '=', '012'), ('partner_id', '=', company_partner_id)]" />
+                                    domain="[('bank_id.bic', '=', '072'), ('partner_id', '=', company_partner_id)]" />
                             </div>
                         </div>
                         <div class="col-lg-6 col-12 o_setting_box">

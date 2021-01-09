@@ -9,12 +9,19 @@
             <form string="Mensajes en Timbrado">
                 <group colspan="4">
                     <field name="run_id" readonly="1" />
-                    <field name="lines_ids" nolabel="1" colspan="4">
-                        <tree>
+                    <field name="lines_ids" nolabel="1" colspan="4" widget="one2many_list">
+                        <tree string="Nominas">
                             <field name="name" />
                             <field name="payslip_id" />
                             <field name="body" />
                         </tree>
+                        <form string="Nominas">
+                            <group colspan="4" col="6">
+                                <field name="name"/>
+                                <field name="payslip_id"/>
+                                <field name="body"/>
+                            </group>
+                        </form>
                     </field>
                 </group>
                 <footer>
