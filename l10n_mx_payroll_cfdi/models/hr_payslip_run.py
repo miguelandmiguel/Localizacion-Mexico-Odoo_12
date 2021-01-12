@@ -401,22 +401,50 @@ class HrPayslipRun(models.Model):
         for run_id in self:
             res_banco = []
             indx = 1
+            for slip in run_id.slip_ids:
+                total = slip.get_salary_line_total('C99')
+                if total <= 0:
+                    continue
+                employee_id = slip.employee_id or False
+                bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
+                if not bank_account_id:
+                    continue
+                bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
+                cuenta = bank_account_id and bank_account_id.acc_number or ''
+                if not cuenta:
+                    continue
+
+                pp_total = '%.2f'%(total)
+                pp_total = str(pp_total).replace('.', '')
+                rfc = '%s'%(employee_id.cfdi_rfc or '').rjust(16, " ")
+                nombre = employee_id.cfdi_complete_name[:40]
+                res_banco.append((
+                    '%s'%( str(indx).rjust(9, "0") ),
+                    rfc,
+                    '%s'%( '99' if bank_number == '012' else '40' ),
+                    '%s'%( cuenta.ljust(20, " ") ),
+                    '%s'%( pp_total.rjust(15, "0") ),
+                    '%s'%( nombre.ljust(40, " ") ),
+                    '%s'%(bank_number),
+                    '001'
+                ))
+                indx += 1
+
+            banco_datas = self._save_txt(res_banco)
+            return banco_datas
+            """
             p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'bbva')
             for slip in p_ids:
                 total = slip.get_salary_line_total('C99')
                 if total <= 0:
                     continue
-
                 employee_id = slip.employee_id or False
                 bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
                 if not bank_account_id:
                     continue
-
                 bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
                 if not bank_number:
                     continue
-
-
                 cta_bank_number = bank_number[-10:]
                 pp_total = '%.2f'%(total)
                 pp_total = str(pp_total).replace('.', '')
@@ -429,11 +457,11 @@ class HrPayslipRun(models.Model):
                     '%s'%( employee_id.cfdi_complete_name.ljust(40, " ") ),
                     '001001'
                 ))
-
-
-
             banco_datas = self._save_txt(res_banco)
             return banco_datas
+            """
+
+
 
 
 class ReportBanorteTxt(models.AbstractModel):
