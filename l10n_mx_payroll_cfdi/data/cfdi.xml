@@ -183,12 +183,14 @@
                             </nomina12:OtrosPagos>
                         </t>
                         <t t-if="Incapacidades is not None">
+                            <nomina12:Incapacidades>
                             <t t-foreach="Incapacidades" t-as="line">
                                 <nomina12:Incapacidad
                                     t-att-DiasIncapacidad="line['DiasIncapacidad']" 
                                     t-att-TipoIncapacidad="line['TipoIncapacidad']" 
                                     t-att-ImporteMonetario="line.get('ImporteMonetario')" />
                             </t>
+                            </nomina12:Incapacidades>
                         </t>
                     </nomina12:Nomina>
                 </cfdi:Complemento>

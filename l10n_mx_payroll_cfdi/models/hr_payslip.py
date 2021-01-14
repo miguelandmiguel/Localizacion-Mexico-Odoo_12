@@ -220,7 +220,6 @@ class HrPayslipEmployees(models.TransientModel):
                 ('company_id', '=', rec.company_id.id),
                 ('contract_id.state', 'in', ['open', 'close'])
             ])
-            print('---- employee_ids ', employee_ids.ids)
             rec.write({
                 'employee_ids': [(6, 0, employee_ids.ids)]
             })
@@ -313,8 +312,9 @@ class HrPayslip(models.Model):
     layout_nomina = fields.Selection([
             ('banorte', 'Banorte'),
             ('bbva', 'BBVA Bancomer'),
+            ('bbva_inter', 'BBVA Bancomer_inter'),
             ('efectivo', 'Efectivo')
-        ], string='Plantilla Nomina', default='efectivo', compute='_compute_dispersionnomina')
+        ], string='Dispersion Nomina', default='efectivo', compute='_compute_dispersionnomina')
 
 
     @api.multi
@@ -322,10 +322,20 @@ class HrPayslip(models.Model):
         for payslip in self:
             layout_nomina = 'efectivo'
             bic = payslip.employee_id.bank_account_id and payslip.employee_id.bank_account_id.bank_id and payslip.employee_id.bank_account_id.bank_id.bic or False
-            if bic and bic == '012':
+            if not bic:
+                payslip.layout_nomina = layout_nomina
+                continue
+
+            if bic == '012':
                 layout_nomina = 'bbva'
-            elif bic and bic != '012':
-                layout_nomina = 'banorte'
+            else:
+                if payslip.company_id.sin_dispersion_banorte:
+                    layout_nomina = 'bbva_inter'
+                else:
+                    if bic == '072':
+                        layout_nomina = 'banorte'
+                    elif bic not in ['012', '072']:
+                        layout_nomina = 'bbva_inter'
             payslip.layout_nomina = layout_nomina
 
     @api.one
@@ -404,7 +414,6 @@ class HrPayslip(models.Model):
         This can be encoded with the certificate to create the digital seal.
         Since the cadena is generated with the invoice data, any change in it will be noticed resulting in a different
         cadena and so, ensure the invoice has not been modified.
-
         :param xslt_path: The path to the xslt file.
         :param cfdi_as_tree: The cfdi converted as a tree
         :return: A string computed with the invoice data called the cadena
@@ -632,7 +641,6 @@ class HrPayslip(models.Model):
     @api.model
     def l10n_mx_edi_retrieve_attachments(self):
         """Retrieve all the cfdi attachments generated for this payment.
-
         :return: An ir.attachment recordset
         """
         self.ensure_one()
@@ -654,7 +662,6 @@ class HrPayslip(models.Model):
     def l10n_mx_edi_get_xml_etree(self, cfdi=None):
         '''Get an objectified tree representing the cfdi.
         If the cfdi is not specified, retrieve it from the attachment.
-
         :param cfdi: The cfdi as string
         :return: An objectified tree
         '''
@@ -694,7 +701,6 @@ class HrPayslip(models.Model):
     @api.model
     def l10n_mx_edi_get_payment_etree(self, cfdi):
         '''Get the Complement node from the cfdi.
-
         :param cfdi: The cfdi as etree
         :return: the Payment node
         '''
@@ -712,7 +718,6 @@ class HrPayslip(models.Model):
         This can be encoded with the certificate to create the digital seal.
         Since the cadena is generated with the invoice data, any change in it will be noticed resulting in a different
         cadena and so, ensure the invoice has not been modified.
-
         :param xslt_path: The path to the xslt file.
         :param cfdi_as_tree: The cfdi converted as a tree
         :return: A string computed with the invoice data called the cadena
@@ -733,7 +738,6 @@ class HrPayslip(models.Model):
     @api.multi
     def _l10n_mx_edi_post_sign_process(self, xml_signed, code=None, msg=None):
         """Post process the results of the sign service.
-
         :param xml_signed: the xml signed datas codified in base64
         :param code: an eventual error code
         :param msg: an eventual error msg
@@ -861,7 +865,6 @@ class HrPayslip(models.Model):
             'password': 'vAux00__' if test else password,
         }
 
-
     @staticmethod
     def _l10n_mx_get_serie_and_folio(number):
         values = {'serie': None, 'folio': None}
@@ -915,6 +918,19 @@ class HrPayslip(models.Model):
             message = "<li>Error \n\nNo se encontro entrada de dias trabajados con codigo %s</li>"%code
             self.action_raisemessage(message)
         return dias, horas
+
+    def _get_input(self, line):
+        regla = line.salary_rule_id
+        codigo = ''
+        cantidad = 0
+        for inp in regla.input_ids:
+            codigo = inp.code
+            break
+        for inp in self.input_line_ids:
+            if inp.code == codigo:
+                cantidad = inp.amount
+                break
+        return cantidad
 
     def _get_code(self, line):
         if not line.salary_rule_id.cfdi_codigoagrupador_id:
@@ -1201,20 +1217,22 @@ class HrPayslip(models.Model):
         return otros_pagos
 
     def getIncapacidades(self):
+        inca_total = self.get_salary_line_total('C110') or 0.0
+        _logger.info('------ Incapacidades %s '%(inca_total) )
         nodo_i = self._get_lines_type('i')
         incapacidades = None
         if nodo_i:
             incapacidades = []
             for incapacidad in nodo_i:
-                inca = self._get_input(incapacidad)
-                if inca != 0:
-                    tipo_incapacidad, nombre_incapacidad = self._get_code(incapacidad)
+                tipo_incapacidad, nombre_incapacidad = self._get_code(incapacidad)
+                if incapacidad.total > 0.0:
                     nodo_incapacidad = {
-                        "DiasIncapacidad": "%d"%self._get_input(incapacidad),
+                        "DiasIncapacidad": "%d"%incapacidad.total,
                         "TipoIncapacidad": tipo_incapacidad,
-                        "ImporteMonetario": "%.2f"%abs(incapacidad.total),
+                        "ImporteMonetario": "%.2f"%abs(inca_total),
                     }
                     incapacidades.append(nodo_incapacidad)
+        _logger.info('----- INCA %s '%(incapacidades) )
         return incapacidades
 
 
@@ -1261,7 +1279,7 @@ class HrPayslip(models.Model):
         TotalOtrosPagos = OtrosPagos and abs(float(OtrosPagos.get('totalOtrosPagos', '0.0'))) or 0.0
         importe = (TotalPercepciones or 0.0) + (TotalOtrosPagos or 0.0)
         subtotal = importe
-        descuento = TotalDeducciones or 0.0
+        descuento = TotalDeducciones
         total = subtotal - descuento
         values = {
             'record': self,
@@ -1270,7 +1288,7 @@ class HrPayslip(models.Model):
             'issued': self.journal_id.l10n_mx_address_issued_id,
             'customer': self.employee_id,
             'NumDiasPagados': "%d"%self._get_days("WORK100")[0],
-            "RegistroPatronal": company.cfdi_registropatronal_id and company.cfdi_registropatronal_id.name or False,
+            "RegistroPatronal": company.cfdi_registropatronal_id and company.cfdi_registropatronal_id.code or False,
             'antiguedad': antiguedad,
             'fecha_alta': fecha_alta,
             'RiesgoPuesto': RiesgoPuesto,
@@ -1278,7 +1296,7 @@ class HrPayslip(models.Model):
             'banco': banco,
             'num_cuenta': num_cuenta,
             'TotalPercepciones': "%.2f"%TotalPercepciones,
-            'TotalDeducciones': "%.2f"%TotalDeducciones,
+            'TotalDeducciones': "%.2f"%TotalDeducciones if TotalDeducciones > 0.0 else None,
             'TotalOtrosPagos': "%.2f"%TotalOtrosPagos if TotalOtrosPagos != None else None,
             'EntidadSNCF': EntidadSNCF,
             'Percepciones': Percepciones or None,
@@ -1286,7 +1304,7 @@ class HrPayslip(models.Model):
             'SeparacionIndemnizacion': SeparacionIndemnizacion,
             'Deducciones': Deducciones,
             'OtrosPagos': OtrosPagos,
-            'Incapacidades': Incapacidades,
+            'Incapacidades': Incapacidades if Incapacidades and len(Incapacidades) > 0 else None,
             'importe': "%.2f"%importe,
             'descuento': "%.2f"%descuento,
             'subtotal': "%.2f"%subtotal,
@@ -1364,9 +1382,7 @@ class HrPayslip(models.Model):
             elif record.l10n_mx_edi_pac_status == 'to_cancel':
                 record._l10n_mx_edi_cancel()
 
-    @api.multi
     def action_payslip_cfdivalues(self):
-        self.ensure_one()
         post_msg = []
         body_msg = _('Error: Validacion XML')
         fechaAlta = self.employee_id.cfdi_date_start or self.employee_id.contract_id.date_start or False
@@ -1376,6 +1392,8 @@ class HrPayslip(models.Model):
         tipoContrato = self.contract_id.type_id and self.contract_id.type_id.code or ''
         periodicidadPago = self.contract_id.cfdi_periodicidadpago_id and self.contract_id.cfdi_periodicidadpago_id.code or ''
         tipoRegimen = self.contract_id.cfdi_regimencontratacion_id and self.contract_id.cfdi_regimencontratacion_id.code or ''
+        registroPatronal = self.company_id.cfdi_registropatronal_id and self.company_id.cfdi_registropatronal_id.code or False
+        total = self.get_salary_line_total('C99')
         res = False
         if not self.employee_id.cfdi_rfc:
             post_msg.extend([_('El Empleado no tiene "RFC" ')])
@@ -1393,6 +1411,10 @@ class HrPayslip(models.Model):
             post_msg.extend([_('El Empleado no tiene "Riesgo Puesto" ')])
         if not salarioDiarioIntegrado:
             post_msg.extend([_('El Empleado no tiene "Salario Diario Integrado" ')])
+        if total <= 0:
+            post_msg.extend([_('No se puede timbrar Nominas en 0 o Negativos ')])
+        if not registroPatronal:
+            post_msg.extend([_('El atributo Nomina.Emisor.RegistroPatronal se debe registrar')])
         if post_msg:
             self.message_post(body=body_msg + create_list_html(post_msg))
             res = True

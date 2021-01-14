@@ -12,9 +12,17 @@ from odoo.exceptions import UserError
 from odoo.tools.float_utils import float_repr
 from odoo.addons.l10n_mx_edi.tools.run_after_commit import run_after_commit
 
+import unicodedata
+
 _logger = logging.getLogger(__name__)
 
 CATALOGO_TIPONOMINA = [('O','Ordinaria'), ('E','Extraordinaria')]
+
+def remove_accents(s):
+    def remove_accent1(c):
+        return unicodedata.normalize('NFD', c)[0]
+    return u''.join(map(remove_accent1, s))
+
 
 def create_list_html(array):
     if not array:
@@ -216,7 +224,7 @@ class HrPayslipRun(models.Model):
             for run_id in runModel.browse(active_id):
                 for payslip in payslipModel.search([('state', '=', 'done'), ('payslip_run_id', '=', run_id.id)]):
                     try:
-                        if payslip.l10n_mx_edi_cfdi_uuid:
+                        if payslip.l10n_mx_edi_cfdi_uuid and payslip.employee_id.address_home_id.email:
                             _logger.info('------- Payslip Email %s '%(payslip.id) )
                             ctx.update({
                                 'default_model': 'hr.payslip',
@@ -318,12 +326,12 @@ class HrPayslipRun(models.Model):
             banco_header = run_id.company_id.clave_emisora or ''
             run_id.application_date_banorte or 'AAAAMMDD'
             date1 = run_id.application_date_banorte.strftime("%Y%m%d")
-            indx = 1
+            indx = 0
             monto_banco = 0.0
             # ---------------
             # Detalle
             # ---------------
-            res_banco = []
+            res_banco_header, res_banco = [], []
             p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'banorte')
             _logger.info('---------- Layout Banorte %s '%( len(p_ids) ) )
             for slip in p_ids:
@@ -339,10 +347,13 @@ class HrPayslipRun(models.Model):
                 if not bank_number:
                     continue
                     # raise UserError(_("El Banco Receptor %s no tiene codigo. "%(bank_account_id.name) ))
+                indx += 1
                 bank_type = '01'
                 if bank_number != '072':
                     bank_type = '40'
                 cuenta = bank_account_id and bank_account_id.acc_number or ''
+                cuenta = cuenta[ : len(cuenta) -1 ]
+                cuenta = cuenta[-10:]
                 monto_banco += total
                 pp_total = '%.2f'%(total)
                 pp_total = str(pp_total).replace('.', '')
@@ -361,26 +372,25 @@ class HrPayslipRun(models.Model):
                     '00000000',
                     '%s'%( str(' ').rjust(18, " ") ),
                 ))
-                indx += 1
-
-            monto_banco = '%.2f'%(monto_banco)
-            monto_banco = str(monto_banco).replace('.', '')
-            res_banco_header = [(
-                'H',
-                'NE',
-                '%s'%( banco_header ),
-                '%s'%( date1 ),
-                '01',
-                '%s'%( str(indx).rjust(6, "0") ),
-                '%s'%( monto_banco.rjust(15, "0") ),
-                '000000',
-                '000000000000000',
-                '000000',
-                '000000000000000',
-                '000000',
-                '0',
-                '%s'%( str(' ').rjust(77, " ") )
-            )]
+            if res_banco:
+                monto_banco = '%.2f'%(monto_banco)
+                monto_banco = str(monto_banco).replace('.', '')
+                res_banco_header = [(
+                    'H',
+                    'NE',
+                    '%s'%( banco_header ),
+                    '%s'%( date1 ),
+                    '01',
+                    '%s'%( str(indx).rjust(6, "0") ),
+                    '%s'%( monto_banco.rjust(15, "0") ),
+                    '000000',
+                    '000000000000000',
+                    '000000',
+                    '000000000000000',
+                    '000000',
+                    '0',
+                    '%s'%( str(' ').rjust(77, " ") )
+                )]
             banco_datas = self._save_txt(res_banco_header + res_banco)
             return banco_datas
 
@@ -401,23 +411,30 @@ class HrPayslipRun(models.Model):
         for run_id in self:
             res_banco = []
             indx = 1
-            for slip in run_id.slip_ids:
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'bbva')
+            _logger.info('---------- Layout BBVA %s '%( len(p_ids) ) )
+            for slip in p_ids:
+                employee_id = slip.employee_id or False
                 total = slip.get_salary_line_total('C99')
                 if total <= 0:
+                    _logger.info('---- Dispersion BBVA NO total=0 %s %s %s '%( slip.id, slip.number, employee_id.id ) )
                     continue
-                employee_id = slip.employee_id or False
                 bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
                 if not bank_account_id:
+                    _logger.info('---- Dispersion BBVA NO bank_account_id %s %s %s '%( slip.id, slip.number, employee_id.id ) )
                     continue
                 bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
                 cuenta = bank_account_id and bank_account_id.acc_number or ''
                 if not cuenta:
+                    _logger.info('---- Dispersion BBVA NO CUENTA%s %s %s '%( slip.id, slip.number, employee_id.id ) )
                     continue
 
                 pp_total = '%.2f'%(total)
                 pp_total = str(pp_total).replace('.', '')
-                rfc = '%s'%(employee_id.cfdi_rfc or '').rjust(16, " ")
-                nombre = employee_id.cfdi_complete_name[:40]
+                rfc = '%s'%('0').rjust(16, "0")
+                # nombre = employee_id.cfdi_complete_name[:40]
+                nombre = '%s %s %s'%( employee_id.cfdi_appat, employee_id.cfdi_apmat, employee_id.name )
+                nombre = remove_accents(nombre[:40])
                 res_banco.append((
                     '%s'%( str(indx).rjust(9, "0") ),
                     rfc,
@@ -425,41 +442,58 @@ class HrPayslipRun(models.Model):
                     '%s'%( cuenta.ljust(20, " ") ),
                     '%s'%( pp_total.rjust(15, "0") ),
                     '%s'%( nombre.ljust(40, " ") ),
-                    '%s'%(bank_number),
+                    '001',
                     '001'
                 ))
                 indx += 1
-
             banco_datas = self._save_txt(res_banco)
             return banco_datas
-            """
-            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'bbva')
+
+    #---------------------------------------
+    #  Dispersion Nominas BBVA
+    #---------------------------------------
+    @api.multi
+    def dispersion_bbva_inter_datas(self):
+        for run_id in self:
+            res_banco = []
+            indx = 1
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'bbva_inter')
+            _logger.info('---------- Layout BBVA Inter %s '%( len(p_ids) ) )
             for slip in p_ids:
+                employee_id = slip.employee_id or False
                 total = slip.get_salary_line_total('C99')
                 if total <= 0:
+                    _logger.info('---- Dispersion BBVA NO total=0 %s %s %s '%( slip.id, slip.number, employee_id.id ) )
                     continue
-                employee_id = slip.employee_id or False
                 bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
                 if not bank_account_id:
+                    _logger.info('---- Dispersion BBVA NO bank_account_id %s %s %s '%( slip.id, slip.number, employee_id.id ) )
                     continue
                 bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
-                if not bank_number:
+                cuenta = bank_account_id and bank_account_id.acc_number or ''
+                if not cuenta:
+                    _logger.info('---- Dispersion BBVA NO CUENTA%s %s %s '%( slip.id, slip.number, employee_id.id ) )
                     continue
-                cta_bank_number = bank_number[-10:]
+
                 pp_total = '%.2f'%(total)
                 pp_total = str(pp_total).replace('.', '')
+                rfc = '%s'%('0').rjust(16, "0")
+                # nombre = employee_id.cfdi_complete_name[:40]
+                nombre = '%s %s %s'%( employee_id.cfdi_appat, employee_id.cfdi_apmat, employee_id.name )
+                nombre = remove_accents(nombre[:40])
                 res_banco.append((
                     '%s'%( str(indx).rjust(9, "0") ),
-                    '                99',
-                    '%s'%( cta_bank_number.rjust(10, "0") ),
-                    '%s'%( str(' ').ljust(10, " ") ),
+                    rfc,
+                    '%s'%( '99' if bank_number == '012' else '40' ),
+                    '%s'%( cuenta.ljust(20, " ") ),
                     '%s'%( pp_total.rjust(15, "0") ),
-                    '%s'%( employee_id.cfdi_complete_name.ljust(40, " ") ),
-                    '001001'
+                    '%s'%( nombre.ljust(40, " ") ),
+                    '%s'%( bank_number ),
+                    '001'
                 ))
+                indx += 1
             banco_datas = self._save_txt(res_banco)
             return banco_datas
-            """
 
 
 
@@ -485,4 +519,15 @@ class ReportBBVATxt(models.AbstractModel):
 
     def generate_txt_report(self, txtfile, data, objects):
         body = objects.dispersion_bbva_datas()
+        txtfile.write(b'%s'%body.encode('utf-8'))
+
+class ReportBBVATxt(models.AbstractModel):
+    _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvaintertxt'
+    _inherit = 'report.report_txt.abstract'
+
+    def __init__(self, pool, cr):
+        self.sheet_header = None
+
+    def generate_txt_report(self, txtfile, data, objects):
+        body = objects.dispersion_bbva_inter_datas()
         txtfile.write(b'%s'%body.encode('utf-8'))

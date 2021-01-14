@@ -136,5 +136,14 @@
             file="dispersionbbvatxt"
             attachment_use="True" />
 
+        <report
+            id="dispersionbbvaintertxt"
+            model="hr.payslip.run"
+            string="Dispersion BBVA Interbancarias"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.dispersionbbvaintertxt"
+            file="dispersionbbvaintertxt"
+            attachment_use="True" />
+
     </data>
 </odoo>

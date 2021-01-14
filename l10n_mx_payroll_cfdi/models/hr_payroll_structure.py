@@ -20,3 +20,32 @@ class HrPayslipLine(models.Model):
     _inherit = 'hr.payslip.line'
 
     slip_id = fields.Many2one('hr.payslip', string='Pay Slip', required=True, ondelete='cascade', index=True)
+
+
+
+class RegistroPatronal(models.Model):
+    _name = 'l10n_mx_payroll.regpat'
+    _description = 'Registro Patronal'
+    
+    name = fields.Char(string="Name", required=True, default="")
+    code = fields.Char(string="Code", size=64, required=True, default="")
+    company_id = fields.Many2one('res.company', string='Company', change_default=True,
+        default=lambda self: self.env['res.company']._company_default_get('l10n_mx_payroll.regpat'))
+
+    @api.multi
+    def name_get(self):
+        result = []
+        for rec in self:
+            result.append((rec.id, "[%s] %s" % (rec.code, rec.name or '')))
+        return result
+
+    @api.model
+    def name_search(self, name, args=None, operator='ilike', limit=100):
+        recs = super(RegistroPatronal, self).name_search(name, args=args, operator=operator, limit=limit)
+        args = args or []
+        recs = self.browse()
+        if name:
+            recs = self.search([('code', operator, name)] + args, limit=limit)
+        if not recs:
+            recs = self.search([('name', operator, name)] + args, limit=limit)
+        return recs.name_get()
