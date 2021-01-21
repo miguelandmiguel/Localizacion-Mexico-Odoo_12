@@ -194,12 +194,7 @@ class HrPayslipRun(models.Model):
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            # now1 = datetime.now()
-            # self._actualizar_user(use_new_cursor=use_new_cursor, run_id=run_id)
-            # self._enviar_msg(use_new_cursor=use_new_cursor, run_id=run_id, message_type='Inicia Calculo ', message_post='%s '%( now1.strftime("%Y-%m-%d %H:%M:%S") )  )
             self._compute_scheduler_tasks(use_new_cursor=use_new_cursor, run_id=run_id)
-            # now2 = datetime.now()
-            # self._enviar_msg(use_new_cursor=use_new_cursor, run_id=run_id, message_type='Termina Calculo ', message_post='%s '%( now2.strftime("%Y-%m-%d %H:%M:%S") )  )
         finally:
             if use_new_cursor:
                 try:
@@ -221,7 +216,6 @@ class HrPayslipRun(models.Model):
         threaded_calculation = threading.Thread(target=self._compute_sheet_run_threading, args=([run_id]))
         threaded_calculation.start()
         return {}
-
 
     #---------------------------------------
     #  Confirmar y Timbrar Nominas
@@ -271,37 +265,24 @@ class HrPayslipRun(models.Model):
     #  Enviar Nominas
     #---------------------------------------
     @api.model
-    def _enviar_nomina_threading_task(self, use_new_cursor=False, active_id=False):
+    def _enviar_nomina_scheduler_tasks(self, use_new_cursor=False, run_id=False):
+        domain = [('state', '=', 'done'), ('payslip_run_id', '=', run_id), ('l10n_mx_edi_sendemail', '=', False)]
+        payslip_to_assign = self.env['hr.payslip'].search(domain, limit=None,
+            order='number desc, id asc')
+        for payslip_chunk in split_every(100, payslip_to_assign.ids):
+            self.env['hr.payslip'].browse(payslip_chunk).sudo().enviar_nomina()
+            if use_new_cursor:
+                self._cr.commit()
+        if use_new_cursor:
+            self._cr.commit()
+
+    @api.model
+    def _enviar_nomina_threading_task(self, use_new_cursor=False, run_id=False):
         try:
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            ctx = self._context.copy()
-            template = self.env.ref('l10n_mx_payroll_cfdi.email_template_payroll', False)
-            runModel = self.env['hr.payslip.run']
-            payslipModel = self.env['hr.payslip']
-            mailModel = self.env['mail.compose.message']
-            for run_id in runModel.browse(active_id):
-                for payslip in payslipModel.search([('state', '=', 'done'), ('payslip_run_id', '=', run_id.id)]):
-                    try:
-                        if payslip.l10n_mx_edi_cfdi_uuid and payslip.employee_id.address_home_id.email:
-                            _logger.info('------- Payslip Email %s '%(payslip.id) )
-                            ctx.update({
-                                'default_model': 'hr.payslip',
-                                'default_res_id': payslip.id,
-                                'default_use_template': bool(template),
-                                'default_template_id': template.id,
-                                'default_composition_mode': 'comment',
-                                'mail_create_nosubscribe': True
-                            })
-                            vals = mailModel.onchange_template_id(template.id, 'comment', 'hr.payslip', payslip.id)
-                            mail_message  = mailModel.with_context(ctx).create(vals.get('value',{}))
-                            mail_message.action_send_mail()
-                    except Exception as e:
-                        payslip.message_post(body='Error Al enviar Email Nomina: %s '%( e ) )
-                        _logger.info('------ Error Al enviar Email Nomina %s '%( e ) )
-                    if use_new_cursor:
-                        self._cr.commit()
+            self._enviar_nomina_scheduler_tasks(use_new_cursor=use_new_cursor, run_id=run_id)
         finally:
             if use_new_cursor:
                 try:
@@ -310,19 +291,18 @@ class HrPayslipRun(models.Model):
                     pass
         return {}
 
-    def _enviar_nomina_threading(self, active_id):
+    def _enviar_nomina_threading(self, run_id=False):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
-            self.env['hr.payslip.run']._enviar_nomina_threading_task(use_new_cursor=self._cr.dbname, active_id=active_id)
+            self.env['hr.payslip.run']._enviar_nomina_threading_task(use_new_cursor=self._cr.dbname, run_id=run_id)
             new_cr.close()
-        return {}
+            return {}
 
-    @api.multi
     def enviar_nomina(self):
-        for run_id in self:
-            threaded_calculation = threading.Thread(target=self._enviar_nomina_threading, args=(run_id.id, ), name='enviarnominarunid_%s'%run_id.id)
-            threaded_calculation.start()
+        run_id = self.id
+        threaded_calculation = threading.Thread(target=self._enviar_nomina_threading, args=([run_id]))
+        threaded_calculation.start()
         return {}
 
 

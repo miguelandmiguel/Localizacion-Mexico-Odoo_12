@@ -1530,4 +1530,32 @@ class HrPayslip(models.Model):
             cr.close()
         return {}    
 
-# http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/GuiaNomina11102019.pdf
+    #--------------------------------
+    # Enviar correo timbrado batch
+    #--------------------------------
+    @api.multi
+    def enviar_nomina(self):
+        ctx = self._context.copy()
+        template = self.env.ref('l10n_mx_payroll_cfdi.email_template_payroll', False)
+        runModel = self.env['hr.payslip.run']
+        mailModel = self.env['mail.compose.message']
+        for payslip in self:
+            if payslip.l10n_mx_edi_cfdi_uuid and payslip.employee_id.address_home_id.email:
+                try:
+                    payslip.write({'l10n_mx_edi_sendemail': True})
+                    ctx.update({
+                        'default_model': 'hr.payslip',
+                        'default_res_id': payslip.id,
+                        'default_use_template': bool(template),
+                        'default_template_id': template.id,
+                        'default_composition_mode': 'comment',
+                        'mail_create_nosubscribe': True
+                    })
+                    vals = mailModel.onchange_template_id(template.id, 'comment', 'hr.payslip', payslip.id)
+                    mail_message  = mailModel.with_context(ctx).create(vals.get('value',{}))
+                    mail_message.action_send_mail()
+                except Exception as e:
+                    payslip.message_post(body='Error Al enviar Email Nomina %s: %s '%( payslip.number, e ) )
+                    _logger.info('------ Error Al enviar Email Nomina %s:  %s '%( payslip.number, e ) )
+
+

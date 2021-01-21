@@ -20,7 +20,12 @@ Control de Cambios.
 4. Enviar Mensajes al Confirmar la nomina
 5. Correr la nomina con OdooBot
 
+# http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/GuiaNomina11102019.pdf
 
+            # now1 = datetime.now()
+            # self._actualizar_user(use_new_cursor=use_new_cursor, run_id=run_id)
+            # self._enviar_msg(use_new_cursor=use_new_cursor, run_id=run_id, message_type='Inicia Calculo ', message_post='%s '%( now1.strftime("%Y-%m-%d %H:%M:%S") )  )
+            # self._enviar_msg(use_new_cursor=use_new_cursor, run_id=run_id, message_type='Termina Calculo ', message_post='%s '%( now2.strftime("%Y-%m-%d %H:%M:%S") )  )
 
 
 
@@ -69,6 +74,82 @@ Caclular nomina
             threaded_calculation = threading.Thread(target=self._compute_sheet_run_threading, args=(run_id.id, ), name='calcularrunid_%s'%run_id.id)
             threaded_calculation.start()
         return {}
+
+
+
+    #---------------------------------------
+    #  Enviar Nominas
+    #---------------------------------------
+    @api.model
+    def _enviar_nomina_threading_task(self, use_new_cursor=False, active_id=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+            ctx = self._context.copy()
+            template = self.env.ref('l10n_mx_payroll_cfdi.email_template_payroll', False)
+            runModel = self.env['hr.payslip.run']
+            payslipModel = self.env['hr.payslip']
+            mailModel = self.env['mail.compose.message']
+            for run_id in runModel.browse(active_id):
+                for payslip in payslipModel.search([('state', '=', 'done'), ('payslip_run_id', '=', run_id.id)]):
+                    try:
+                        if payslip.l10n_mx_edi_cfdi_uuid and payslip.employee_id.address_home_id.email:
+                            _logger.info('------- Payslip Email %s '%(payslip.id) )
+                            ctx.update({
+                                'default_model': 'hr.payslip',
+                                'default_res_id': payslip.id,
+                                'default_use_template': bool(template),
+                                'default_template_id': template.id,
+                                'default_composition_mode': 'comment',
+                                'mail_create_nosubscribe': True
+                            })
+                            vals = mailModel.onchange_template_id(template.id, 'comment', 'hr.payslip', payslip.id)
+                            mail_message  = mailModel.with_context(ctx).create(vals.get('value',{}))
+                            mail_message.action_send_mail()
+                    except Exception as e:
+                        payslip.message_post(body='Error Al enviar Email Nomina: %s '%( e ) )
+                        _logger.info('------ Error Al enviar Email Nomina %s '%( e ) )
+                    if use_new_cursor:
+                        self._cr.commit()
+        finally:
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return {}
+    def _enviar_nomina_threading(self, active_id):
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['hr.payslip.run']._enviar_nomina_threading_task(use_new_cursor=self._cr.dbname, active_id=active_id)
+            new_cr.close()
+        return {}
+    @api.multi
+    def enviar_nomina(self):
+        for run_id in self:
+            threaded_calculation = threading.Thread(target=self._enviar_nomina_threading, args=(run_id.id, ), name='enviarnominarunid_%s'%run_id.id)
+            threaded_calculation.start()
+        return {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
