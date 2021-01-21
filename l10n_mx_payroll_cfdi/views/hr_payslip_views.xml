@@ -67,6 +67,7 @@
                             <field name="cfdi_date_payment" />
                             <field name="cfdi_tipo_nomina_especial" />
                             <field name="cfdi_tipo_nomina" />
+                            <field name="l10n_mx_edi_sendemail" />
                         </group>
                         <group col="4">
                             <field name="date_invoice" readonly="1" />

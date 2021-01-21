@@ -9,13 +9,16 @@
 Control de Cambios.
 1. Nominas C99=0 cambiarlas a Done. 												OK
 2. Nominas Especiales. No permitir crear dos veces el mismo registro.(Excel).		OK
+3. Envio de Correos. Que no se envie a los seguidores.
 
+
+3. Envio de correos. --- Hacer Commit.
+3. Envio de Correos. --- Campo Status send_email.
 3. Crear opcion Generar dispersión de pagos. Seleccionar empleados
 3. Nomina para empleados inactivos... Finiquitos
 3. Enviar Mensajes al calcular la nomina.
 4. Enviar Mensajes al Confirmar la nomina
 5. Correr la nomina con OdooBot
-
 
 
 

@@ -22,7 +22,6 @@ class MailTemplate(models.Model):
         for record in self.env[self.model].browse(res_ids):
             if record.company_id.country_id != self.env.ref('base.mx'):
                 continue
-            res[record.id]['partner_ids'] = record.employee_id.address_home_id and record.employee_id.address_home_id.ids
             attachment = record.l10n_mx_edi_retrieve_last_attachment()
             if attachment:
                 (res[record.id] if multi_mode else res).setdefault('attachments', []).append((attachment.name, attachment.datas))
