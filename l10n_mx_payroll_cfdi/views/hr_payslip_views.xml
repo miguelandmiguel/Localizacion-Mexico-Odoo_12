@@ -108,7 +108,6 @@
                 <button name="refund_sheet" position="replace"></button>
                 <button name="action_payslip_cancel" position="replace">
                     <button string="Cancel Payslip" name="action_payslip_cancel_nomina" type="object" states="draft,hr_check,confirm,verify,done" class="oe_highlight"/>
-                    <button name="send_nomina" class="oe_highlight" string="Enviar por correo" type="object"/>
                 </button>
                 <field name="state">
                     <field name="state" widget="statusbar" statusbar_visible="draft,cancel,confirm"/>

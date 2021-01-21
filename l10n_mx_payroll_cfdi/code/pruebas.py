@@ -1,5 +1,78 @@
 # -*- coding: utf-8 -*-
 
+
+
+
+
+
+"""
+Control de Cambios.
+1. Nominas C99=0 cambiarlas a Done. 												OK
+2. Nominas Especiales. No permitir crear dos veces el mismo registro.(Excel).		OK
+
+3. Crear opcion Generar dispersión de pagos. Seleccionar empleados
+3. Nomina para empleados inactivos... Finiquitos
+3. Enviar Mensajes al calcular la nomina.
+4. Enviar Mensajes al Confirmar la nomina
+5. Correr la nomina con OdooBot
+
+
+
+
+
+
+Caclular nomina
+    @api.model
+    def _compute_sheet_run_task_payslip(self, use_new_cursor=False, active_id=False):
+        if use_new_cursor:
+            cr = registry(self._cr.dbname).cursor()
+            self = self.with_env(self.env(cr=cr))
+            _logger.info('------ Calcular Nomina %s '%(active_id) )
+            payslipModel = self.env['hr.payslip'].browse(active_id).compute_sheet()
+            if use_new_cursor:
+                cr.commit()
+        return {}
+    @api.model
+    def _compute_sheet_run_task(self, use_new_cursor=False, active_id=False):
+        try:
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))  # TDE FIXME
+            runModel = self.env['hr.payslip.run']
+            payslipModel = self.env['hr.payslip']
+            for run_id in runModel.browse(active_id):
+                # Prueba escribir chat
+                # run_id.write_msg(use_new_cursor=use_new_cursor, active_id=run_id.id)
+                for payslip in payslipModel.search([('state', '=', 'draft'), ('payslip_run_id', '=', run_id.id)]):
+                    run_id._compute_sheet_run_task_payslip(use_new_cursor=use_new_cursor, active_id=payslip.id)
+                # run_id.sendMsgChannel(body='Finaliza proceso Calcular %s '%( run_id.name ) )
+        finally:
+            if use_new_cursor:
+                try:
+                    self._cr.close()
+                except Exception:
+                    pass
+        return {}
+    def _compute_sheet_run_threading(self, active_id):
+        with api.Environment.manage():
+            new_cr = self.pool.cursor()
+            self = self.with_env(self.env(cr=new_cr))
+            self.env['hr.payslip.run']._compute_sheet_run_task(use_new_cursor=self._cr.dbname, active_id=active_id)
+            new_cr.close()
+        return {}
+    @api.multi
+    def cumpute_sheet_run(self):
+        for run_id in self:
+            threaded_calculation = threading.Thread(target=self._compute_sheet_run_threading, args=(run_id.id, ), name='calcularrunid_%s'%run_id.id)
+            threaded_calculation.start()
+        return {}
+
+
+
+
+
+
+
 import odoorpc
 
 odoo = odoorpc.ODOO('localhost', port=8089)
@@ -12,7 +85,7 @@ print('----------- user_data ', user_data)
 
 
 
-"""
+
 
 
 H					| 01 - 01 - Tipo de Registro

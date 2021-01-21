@@ -15,7 +15,6 @@ from lxml.objectify import fromstring
 from suds.client import Client
 from suds.plugin import MessagePlugin
 import pprint
-import logging
 
 from odoo import _, api, fields, models, tools, registry
 from odoo.tools.xml_utils import _check_with_xsd
@@ -91,7 +90,7 @@ class HrPayslipEmployees(models.TransientModel):
     _description = 'Generate payslips for all selected employees'
 
     def _get_available_contracts_domain(self):
-        return [('contract_id.state', 'in', ('open', 'close')), ('company_id', '=', self.env.user.company_id.id)]
+        return [('active', 'in', [True, False]), ('contract_id.state', 'in', ('open', 'close')), ('company_id', '=', self.env.user.company_id.id)]
 
     def _get_employees(self):
         # YTI check dates too
@@ -167,6 +166,9 @@ class HrPayslipEmployees(models.TransientModel):
     @api.multi
     def compute_sheet(self):
         [data] = self.read()
+        if not data['employee_ids']:
+            employees = self.with_context(active_test=False).employee_ids
+            data['employee_ids'] = employees.ids
         active_id = self.env.context.get('active_id')
         if active_id:
             [run_data] = self.env['hr.payslip.run'].browse(active_id).read(['date_start', 'date_end', 'credit_note'])
@@ -1491,6 +1493,8 @@ class HrPayslip(models.Model):
             return False
         res = super(HrPayslip, self).action_payslip_done()
         for rec in self:
+            if rec.get_salary_line_total('C99') == 0.0:
+                continue
             if rec.contract_id.is_cfdi:
                 version = self.l10n_mx_edi_get_pac_version()
                 number = rec.number.replace('SLIP','').replace('/','')
@@ -1499,7 +1503,6 @@ class HrPayslip(models.Model):
                 result = rec.l10n_mx_edi_retry()
                 if result.get('error'):
                     return result
-
         return res
 
     @api.one

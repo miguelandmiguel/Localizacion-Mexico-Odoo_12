@@ -407,7 +407,6 @@
             name="l10n_mx_payroll_cfdi.report_hr_payslip_mx"
             file="l10n_mx_payroll_cfdi.report_hr_payslip_mx"
             usage="default"
-            attachment_use="True"
             attachment="'NOM-%s - %s.pdf' % ((object.number or '').replace('/',''), object.employee_id.name )"
             print_report_name="'NOM-%s - %s' % ((object.number or '').replace('/',''), object.employee_id.name)"  />
     </data>

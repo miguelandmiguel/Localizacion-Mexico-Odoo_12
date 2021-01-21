@@ -4,12 +4,14 @@ import threading
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
-from odoo import _, api, fields, models, tools, registry
+from odoo import _, api, fields, models, tools, registry, SUPERUSER_ID
 from odoo.tools.xml_utils import _check_with_xsd
 from odoo.tools import DEFAULT_SERVER_TIME_FORMAT
 from odoo.tools import float_round
+from odoo.tools.misc import split_every
 from odoo.exceptions import UserError
 from odoo.tools.float_utils import float_repr
+
 from odoo.addons.l10n_mx_edi.tools.run_after_commit import run_after_commit
 
 import unicodedata
@@ -77,6 +79,7 @@ class HrPayslipRun(models.Model):
              'to the contract chosen. If you let empty the field contract, this field isn\'t '
              'mandatory anymore and thus the rules applied will be all the rules set on the '
              'structure of all contracts of the employee valid for the chosen period')
+    user_id = fields.Many2one('res.users', 'Responsible', tracking=True, default=lambda self: self.env.user)
 
     cfdi_btn_compute = fields.Boolean()
     cfdi_btn_confirm = fields.Boolean()
@@ -113,32 +116,90 @@ class HrPayslipRun(models.Model):
         return result
 
 
+    def sendMsgChannel(self, body=""):
+        users = self.env.ref('base.user_admin')
+        ch_obj = self.env['mail.channel']
+        ch_partner = self.env['mail.channel.partner']
+        if users:
+            for user in users:
+                ch_name = user.name+', '+self.user_id.name
+                ch = ch_obj.sudo().search([('name', 'ilike', str(ch_name))])
+                if not ch:
+                    ch = ch_obj.sudo().search([('name', 'ilike', str(self.user_id.name+', '+user.name))])
+                if not ch:
+                    ch = ch_obj.sudo().create({
+                        'name': user.name+', '+self.user_id.name,
+                        'channel_type': 'chat',
+                        'public': 'private'
+                    })
+                    ch_partner.sudo().create({
+                        'partner_id': users.partner_id.id,
+                        'channel_id': ch.id,
+                    })
+                    ch_partner.sudo().create({
+                        'partner_id': self.user_id.partner_id.id,
+                        'channel_id': ch.id,
+                        'fold_state': 'open',
+                        'is_minimized': False,
+                    })
+            ch.message_post(
+                attachment_ids=[],
+                body=body,
+                message_type='comment',
+                partner_ids=[],
+                subtype='mail.mt_comment',
+                email_from=self.user_id.partner_id.email,
+                author_id=self.user_id.partner_id.id
+            )
+
+    @api.model
+    def _actualizar_user(self, use_new_cursor=False, run_id=False):
+        for runBrowse in self.env['hr.payslip.run'].browse(run_id).sudo():
+            runBrowse.user_id = self.env.user.id
+            if use_new_cursor:
+                self._cr.commit()
+        if use_new_cursor:
+            self._cr.commit()
+
+    @api.model
+    def _enviar_msg(self, use_new_cursor=False, run_id=False, message_type='', message_post=''):
+        for runBrowse in self.env['hr.payslip.run'].browse(run_id).sudo():
+            msg = """<strong>%s Procesamiento: %s </strong><br/>"""%( message_type, runBrowse.name )
+            msg += """<span>%s</span>"""%( message_post ) 
+            runBrowse.sendMsgChannel(body=msg )
+            if use_new_cursor:
+                self._cr.commit()
+        if use_new_cursor:
+            self._cr.commit()
+
+
     #---------------------------------------
     #  Calcular Nominas
     #---------------------------------------
     @api.model
-    def _compute_sheet_run_task_payslip(self, use_new_cursor=False, active_id=False):
-        if use_new_cursor:
-            cr = registry(self._cr.dbname).cursor()
-            self = self.with_env(self.env(cr=cr))
-            _logger.info('------ Calcular Nomina %s '%(active_id) )
-            payslipModel = self.env['hr.payslip'].browse(active_id).compute_sheet()
+    def _compute_scheduler_tasks(self, use_new_cursor=False, run_id=False):
+        domain = [('state', '=', 'draft'), ('payslip_run_id', '=', run_id)]
+        payslip_to_assign = self.env['hr.payslip'].search(domain, limit=None,
+            order='number desc, id asc')
+        for payslip_chunk in split_every(100, payslip_to_assign.ids):
+            self.env['hr.payslip'].browse(payslip_chunk).sudo().compute_sheet()
             if use_new_cursor:
-                cr.commit()
-                cr.close()
-        return {}
+                self._cr.commit()
+        if use_new_cursor:
+            self._cr.commit()
 
     @api.model
-    def _compute_sheet_run_task(self, use_new_cursor=False, active_id=False):
+    def _compute_sheet_run_threading_task(self, use_new_cursor=False, run_id=False):
         try:
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            runModel = self.env['hr.payslip.run']
-            payslipModel = self.env['hr.payslip']
-            for run_id in runModel.browse(active_id):
-                for payslip in payslipModel.search([('state', '=', 'draft'), ('payslip_run_id', '=', run_id.id)]):
-                    run_id._compute_sheet_run_task_payslip(use_new_cursor=use_new_cursor, active_id=payslip.id)
+            # now1 = datetime.now()
+            # self._actualizar_user(use_new_cursor=use_new_cursor, run_id=run_id)
+            # self._enviar_msg(use_new_cursor=use_new_cursor, run_id=run_id, message_type='Inicia Calculo ', message_post='%s '%( now1.strftime("%Y-%m-%d %H:%M:%S") )  )
+            self._compute_scheduler_tasks(use_new_cursor=use_new_cursor, run_id=run_id)
+            # now2 = datetime.now()
+            # self._enviar_msg(use_new_cursor=use_new_cursor, run_id=run_id, message_type='Termina Calculo ', message_post='%s '%( now2.strftime("%Y-%m-%d %H:%M:%S") )  )
         finally:
             if use_new_cursor:
                 try:
@@ -147,19 +208,18 @@ class HrPayslipRun(models.Model):
                     pass
         return {}
 
-    def _compute_sheet_run_threading(self, active_id):
+    def _compute_sheet_run_threading(self, run_id=False):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
-            self.env['hr.payslip.run']._compute_sheet_run_task(use_new_cursor=self._cr.dbname, active_id=active_id)
+            self.env['hr.payslip.run']._compute_sheet_run_threading_task(use_new_cursor=self._cr.dbname, run_id=run_id)
             new_cr.close()
-        return {}
+            return {}
 
-    @api.multi
     def cumpute_sheet_run(self):
-        for run_id in self:
-            threaded_calculation = threading.Thread(target=self._compute_sheet_run_threading, args=(run_id.id, ), name='calcularrunid_%s'%run_id.id)
-            threaded_calculation.start()
+        run_id = self.id
+        threaded_calculation = threading.Thread(target=self._compute_sheet_run_threading, args=([run_id]))
+        threaded_calculation.start()
         return {}
 
 
@@ -232,6 +292,7 @@ class HrPayslipRun(models.Model):
                                 'default_use_template': bool(template),
                                 'default_template_id': template.id,
                                 'default_composition_mode': 'comment',
+                                'mail_create_nosubscribe': True
                             })
                             vals = mailModel.onchange_template_id(template.id, 'comment', 'hr.payslip', payslip.id)
                             mail_message  = mailModel.with_context(ctx).create(vals.get('value',{}))

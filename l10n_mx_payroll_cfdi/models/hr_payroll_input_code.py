@@ -136,6 +136,11 @@ class HrPayslipRunImportInputsWizard(models.TransientModel):
             # Crea Nominas
             for dataLine in dataLines:
                 for employee in employeeModel.search([('identification_id', '=', dataLine[1])]):
+                    p_id = payslipModel.search([('payslip_run_id', '=', active_id), ('employee_id', '=', employee.id)])
+                    if p_id:
+                        payslips.append(p_id.id)
+                        continue
+
                     slip_data = payslipModel.onchange_employee_id(from_date, to_date, employee.id, contract_id=False)
                     res = {
                         'employee_id': employee.id,
@@ -160,20 +165,22 @@ class HrPayslipRunImportInputsWizard(models.TransientModel):
                         self._cr.commit()
 
             # Calcula Nominas
-            for payslip in payslips:
-                payslipModel.browse(payslip).compute_sheet()
+            run_id = self.env['hr.payslip.run'].browse(active_id)
+            for payslip in run_id.slip_ids:
+                payslip.compute_sheet()
                 if use_new_cursor:
                     self._cr.commit()
 
-            for line in dataLines:
-                self.action_create_inputsline_payslip(dataLine=line, dataHeaders=dataHeaders)
+            for dataLine in dataLines:
+                self.action_create_inputsline_payslip(dataLine=dataLine, dataHeaders=dataHeaders)
                 if use_new_cursor:
                     self._cr.commit()
         finally:
             if use_new_cursor:
                 try:
                     self._cr.close()
-                except Exception:
+                except Exception as e:
+                    _logger.info('---------Error en proceso Nomina incidencias %s '%e)
                     pass
         return {}
 

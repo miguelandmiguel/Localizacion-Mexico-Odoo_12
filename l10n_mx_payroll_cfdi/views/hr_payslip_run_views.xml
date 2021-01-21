@@ -25,6 +25,7 @@
                     <field name="cfdi_btn_sendemail" invisible="1" />
                     <field name="cfdi_btn_clear" invisible="1" />
                     <field name="cfdi_btn_compute" invisible="1" />
+                    <field name="user_id" />
                 </field>
                 <xpath expr="//form/sheet/label[@class='oe_edit_only']" position="before">
                     <div class="oe_button_box" name="button_box">

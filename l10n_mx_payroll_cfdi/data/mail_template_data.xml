@@ -2,32 +2,57 @@
 <odoo>
     <data noupdate="0">
 
+        <!--
+            <field name="email_from">${(object.company_id.email and '%s &lt;%s&gt;' % (object.company_id.name, object.company_id.email) or '')|safe}</field>
+            <field name="email_to">${object.employee_id.address_home_id.email}</field>
+        -->
         <!--Email template -->
         <record id="email_template_payroll" model="mail.template">
             <field name="name">Envío de nomina por email</field>
             <field name="model_id" ref="hr_payroll.model_hr_payslip"/>
-            <field name="email_from">${(object.company_id.email and '%s &lt;%s&gt;' % (object.company_id.name, object.company_id.email) or '')|safe}</field>
             <field name="subject">Ref: ${object.name or 'n/a' }</field>
-            <!-- <field name="partner_to">${object.employee_id.partner_id.id}</field> -->
-            <field name="email_to">${object.employee_id.address_home_id.email}</field>
-            <field name="auto_delete" eval="True"/>
-            <field name="report_template" ref="l10n_mx_payroll_cfdi.hr_payslip_mx"/>
-            <field name="report_name">${object.name.replace('/', '_') + '.pdf'}</field>
-            <!-- <field name="lang">${object.partner_id.lang}</field> -->
+            <field name="partner_to">${object.employee_id.address_home_id.id}</field>
             <field name="body_html"><![CDATA[
 <p>Dear ${object.employee_id.name}
-
-
 <p>You can reply to this email if you have any questions.</p>
 <p>Thank you,</p>
-
 <p style="color:#eeeeee;">
 % if object.company_id and object.company_id.signature:
     ${object.company_id.signature | safe}
 % endif
 </p>
 ]]></field>
+            <field name="report_template" ref="l10n_mx_payroll_cfdi.hr_payslip_mx"/>
+            <field name="report_name">${object.name.replace('/', '_') + '.pdf'}</field>
+            <field name="lang">${object.employee_id.address_home_id.lang}</field>
+            <field name="auto_delete" eval="True"/>
+            <field name="user_signature" eval="False"/>
         </record>
+
+        <!--Email template -->
+        <act_window name="Send Payslip By Email"
+            res_model="mail.compose.message"
+            src_model="hr.payslip"
+            view_mode="form"
+            target="new"
+            key2="client_action_relate"
+            id="account_send_payslip_receipt_by_email_action"
+            context="{
+                'default_model': 'hr.payslip',
+                'default_composition_mode': 'comment',
+                'default_use_template': True,
+                'default_res_id': active_id,
+                'default_template_id': ref('l10n_mx_payroll_cfdi.email_template_payroll'),
+                'force_email': True,
+                'custom_layout': 'mail.mail_notification_light',
+                'is_private': True,
+                'mail_create_nosubscribe': True,
+                'mail_notify_author': False
+            }"
+        />
+
+
+
     </data>
 </odoo>
 
