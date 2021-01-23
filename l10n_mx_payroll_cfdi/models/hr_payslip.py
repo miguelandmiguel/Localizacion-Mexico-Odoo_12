@@ -1145,7 +1145,7 @@ class HrPayslip(models.Model):
         self.ensure_one()
         empleado = self.employee_id
         company = self.company_id
-        fecha_alta = empleado.cfdi_date_start or self.contract_id.date_start or False
+        fecha_alta = self.contract_id.date_start or empleado.cfdi_date_start or False
         antiguedad = getAntiguedad('%s'%fecha_alta, '%s'%self.date_to)
         RiesgoPuesto = empleado.job_id and empleado.job_id.cfdi_riesgopuesto_id and empleado.job_id.cfdi_riesgopuesto_id.code or False
         periodicidad_pago = self.contract_id.cfdi_periodicidadpago_id and self.contract_id.cfdi_periodicidadpago_id.code or ""
