@@ -24,7 +24,7 @@ from odoo.tools.misc import split_every
 from odoo.tools.safe_eval import safe_eval
 from odoo.exceptions import UserError
 from odoo.addons.l10n_mx_edi.tools.run_after_commit import run_after_commit
-
+import unicodedata
 import threading
 
 _logger = logging.getLogger(__name__)
@@ -60,6 +60,11 @@ def create_list_html(array):
     for item in array:
         msg += '<li>' + item + '</li>'
     return '<ul>' + msg + '</ul>'
+
+def remove_accents(s):
+    def remove_accent1(c):
+        return unicodedata.normalize('NFD', c)[0]
+    return u''.join(map(remove_accent1, s))
 
 def getAntiguedad(date_from, date_to):
     FechaInicioRelLaboral = datetime.strptime(date_from, "%Y-%m-%d")
@@ -1139,6 +1144,13 @@ class HrPayslip(models.Model):
         if self.company_id.city:
             companyName += '  %s'%self.company_id.city
         return companyName.upper()
+
+
+    def _getRemoverAcentos(self, remover=''):
+        return remove_accents( remover )
+
+    def _getMayusculas(self, palabras='' ):
+        return palabras.upper()
 
     @api.multi
     def _l10n_mx_edi_create_cfdi_values(self):

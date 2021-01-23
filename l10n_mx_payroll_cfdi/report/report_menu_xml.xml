@@ -423,7 +423,7 @@
                             <strong>DEPTO: &amp;nbsp;</strong><span t-esc="rec.get('Departamento')"/>
                         </td>
                         <td style="width: 75% !important;" colspan="3">
-                            <span>PAGO TRANSFERENCIA ELECTRONICA&amp;nbsp;</span>
+                            <span>99 POR DEFINIR&amp;nbsp;</span>
                         </td>
                     </tr>
                 </table>
@@ -448,7 +448,7 @@
                                     <tr>
                                         <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Clave')"/></td>
                                         <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Concepto')"/></td>
-                                        <td style="text-align: center;">
+                                        <td style="text-align: right;">
                                             &amp;nbsp;<span t-esc="l.get('ImporteGravado')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                     </tr>
@@ -465,7 +465,7 @@
                                     <tr>
                                         <td style="text-align: left;">&amp;nbsp;<span t-esc="d.get('Clave')"/></td>
                                         <td style="text-align: left;">&amp;nbsp;<span t-esc="d.get('Concepto')"/></td>
-                                        <td style="text-align: center; ">
+                                        <td style="text-align: right; ">
                                             &amp;nbsp;<span t-esc="d.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                         </td>
                                     </tr>
@@ -478,7 +478,7 @@
                             <table style="width: 100% !important">
                                 <tr>
                                     <td colspan="2" style="text-align: right; " ><strong>Total Percepciones</strong> &amp;nbsp;</td>
-                                    <td style="text-align: center; " >&amp;nbsp;&amp;nbsp;<span t-esc="float(TotalSueldos)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    <td style="text-align: right; " >&amp;nbsp;&amp;nbsp;<span t-esc="float(TotalSueldos)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
                                 </tr>
                             </table>
                         </td>
@@ -486,7 +486,7 @@
                             <table style="width: 100% !important">
                                 <tr>
                                     <td colspan="2" style="text-align: right; " ><strong>Total Deducciones</strong> &amp;nbsp;</td>
-                                    <td style="text-align: center; " >&amp;nbsp;&amp;nbsp;<span t-esc="TotalImporte" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    <td style="text-align: right; " >&amp;nbsp;&amp;nbsp;<span t-esc="TotalImporte" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
                                 </tr>
                             </table>
                         </td>
@@ -505,13 +505,13 @@
                             </table>
                         </td>
                         <td style="width: 50%; font-size: 11px; vertical-align:top; text-align: center; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
-                            <h3 style="font-size: 14px;" ><strong>Total a Pagar</strong> &amp;nbsp;<span t-esc="rec.get('Total', 0.0)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/> </h3>
+                            <h3 style="font-size: 14px; text-align: right;" ><strong>Total a Pagar</strong> &amp;nbsp;<span t-esc="rec.get('Total', 0.0)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/> </h3>
                         </td>
                     </tr>
                 </table>
                 <table>
                     <tr style="font-size: 9px;">
-                        <span style="font-size: 9px;">RECIBI DE <strong><t t-esc="rec.get('EmisorNombre')" /></strong>, LA CANTIDAD <strong><t t-esc="rec.get('AmountText')" /></strong>. QUEDO CONFORME CON LOS CONCEPTOS Y LAS CANTIDADES PAGADAS ASI COMO CON LASDEDUCCIONES EFECTUADAS, OTORGÁNDOLE A ESTA EL MAS AMPLIO FINIQUITO LIBERATORIO DE OBLIGACIONES QUE EN DERECHO PROCEDA Y NO RESERVÁNDOSE NINGUNA ACCIÓN O DERECHO A EJERCITAR EN SU CONTRA.</span>
+                        <span style="font-size: 9px;">RECIBI DE <strong><t t-esc=" o._getMayusculas( o._getRemoverAcentos(rec.get('EmisorNombre')) ) " /></strong>, LA CANTIDAD <strong><t t-esc="rec.get('AmountText')" /></strong>. QUEDO CONFORME CON LOS CONCEPTOS Y LAS CANTIDADES PAGADAS ASI COMO CON LAS DEDUCCIONES EFECTUADAS, OTORGÁNDOLE A ESTA EL MAS AMPLIO FINIQUITO LIBERATORIO DE OBLIGACIONES QUE EN DERECHO PROCEDA Y NO RESERVÁNDOSE NINGUNA ACCIÓN O DERECHO A EJERCITAR EN SU CONTRA.</span>
                     </tr>
                 </table>
                 <div>&amp;nbsp;</div>
