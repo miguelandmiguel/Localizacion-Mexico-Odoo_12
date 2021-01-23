@@ -38,6 +38,7 @@ class ReportController(report.ReportController):
                 )
             ]
         elif converter == 'txt':
+            report_name = report.render_txt_name(docids, data=data) or '%s.txt'%( report.report_file )
             body = report.with_context(context).render_txt(
                 docids, data=data
             )[0]
@@ -46,7 +47,7 @@ class ReportController(report.ReportController):
                 ('Content-Length', len(body)),
                 (
                     'Content-Disposition',
-                    content_disposition(report.report_file + '.txt')
+                    content_disposition( report_name )
                 )
             ]
         elif converter == 'zip':

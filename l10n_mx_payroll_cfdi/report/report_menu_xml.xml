@@ -2,7 +2,7 @@
 <odoo>
 
     <data>
-        <template id="report_hr_payslip_mx_document">
+        <template id="report_hr_payslip_mx_document_old">
             <t t-call="l10n_mx_payroll_cfdi.nomina_external_layout">
                 <div class="page">
                     <t t-set="rec" t-value="o and o.getDatasXmlPayslip() or {}"/>
@@ -24,27 +24,32 @@
                             <td style="background-color: #EEE !important;"><span>Serie y Folio: &amp;nbsp;</span></td>
                             <td style="text-align: left;">&amp;nbsp;<span t-esc="rec.get('Serie')"/> <span t-esc="rec.get('Folio')"/> </td>
                         </tr>
+                        <tr>
+                            <td style="background-color: #EEE !important;"><span>RFC: &amp;nbsp;</span></td>
+                            <td style="text-align: left;">&amp;nbsp;<span t-esc="rec.get('EmisorRfc')"/></td>
+                            <td style="background-color: #EEE !important;"><span>Régimen fiscal: &amp;nbsp;</span></td>
+                            <td style="text-align: left;">&amp;nbsp;<span t-esc="rec.get('RegimenFiscal', '')"/></td>
+                            <td style="background-color: #EEE !important;"><span> &amp;nbsp;</span></td>
+                            <td style="text-align: left;">&amp;nbsp; </td>
+                        </tr>
                     </table>
                     <table class="info" style="width: 100%; font-size: 10px;">
                         <tr>
                             <td colspan="6"><span style="font-size: 12px;"><b>RECIBO DE NÓMINA</b></span></td>
                         </tr>
                         <tr>
+                            <td style="text-align: right; "><b>Nombre del Empleado: &amp;nbsp;</b></td>
+                            <td colspan="5" style="text-align: left; margin-right: 5px; font-style: italic;">&amp;nbsp;<span t-esc="o.employee_id.cfdi_complete_name" /></td>
+                        </tr>
+                        <tr>
                             <td style="text-align: right; "><b>RFC: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-right: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('EmisorRfc')"/></td>
+                            <td style="text-align: left; margin-right: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('ReceptorRfc', '')"/></td>
                             <td style="text-align: right; "><b>CURP: &amp;nbsp;</b></td>
                             <td style="text-align: left; margin-right: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('ReceptorCurp')"/></td>
                             <td style="text-align: right; "><b>Registro patronal: &amp;nbsp;</b></td>
                             <td style="text-align: left; margin-right: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('RegistroPatronal')"/></td>
                         </tr>
-                        <tr>
-                            <td style="text-align: right; "><b>Rfc Patron Origen: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('RfcPatronOrigen')"/></td>
-                            <td style="text-align: right; "><b>Origen Recurso: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('OrigenRecurso')"/></td>
-                            <td style="text-align: right; "><b>Monto Recurso Propio: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-right: 5px; font-style: italic;"><span t-esc="rec.get('MontoRecursoPropio')"/></td>
-                        </tr>
+
                         <tr>
                             <td style="text-align: right; "><b>Número de empleado: &amp;nbsp;</b></td>
                             <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('NumEmpleado')"/></td>
@@ -54,28 +59,12 @@
                             <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('Departamento')"/></td>
                         </tr>
                         <tr>
-                            <td style="text-align: right; "><b>Puesto: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('Puesto')"/></td>
-                            <td style="text-align: right; "><b>Riesgo de puesto: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('RiesgoPuesto')"/></td>
-                            <td style="text-align: right; "><b>Tipo de contrato: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('TipoContrato')"/></td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right; "><b>Sindicalizado: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('Sindicalizado')"/></td>
-                            <td style="text-align: right; "><b>Tipo de jornada: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('TipoJornada')"/></td>
-                            <td style="text-align: right; "><b>Antigüedad: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('Antiguedad')"/></td>
-                        </tr>
-                        <tr>
                             <td style="text-align: right; "><b>Fecha de pago: &amp;nbsp;</b></td>
                             <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('FechaPago')"/></td>
                             <td style="text-align: right; "><b>Fecha inicial de pago: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('FechaPago')"/></td>
+                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('FechaInicialPago')"/></td>
                             <td style="text-align: right; "><b>Fecha final de pago: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('FechaPago')"/></td>
+                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('FechaFinalPago')"/></td>
                         </tr>
                         <tr>
                             <td style="text-align: right; "><b>Total Percepciones: &amp;nbsp;</b></td>
@@ -86,36 +75,20 @@
                             <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('TotalOtrosPagos')"/></td>
                         </tr>
                         <tr>
+                            <td style="text-align: right; "><b>Puesto: &amp;nbsp;</b></td>
+                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('Puesto')"/></td>
                             <td style="text-align: right; "><b>Número de días pagados: &amp;nbsp;</b></td>
                             <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('NumDiasPagados')"/></td>
-                            <td style="text-align: right; "><b>Inicio de la relación laboral: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('FechaInicioRelLaboral')"/></td>
-                            <td style="text-align: right; "><b>Salario Diario Integrado: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('SalarioDiarioIntegrado')"/></td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: right; "><b>Clave Entidad Federativa: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('ClaveEntFed')"/></td>
                             <td style="text-align: right; "><b>Periodicidad de pago: &amp;nbsp;</b></td>
                             <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('PeriodicidadPago')"/></td>
-                            <td style="text-align: right; "><b>SalarioBaseCotApor: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('SalarioBaseCotApor')"/></td>
                         </tr>
                         <tr>
                             <td style="text-align: right; "><b>NSS: &amp;nbsp;</b></td>
                             <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('NumSeguridadSocial')"/></td>
-                            <td style="text-align: right; "><b>Banco: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('Banco')"/></td>
-                            <td style="text-align: right; "><b>Cuenta Bancaria: &amp;nbsp;</b></td>
-                            <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('CuentaBancaria')"/></td>
-                        </tr>
-                        <tr>
                             <td style="text-align: right; "><b>Tipo Nomina: &amp;nbsp;</b></td>
                             <td style="text-align: left; margin-left: 5px; font-style: italic;">&amp;nbsp;<span t-esc="rec.get('TipoNomina')"/></td>
                             <td><span> </span></td>
-                            <td></td>
                             <td><span> </span></td>
-                            <td></td>
                         </tr>
                     </table>
                     <table class="info" style="width: 100%; font-size: 10px;">
@@ -387,6 +360,205 @@
                 </div>
             </t>
         </template>
+
+
+
+
+
+
+        <template id="recibo">
+            <div class="o_nomina" style="width:100%; min-height:460px; border: 0px solid grey;">
+                <!-- ENCABEZADO -->
+                <table class="info" style="width: 100%  !important; font-size: 10px;">
+                    <tr>
+                        <td style="text-align: center; " colspan="2">
+                            <h3 style="font-size: 14px;"><strong><t t-esc="rec.get('EmisorNombre')" /></strong></h3>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center; font-size: 11px;" colspan="2"><strong><span><t t-esc="o._getCompanyName()" /></span></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <strong>RFC: <span t-esc="rec.get('EmisorRfc')"/>&amp;nbsp;&amp;nbsp;</strong>
+                        </td>
+                        <td style="text-align: left; ">
+                            <strong>&amp;nbsp;&amp;nbsp;REG. PAT: <span t-esc="rec.get('RegistroPatronal')"/></strong>
+                        </td>
+                    </tr>
+                </table>
+                <br />
+                <table class="info" style="width: 100%  !important; font-size: 10px;">
+                    <tr>
+                        <td style="width: 25% !important;">
+                            <span t-esc="rec.get('NumEmpleado')"/> &amp;nbsp;<span t-esc="rec.get('ReceptorNombre')"/>
+                        </td>
+                        <td style="width: 25% !important;">
+                            <strong>CURP: &amp;nbsp;</strong><span t-esc="rec.get('ReceptorCurp')"/>
+                        </td>
+                        <td style="width: 25% !important;">
+                            <strong>RFC: &amp;nbsp;</strong><span t-esc="rec.get('ReceptorRfc')"/>
+                        </td>
+                        <td style="width: 25% !important;">
+                            <strong>NSS: &amp;nbsp;</strong><span t-esc="rec.get('NumSeguridadSocial')"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 25% !important;">
+                            <strong>PUESTO: &amp;nbsp;</strong><span t-esc="rec.get('Puesto')"/>
+                        </td>
+                        <td style="width: 25% !important;">
+                            <strong>DIAS TRAB: &amp;nbsp;</strong><span t-esc="rec.get('NumDiasPagados')"/>
+                        </td>
+                        <td style="width: 25% !important;">
+                            <strong>DEL: &amp;nbsp;</strong><span t-esc="rec.get('FechaInicialPago')"/><br />
+                            <strong>AL: &amp;nbsp;</strong><span t-esc="rec.get('FechaFinalPago')"/><br />
+                        </td>
+                        <td style="width: 25% !important;">
+                            <span>JORNADA: 8 hrs&amp;nbsp;</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 25% !important;">
+                            <strong>DEPTO: &amp;nbsp;</strong><span t-esc="rec.get('Departamento')"/>
+                        </td>
+                        <td style="width: 75% !important;" colspan="3">
+                            <span>PAGO TRANSFERENCIA ELECTRONICA&amp;nbsp;</span>
+                        </td>
+                    </tr>
+                </table>
+                <div>&amp;nbsp;</div>
+                <table class="info" style="width: 100%  !important; font-size: 11px;">
+                    <tr>
+                        <td style="width: 50%; font-size: 10px; text-align: center; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <span><strong>PERCEPCIONES</strong></span>
+                        </td>
+                        <td style="width: 50%; font-size: 10px; text-align: center; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <span><strong>DEDUCCIONES</strong></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; font-size: 9px; text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <table style="width: 100% !important">
+                                <t t-set="pl" t-value="rec.get('Percepciones') and rec['Percepciones'].get('Lines') or [] "/>
+                                <t t-set="TotalSueldos" t-value="rec.get('Percepciones') and rec['Percepciones'].get('TotalSueldos') or 0.0 "/>
+                                <t t-set="TotalGravado" t-value="rec.get('Percepciones') and rec['Percepciones'].get('TotalGravado') or 0.0 "/>
+                                <t t-set="TotalExento" t-value="rec.get('Percepciones') and rec['Percepciones'].get('TotalExento') or 0.0 "/>
+                                <t t-foreach="pl" t-as="l">
+                                    <tr>
+                                        <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Clave')"/></td>
+                                        <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Concepto')"/></td>
+                                        <td style="text-align: center;">
+                                            &amp;nbsp;<span t-esc="l.get('ImporteGravado')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </table>
+                        </td>
+                        <td style="width: 50%; font-size: 9px; text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <table style="width: 100% !important">
+                                <t t-set="dl" t-value="rec.get('Deducciones') and rec['Deducciones'].get('Lines') or [] "/>
+                                <t t-set="TotalOtrasDeducciones" t-value="rec.get('Deducciones') and rec['Deducciones'].get('TotalOtrasDeducciones') or 0.0 "/>
+                                <t t-set="TotalImpuestosRetenidos" t-value="rec.get('Deducciones') and rec['Deducciones'].get('TotalImpuestosRetenidos') or 0.0 "/>
+                                <t t-set="TotalImporte" t-value="rec.get('Deducciones') and rec['Deducciones'].get('TotalImporte') or 0.0 "/>
+                                <t t-foreach="dl" t-as="d">
+                                    <tr>
+                                        <td style="text-align: left;">&amp;nbsp;<span t-esc="d.get('Clave')"/></td>
+                                        <td style="text-align: left;">&amp;nbsp;<span t-esc="d.get('Concepto')"/></td>
+                                        <td style="text-align: center; ">
+                                            &amp;nbsp;<span t-esc="d.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; font-size: 11px; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <table style="width: 100% !important">
+                                <tr>
+                                    <td colspan="2" style="text-align: right; " ><strong>Total Percepciones</strong> &amp;nbsp;</td>
+                                    <td style="text-align: center; " >&amp;nbsp;&amp;nbsp;<span t-esc="float(TotalSueldos)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td style="width: 50%; font-size: 11px; text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <table style="width: 100% !important">
+                                <tr>
+                                    <td colspan="2" style="text-align: right; " ><strong>Total Deducciones</strong> &amp;nbsp;</td>
+                                    <td style="text-align: center; " >&amp;nbsp;&amp;nbsp;<span t-esc="TotalImporte" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; font-size: 11px; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <table style="width: 100% !important">
+                                <td>
+                                    <t t-set="ol" t-value="rec.get('OtrosPagos') and rec['OtrosPagos'] or [] "/>
+                                    <t t-foreach="ol" t-as="l">
+                                        <t t-if="l.get('Importe', 0.0) != 0.0">
+                                            &amp;nbsp;<span t-esc="l.get('Concepto')"/>&amp;nbsp;&amp;nbsp;<strong t-esc="l.get('Importe', 0.0)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/><br />
+                                        </t>
+                                    </t>
+                                </td>
+                            </table>
+                        </td>
+                        <td style="width: 50%; font-size: 11px; vertical-align:top; text-align: center; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <h3 style="font-size: 14px;" ><strong>Total a Pagar</strong> &amp;nbsp;<span t-esc="rec.get('Total', 0.0)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/> </h3>
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <tr style="font-size: 9px;">
+                        <span style="font-size: 9px;">RECIBI DE <strong><t t-esc="rec.get('EmisorNombre')" /></strong>, LA CANTIDAD <strong><t t-esc="rec.get('AmountText')" /></strong>. QUEDO CONFORME CON LOS CONCEPTOS Y LAS CANTIDADES PAGADAS ASI COMO CON LASDEDUCCIONES EFECTUADAS, OTORGÁNDOLE A ESTA EL MAS AMPLIO FINIQUITO LIBERATORIO DE OBLIGACIONES QUE EN DERECHO PROCEDA Y NO RESERVÁNDOSE NINGUNA ACCIÓN O DERECHO A EJERCITAR EN SU CONTRA.</span>
+                    </tr>
+                </table>
+                <div>&amp;nbsp;</div>
+                <table class="info" style="width: 100%  !important; font-size: 11px;">
+                    <td style="width: 20% !important;">
+                        <div class="barcode" t-if="o.l10n_mx_edi_cfdi_uuid">
+                            <t t-set="sello" t-value="rec.get('Sello')"/>
+                            <img style="height: 180px; width: 180px;" alt="Barcode" t-att-src="'/report/barcode/?type=QR&amp;value=%s' % quote_plus(
+                                'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?' + keep_query(
+                                    re=o.l10n_mx_edi_cfdi_supplier_rfc, rr=o.l10n_mx_edi_cfdi_customer_rfc,
+                                    tt='%.*f' % (o.currency_id.decimal_places, rec.get('Total')), id=o.l10n_mx_edi_cfdi_uuid)
+                                    + '&amp;fe=%s' % quote_plus(
+                                        sello, 'utf-8', 'strict', '=/').replace('%2B', '+'))"/>
+                        </div>
+                    </td>
+                    <td style="vertical-align:top; width: 60% !important;" class="dont-break-out">
+                        <span><strong>Folio Fiscal:&amp;nbsp;</strong><t t-esc="rec.get('UUID')" /></span><br />
+                        <strong>SELLO SAT:</strong><br />
+                        <div class="digital-stamp-content">
+                            <span style="font-size: 6px;" t-esc="rec.get('SelloSAT')"/>
+                        </div>
+                        <span><strong>SELLO DIGITAL:&amp;nbsp;</strong><br />
+                        <span style="font-size: 6px;" t-esc="rec.get('SelloCFDI')"/></span><br />
+                    </td>
+                    <td style="vertical-align:top; width: 20% !important; text-align: center;">
+                        <br /><br /><br /><br /><br /><br />
+                        <div style="border-top: 1px solid #BDBDBD !important; ">
+                            <strong>FIRMA DEL EMPLEADO</strong>
+                        </div>
+                    </td>
+                </table>
+            </div>
+        </template>
+
+        <template id="report_hr_payslip_mx_document">
+            <t t-call="l10n_mx_payroll_cfdi.nomina_external_layout">
+                <div class="page">
+                    <t t-set="rec" t-value="o and o.getDatasXmlPayslip() or {}"/>
+                    <t t-call="l10n_mx_payroll_cfdi.recibo"/>
+                    <!-- Separador -->
+                    <div style="width:100%; height:20px; margin-top:20px; border-top: 1px dotted #CCC;"/>
+                    <!-- Copia inferior -->
+                    <t t-call="l10n_mx_payroll_cfdi.recibo"/>
+                </div>
+            </t>
+        </template>
+
 
         <template id="report_hr_payslip_mx">
             <t t-call="web.html_container">

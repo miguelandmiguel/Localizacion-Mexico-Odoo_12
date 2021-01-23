@@ -125,8 +125,7 @@
             string="Dispersion Banorte"
             report_type="txt"
             name="l10n_mx_payroll_cfdi.dispersionbanortetxt"
-            file="dispersionbanortetxt"
-            attachment_use="True" />
+            file="dispersionbanortetxt" />
 
         <report
             id="dispersionbbvatxt"

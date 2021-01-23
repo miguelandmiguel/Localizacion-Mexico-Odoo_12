@@ -30,4 +30,16 @@ class ReportTxtAbstract(models.AbstractModel):
     def generate_txt_report(self, file_data, data, objs):
         raise NotImplementedError()
 
+    #
+    # Crea nombre del Reporte
+    #
+    def create_txt_reportname(self, docids, data):
+        objs = self._get_objs_for_report(docids, data)
+        try:
+            name = self.generate_txt_reportname(docids)
+        except:
+            name = ''
+        return name
 
+    def generate_txt_reportname(self, docids):
+        raise NotImplementedError()

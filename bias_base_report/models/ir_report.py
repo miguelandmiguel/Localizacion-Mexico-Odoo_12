@@ -52,3 +52,14 @@ class ReportAction(models.Model):
         ]
         context = self.env["res.users"].context_get()
         return report_obj.with_context(context).search(conditions, limit=1)
+
+
+    @api.model
+    def render_txt_name(self, docids, data):
+        report_model_name = "report.%s" % self.report_name
+        report_model = self.env.get(report_model_name)
+        if report_model is None:
+            raise UserError(_("%s model was not found" % report_model_name))
+        return report_model.with_context(active_model=self.model).create_txt_reportname(  # noqa
+            docids, data
+        )

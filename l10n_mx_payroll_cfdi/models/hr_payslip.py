@@ -297,6 +297,7 @@ class HrPayslip(models.Model):
         cfdi = self.l10n_mx_edi_get_xml_etree()
         cfdi = cfdi if cfdi is not None else {}
         Emisor = cfdi.Emisor
+        Receptor = cfdi.Receptor
         Nomina = self.l10n_mx_edi_get_nomina12_etree(cfdi)
         tfd = self.l10n_mx_edi_get_tfd_etree(cfdi)
 
@@ -304,6 +305,11 @@ class HrPayslip(models.Model):
             return {
                 'Serie': ''
             }
+
+        RegimenFiscal = Emisor.get('RegimenFiscal')
+        if RegimenFiscal is not None:
+            reg = self.env['account.fiscal.position'].search([('l10n_mx_edi_code', '=', RegimenFiscal)], limit=1)
+            RegimenFiscal = '%s'%( reg.name )
 
         nodo_p = self._get_agrupadorsat_type('p')
         nodo_d = self._get_agrupadorsat_type('d')
@@ -318,7 +324,13 @@ class HrPayslip(models.Model):
             'Fecha': cfdi.get('Fecha'),
             'FormaPago': '99 - Por definir',
             'NoCertificado': cfdi.get('NoCertificado'),
+            'RegimenFiscal': RegimenFiscal,
             'EmisorRfc': Emisor.get('Rfc'),
+            'EmisorNombre': Emisor.get('Nombre'),
+            
+            'ReceptorRfc': Receptor.get('Rfc'),
+            'ReceptorNombre': Receptor.get('Nombre', ''),
+            
             'SubTotal': float(cfdi.get('SubTotal', '0.0')),
             'Total': Total,
             'Descuento': float(cfdi.get('Descuento', '0.0')),
@@ -1095,7 +1107,6 @@ class HrPayslip(models.Model):
         _logger.info('----- INCA %s '%(incapacidades) )
         return incapacidades
 
-
     def _get_SalarioBaseCotApor(self):
         _logger.info('---------- Table exists %s '%( tools.table_exists(self._cr, 'x_hr_employee_wage') ) )
         if tools.table_exists(self._cr, 'x_hr_employee_wage'):
@@ -1106,6 +1117,28 @@ class HrPayslip(models.Model):
                 return 0.0
         else:
             return self.employee_id.cfdi_sueldo_diario and '%.2f'%self.employee_id.cfdi_sueldo_diario or None
+
+    def _get_RegistroPatronal(self):
+        rp = self.employee_id.cfdi_registropatronal_id and self.employee_id.cfdi_registropatronal_id.code or False
+        if rp == False:
+            rp = self.employee_id.cfdi_registropatronal_id and self.employee_id.cfdi_registropatronal_id.code or ''
+        return rp
+
+    def _get_NumDiasPagados(self):
+        dias = self.get_salary_line_total('C9') or 0.0
+        return "%d"%dias
+
+    def _getCompanyName(self):
+        companyName = self.company_id.street if self.company_id.street else ''
+        if self.company_id.street_number:
+            companyName += ' %s'%self.company_id.street_number
+        if self.company_id.l10n_mx_edi_colony:
+            companyName += ' COL. %s'%self.company_id.l10n_mx_edi_colony
+        if self.company_id.zip:
+            companyName += '  %s'%self.company_id.zip
+        if self.company_id.city:
+            companyName += '  %s'%self.company_id.city
+        return companyName.upper()
 
     @api.multi
     def _l10n_mx_edi_create_cfdi_values(self):
@@ -1141,14 +1174,15 @@ class HrPayslip(models.Model):
         subtotal = importe
         descuento = TotalDeducciones
         total = subtotal - descuento
+        # "%d"%self._get_days("WORK100")[0],
         values = {
             'record': self,
             'supplier': self.company_id.partner_id.commercial_partner_id,
             'fiscal_position': self.company_id.partner_id.property_account_position_id,
             'issued': self.journal_id.l10n_mx_address_issued_id,
             'customer': self.employee_id,
-            'NumDiasPagados': "%d"%self._get_days("WORK100")[0],
-            "RegistroPatronal": company.cfdi_registropatronal_id and company.cfdi_registropatronal_id.code or False,
+            'NumDiasPagados': self._get_NumDiasPagados(),
+            "RegistroPatronal": self._get_RegistroPatronal(),
             'antiguedad': antiguedad,
             'fecha_alta': fecha_alta,
             'RiesgoPuesto': RiesgoPuesto,
@@ -1557,5 +1591,6 @@ class HrPayslip(models.Model):
                 except Exception as e:
                     payslip.message_post(body='Error Al enviar Email Nomina %s: %s '%( payslip.number, e ) )
                     _logger.info('------ Error Al enviar Email Nomina %s:  %s '%( payslip.number, e ) )
+
 
 

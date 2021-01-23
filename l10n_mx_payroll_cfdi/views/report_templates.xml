@@ -9,6 +9,7 @@
         <template id="external_layout_nomina">
             <div class="header" t-att-style="report_header_style">
                 <div class="o_nomina_header">
+                    <!--
                     <div class="float-right">
                         <h3 class="mt0 text-right" t-field="company.report_header"/>
                     </div>
@@ -26,6 +27,7 @@
                             </div>
                         </div>
                     </div>
+                    -->
                     <div class="clearfix mb8"/>
                 </div>
             </div>

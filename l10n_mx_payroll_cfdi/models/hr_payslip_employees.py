@@ -33,51 +33,62 @@ class HrPayslipEmployees(models.TransientModel):
     company_id = fields.Many2one('res.company', string='Company', readonly=True, copy=False,
         default=lambda self: self.env['res.company']._company_default_get() )
 
+
     @api.model
-    def _run_compute_sheet_tasks(self, use_new_cursor=False, active_id=False, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
+    def _compute_sheet_tasks(self, use_new_cursor=False, active_id=False, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
+
+        payslipModel = self.env['hr.payslip']
+        payslips = []
+        for employees_chunk in split_every(20, employee_ids):
+            _logger.info('--- Nomina Procesando Employees %s', employees_chunk )
+            for employee in self.env['hr.employee'].browse(employees_chunk):
+                slip_data = payslipModel.onchange_employee_id(from_date, to_date, employee.id, contract_id=False)
+                print('------------  slip_data ', slip_data)
+                res = {
+                    'employee_id': employee.id,
+                    'name': slip_data['value'].get('name'),
+                    'struct_id': slip_data['value'].get('struct_id'),
+                    'contract_id': slip_data['value'].get('contract_id'),
+                    'payslip_run_id': active_id,
+                    'input_line_ids': [(0, 0, x) for x in slip_data['value'].get('input_line_ids')],
+                    'worked_days_line_ids': [(0, 0, x) for x in slip_data['value'].get('worked_days_line_ids')],
+                    'date_from': from_date,
+                    'date_to': to_date,
+                    'credit_note': credit_note,
+                    'company_id': employee.company_id.id,
+                    'cfdi_source_sncf': slip_data['value'].get('cfdi_source_sncf'),
+                    'cfdi_amount_sncf': slip_data['value'].get('cfdi_amount_sncf'),
+                    'cfdi_tipo_nomina': slip_data['value'].get('cfdi_tipo_nomina'),
+                    'cfdi_tipo_nomina_especial': slip_data['value'].get('cfdi_tipo_nomina_especial')
+                }
+                payslip_id = payslipModel.create(res)
+                if use_new_cursor:
+                    self._cr.commit()
+                payslips.append(payslip_id.id)
+
+        _logger.info('--- Nomina payslips %s ', len(payslips) )
+        for slip_chunk in split_every(5, payslips):
+            _logger.info('--- Nomina payslip_ids %s ', slip_chunk )
+            try:
+                payslipModel.with_context(slip_chunk=True).browse(slip_chunk).compute_sheet()
+                if use_new_cursor:
+                    self._cr.commit()
+            except Exception as e:
+                _logger.info('------ Error al crear la Nomina %s '%( e ) )
+                pass
+        if use_new_cursor:
+            self._cr.commit()
+
+
+    @api.model
+    def _compute_sheet_threading_task(self, use_new_cursor=False, active_id=False, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
         try:
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            payslipModel = self.env['hr.payslip']
-            payslips = []
-            for employees_chunk in split_every(20, employee_ids):
-                _logger.info('--- Nomina Procesando Employees %s', employees_chunk )
-                for employee in self.env['hr.employee'].browse(employees_chunk):
-                    slip_data = payslipModel.onchange_employee_id(from_date, to_date, employee.id, contract_id=False)
-                    res = {
-                        'employee_id': employee.id,
-                        'name': slip_data['value'].get('name'),
-                        'struct_id': slip_data['value'].get('struct_id'),
-                        'contract_id': slip_data['value'].get('contract_id'),
-                        'payslip_run_id': active_id,
-                        'input_line_ids': [(0, 0, x) for x in slip_data['value'].get('input_line_ids')],
-                        'worked_days_line_ids': [(0, 0, x) for x in slip_data['value'].get('worked_days_line_ids')],
-                        'date_from': from_date,
-                        'date_to': to_date,
-                        'credit_note': credit_note,
-                        'company_id': employee.company_id.id,
-                        'cfdi_source_sncf': slip_data['value'].get('cfdi_source_sncf'),
-                        'cfdi_amount_sncf': slip_data['value'].get('cfdi_amount_sncf'),
-                        'cfdi_tipo_nomina': slip_data['value'].get('cfdi_tipo_nomina'),
-                        'cfdi_tipo_nomina_especial': slip_data['value'].get('cfdi_tipo_nomina_especial')
-                    }
-                    payslip_id = payslipModel.create(res)
-                    payslips.append(payslip_id.id)
-                    if use_new_cursor:
-                        self._cr.commit()
-            _logger.info('--- Nomina payslips %s ', len(payslips) )
-            for slip_chunk in split_every(5, payslips):
-                _logger.info('--- Nomina payslip_ids %s ', slip_chunk )
-                try:
-                    payslipModel.with_context(slip_chunk=True).browse(slip_chunk).compute_sheet()
-                    if use_new_cursor:
-                        self._cr.commit()
-                except:
-                    pass
-            if use_new_cursor:
-                self._cr.commit()
-
+            self._compute_sheet_tasks(
+                use_new_cursor=use_new_cursor, 
+                active_id=active_id, from_date=from_date, to_date=to_date, credit_note=credit_note, employee_ids=employee_ids)
         finally:
             if use_new_cursor:
                 try:
@@ -86,17 +97,16 @@ class HrPayslipEmployees(models.TransientModel):
                     pass
         return {}
 
-    def _compute_sheet_threading(self, active_id, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
+    def _compute_sheet_threading(self, active_id=False, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
             self = self.with_env(self.env(cr=new_cr))
-            self.env['hr.payslip.employees']._run_compute_sheet_tasks(
-                use_new_cursor=self._cr.dbname,
+            self.env['hr.payslip.employees']._compute_sheet_threading_task(
+                use_new_cursor=self._cr.dbname, 
                 active_id=active_id, from_date=from_date, to_date=to_date, credit_note=credit_note, employee_ids=employee_ids)
             new_cr.close()
             return {}
 
-    @api.multi
     def compute_sheet(self):
         [data] = self.read()
         if not data['employee_ids']:
@@ -109,9 +119,25 @@ class HrPayslipEmployees(models.TransientModel):
         to_date = run_data.get('date_end')
         if not data['employee_ids']:
             raise UserError(_("You must select employee(s) to generate payslip(s)."))
-        threaded_calculation = threading.Thread(target=self._compute_sheet_threading, args=( active_id, from_date, to_date, run_data.get('credit_note'), data['employee_ids'] ))
+        threaded_calculation = threading.Thread(target=self._compute_sheet_threading, args=(active_id, from_date, to_date, run_data.get('credit_note'), data['employee_ids']))
         threaded_calculation.start()
         return {'type': 'ir.actions.act_window_close'}
+
+
+
+    @api.multi
+    def compute_sheet_all(self):
+        for rec in self:
+            employee_ids = self.env['hr.employee'].search([
+                ('company_id', '=', rec.company_id.id),
+                ('contract_id.state', 'in', ['open', 'close'])
+            ])
+            rec.write({
+                'employee_ids': [(6, 0, employee_ids.ids)]
+            })
+            rec.compute_sheet()
+
+
 
     @api.multi
     def compute_sheet_old(self):
@@ -146,16 +172,3 @@ class HrPayslipEmployees(models.TransientModel):
             payslips += self.env['hr.payslip'].create(res)
         payslips.compute_sheet()
         return {'type': 'ir.actions.act_window_close'}
-
-
-    @api.multi
-    def compute_sheet_all(self):
-        for rec in self:
-            employee_ids = self.env['hr.employee'].search([
-                ('company_id', '=', rec.company_id.id),
-                ('contract_id.state', 'in', ['open', 'close'])
-            ])
-            rec.write({
-                'employee_ids': [(6, 0, employee_ids.ids)]
-            })
-            rec.compute_sheet()
