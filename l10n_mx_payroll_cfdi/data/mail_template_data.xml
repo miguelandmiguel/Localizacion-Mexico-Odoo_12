@@ -23,7 +23,7 @@
 </p>
 ]]></field>
             <field name="report_template" ref="l10n_mx_payroll_cfdi.hr_payslip_mx"/>
-            <field name="report_name">${object.name.replace('/', '_') + '.pdf'}</field>
+            <field name="report_name">${ 'NOM-%s - %s.pdf' % ((object.number or '').replace('/',''), object.employee_id.cfdi_complete_name ) }</field>
             <field name="lang">${object.employee_id.address_home_id.lang}</field>
             <field name="auto_delete" eval="True"/>
             <field name="user_signature" eval="False"/>
@@ -50,6 +50,8 @@
                 'mail_notify_author': False
             }"
         />
+
+
 
 
 

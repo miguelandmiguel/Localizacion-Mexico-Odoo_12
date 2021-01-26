@@ -36,14 +36,19 @@ class HrPayslipEmployees(models.TransientModel):
 
     @api.model
     def _compute_sheet_tasks(self, use_new_cursor=False, active_id=False, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
+        intercompany_uid = None
+        context = self._context.copy()
+        for run in self.env['hr.payslip.run'].browse(active_id):
+            company = run.company_id
+            intercompany_uid = company.intercompany_user_id and company.intercompany_user_id.id or False
+            context['force_company'] = company.id
 
         payslipModel = self.env['hr.payslip']
         payslips = []
-        for employees_chunk in split_every(20, employee_ids):
+        for employees_chunk in split_every(1, employee_ids):
             _logger.info('--- Nomina Procesando Employees %s', employees_chunk )
             for employee in self.env['hr.employee'].browse(employees_chunk):
                 slip_data = payslipModel.onchange_employee_id(from_date, to_date, employee.id, contract_id=False)
-                print('------------  slip_data ', slip_data)
                 res = {
                     'employee_id': employee.id,
                     'name': slip_data['value'].get('name'),
@@ -67,10 +72,10 @@ class HrPayslipEmployees(models.TransientModel):
                 payslips.append(payslip_id.id)
 
         _logger.info('--- Nomina payslips %s ', len(payslips) )
-        for slip_chunk in split_every(5, payslips):
+        for slip_chunk in split_every(1, payslips):
             _logger.info('--- Nomina payslip_ids %s ', slip_chunk )
             try:
-                payslipModel.with_context(slip_chunk=True).browse(slip_chunk).compute_sheet()
+                payslipModel.with_context(slip_chunk=True).browse(slip_chunk).with_context(context).sudo(intercompany_uid).compute_sheet()
                 if use_new_cursor:
                     self._cr.commit()
             except Exception as e:

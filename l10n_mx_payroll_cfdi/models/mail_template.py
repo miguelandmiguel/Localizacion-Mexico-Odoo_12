@@ -39,7 +39,6 @@ class Message(models.Model):
             'partners': [],
             'channels': [],
         }
-        _logger.info('----------- _notify_compute_recipients %s '%( record._name ) )
         if record._name == 'hr.payslip':
             contact_id = record.employee_id.address_home_id.id
             recipient_data['channels'] = res.get('channels')
@@ -47,6 +46,5 @@ class Message(models.Model):
                 if partner['id'] == contact_id:
                     recipient_data['partners'] = [ partner ]
                     break
-            _logger.info('------------- _notify_compute_recipients INFO %s  '%( recipient_data ) )
             return recipient_data
         return res
