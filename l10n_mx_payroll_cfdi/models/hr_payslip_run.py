@@ -178,18 +178,24 @@ class HrPayslipRun(models.Model):
     #---------------------------------------
     @api.model
     def _compute_scheduler_tasks(self, use_new_cursor=False, run_id=False):
+        """
         context = self._context.copy()
         for run in self.env['hr.payslip.run'].browse(run_id):
             company = run.company_id
             intercompany_uid = company.intercompany_user_id and company.intercompany_user_id.id or False
+            self = self.with_context(force_company=company.id, company_id=company.id)
             context['force_company'] = company.id
+            context['company_id'] = company.id
+
+        self.env['hr.payslip'].sudo().with_context(context).browse(payslip_chunk).compute_sheet()
+        """
         domain = [('state', '=', 'draft'), ('payslip_run_id', '=', run_id)]
         payslip_to_assign = self.env['hr.payslip'].search(domain, limit=None,
             order='number desc, id asc')
         for payslip_chunk in split_every(1, payslip_to_assign.ids):
             _logger.info('-------- Calcular Nomina %s '%( payslip_chunk) )
             try:
-                self.env['hr.payslip'].browse(payslip_chunk).with_context(context).sudo(intercompany_uid).compute_sheet()
+                self.env['hr.payslip'].browse(payslip_chunk).compute_sheet()
                 if use_new_cursor:
                     self._cr.commit()
             except Exception as e:
@@ -228,21 +234,12 @@ class HrPayslipRun(models.Model):
     #---------------------------------------
     @api.model
     def confirm_sheet_run_scheduler_tasks(self, use_new_cursor=False, run_id=False):
-        intercompany_uid = None
-        context = self._context.copy()
-        context['without_compute_sheet'] = True
-        for run in self.env['hr.payslip.run'].browse(run_id):
-            company = run.company_id
-            intercompany_uid = company.intercompany_user_id and company.intercompany_user_id.id or False
-            context['force_company'] = company.id
-
         domain = [('state', 'in', ['draft','verify']), ('payslip_run_id', '=', run_id)]
-        payslip_to_assign = self.env['hr.payslip'].search(domain, limit=None,
-            order='number desc, id asc')
+        payslip_to_assign = self.env['hr.payslip'].search(domain, limit=None, order='number desc, id asc')
         for payslip_chunk in split_every(1, payslip_to_assign.ids):
             try:
                 _logger.info('-------- Confirmar Nomina %s '%( payslip_chunk ) )
-                self.env['hr.payslip'].browse(payslip_chunk).with_context(context).sudo(intercompany_uid).action_payslip_done()
+                self.env['hr.payslip'].browse(payslip_chunk).action_payslip_done()
                 if use_new_cursor:
                     self._cr.commit()
             except Exception as e:
@@ -285,21 +282,13 @@ class HrPayslipRun(models.Model):
     #---------------------------------------
     @api.model
     def _enviar_nomina_scheduler_tasks(self, use_new_cursor=False, run_id=False):
-        intercompany_uid = None
-        context = self._context.copy()
-        context['without_compute_sheet'] = True
-        for run in self.env['hr.payslip.run'].browse(run_id):
-            company = run.company_id
-            intercompany_uid = company.intercompany_user_id and company.intercompany_user_id.id or False
-            context['force_company'] = company.id
-
         domain = [('state', '=', 'done'), ('payslip_run_id', '=', run_id), ('l10n_mx_edi_sendemail', '=', False)]
         payslip_to_assign = self.env['hr.payslip'].search(domain, limit=None,
             order='number desc, id asc')
         for payslip_chunk in split_every(1, payslip_to_assign.ids):
             _logger.info('-------- Enviar Email Nomina %s '%( payslip_chunk )  )
             try:
-                self.env['hr.payslip'].browse(payslip_chunk).with_context(context).sudo(intercompany_uid).enviar_nomina()
+                self.env['hr.payslip'].browse(payslip_chunk).enviar_nomina()
                 if use_new_cursor:
                     self._cr.commit()
             except Exception as e:
@@ -341,19 +330,12 @@ class HrPayslipRun(models.Model):
     #---------------------------------------
     @api.model
     def _unlink_sheet_run_threading_task(self, use_new_cursor=False, active_id=False):
-        intercompany_uid = None
-        context = self._context.copy()
-        context['without_compute_sheet'] = True
-        for run in self.env['hr.payslip.run'].browse(active_id):
-            company = run.company_id
-            intercompany_uid = company.intercompany_user_id and company.intercompany_user_id.id or False
-            context['force_company'] = company.id
         try:
             if use_new_cursor:
                 cr = registry(self._cr.dbname).cursor()
                 self = self.with_env(self.env(cr=cr))  # TDE FIXME
-            runModel = self.env['hr.payslip.run'].with_context(context).sudo(intercompany_uid)
-            payslipModel = self.env['hr.payslip'].with_context(context).sudo(intercompany_uid)
+            runModel = self.env['hr.payslip.run']
+            payslipModel = self.env['hr.payslip']
             for run_id in runModel.browse(active_id):
                 payslip_ids = payslipModel.search([('state', '=', 'draft'), ('payslip_run_id', '=', run_id.id)])
                 line_ids = payslip_ids.filtered(lambda line: line.get_salary_line_total('C99') == 0.0)

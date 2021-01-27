@@ -90,7 +90,7 @@
                             t-att-Banco="banco"
                             t-att-CuentaBancaria="num_cuenta"
                             t-att-SalarioBaseCotApor="record._get_SalarioBaseCotApor()"
-                            t-att-SalarioDiarioIntegrado="record._get_SalarioBaseCotApor()"
+                            t-att-SalarioDiarioIntegrado="record._get_SalarioDiarioIntegrado()"
                             t-att-ClaveEntFed="customer.address_id and customer.address_id.state_id.code" />
                         <t t-if="Percepciones is not None">
                             <t t-set="attrPercepciones" t-value="Percepciones.get('attrs')"/>

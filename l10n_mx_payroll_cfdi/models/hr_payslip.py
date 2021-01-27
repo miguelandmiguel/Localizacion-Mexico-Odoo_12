@@ -856,8 +856,10 @@ class HrPayslip(models.Model):
         from l10n_mx_edi_origin, hope the next structure:
             relation type|UUIDs separated by ,"""
         self.ensure_one()
-        if self.l10n_mx_edi_origin == False:
-            return {}
+        _logger.info('------------ tipoRelacion 01 %s '%(self.l10n_mx_edi_origin) )
+        if not self.l10n_mx_edi_origin:
+            _logger.info('------------ tipoRelacion 02 %s '%(self.l10n_mx_edi_origin) )
+            return None
         origin = self.l10n_mx_edi_origin.split('|')
         uuids = origin[1].split(',') if len(origin) > 1 else []
         return {
@@ -1113,6 +1115,12 @@ class HrPayslip(models.Model):
         return incapacidades
 
     def _get_SalarioBaseCotApor(self):
+        return self.get_salary_line_total('C510D') or 0.0
+
+    def _get_SalarioDiarioIntegrado(self):
+        return self.get_salary_line_total('SD') or 0.0
+
+    def _get_SalarioDiarioIntegradoOLD(self):
         _logger.info('---------- Table exists %s '%( tools.table_exists(self._cr, 'x_hr_employee_wage') ) )
         if tools.table_exists(self._cr, 'x_hr_employee_wage'):
             wage_id = self.env['x_hr_employee_wage'].sudo().search([('x_employee_id','=', self.employee_id.id), ('x_state','=','actual')])
@@ -1134,15 +1142,15 @@ class HrPayslip(models.Model):
         return "%d"%dias
 
     def _getCompanyName(self):
-        companyName = self.company_id.street if self.company_id.street else ''
-        if self.company_id.street_number:
-            companyName += ' %s'%self.company_id.street_number
-        if self.company_id.l10n_mx_edi_colony:
-            companyName += ' COL. %s'%self.company_id.l10n_mx_edi_colony
-        if self.company_id.zip:
-            companyName += '  %s'%self.company_id.zip
-        if self.company_id.city:
-            companyName += '  %s'%self.company_id.city
+        companyName = self.company_id.partner_id.street if self.company_id.partner_id.street else ''
+        if self.company_id.partner_id.street_number:
+            companyName += ' %s'%self.company_id.partner_id.street_number
+        if self.company_id.partner_id.l10n_mx_edi_colony:
+            companyName += ' COL. %s'%self.company_id.partner_id.l10n_mx_edi_colony
+        if self.company_id.partner_id.zip:
+            companyName += '  %s'%self.company_id.partner_id.zip
+        if self.company_id.partner_id.city:
+            companyName += '  %s'%self.company_id.partner_id.city
         return companyName.upper()
 
 
@@ -1294,7 +1302,8 @@ class HrPayslip(models.Model):
         fechaAlta = self.employee_id.cfdi_date_start or self.employee_id.contract_id.date_start or False
         riesgoPuesto = self.employee_id.job_id and self.employee_id.job_id.cfdi_riesgopuesto_id and self.employee_id.job_id.cfdi_riesgopuesto_id.code or False
         # salarioDiarioIntegrado = self.employee_id.cfdi_sueldo_diario and '%.2f'%self.employee_id.cfdi_sueldo_diario or False
-        salarioDiarioIntegrado = self._get_SalarioBaseCotApor() or False
+        salarioBaseCotApor = self._get_SalarioBaseCotApor() or False
+        salarioDiarioIntegrado = self._get_SalarioDiarioIntegrado() or False
         tipoContrato = self.contract_id.type_id and self.contract_id.type_id.code or ''
         periodicidadPago = self.contract_id.cfdi_periodicidadpago_id and self.contract_id.cfdi_periodicidadpago_id.code or ''
         tipoRegimen = self.contract_id.cfdi_regimencontratacion_id and self.contract_id.cfdi_regimencontratacion_id.code or ''
@@ -1317,6 +1326,8 @@ class HrPayslip(models.Model):
             post_msg.extend([_('El Empleado no tiene "Riesgo Puesto" ')])
         if not salarioDiarioIntegrado:
             post_msg.extend([_('El Empleado no tiene "Salario Diario Integrado" ')])
+        if not salarioBaseCotApor:
+            post_msg.extend([_('El Empleado no tiene "Salario Base de Cotizacion Diario" ')])
         if total <= 0:
             post_msg.extend([_('No se puede timbrar Nominas en 0 o Negativos ')])
         if not registroPatronal:

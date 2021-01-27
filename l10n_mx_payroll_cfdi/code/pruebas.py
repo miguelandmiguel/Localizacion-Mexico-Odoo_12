@@ -9,9 +9,10 @@ Control de Cambios.
 2. Nominas Especiales. No permitir crear dos veces el mismo registro.(Excel).		OK
 3. Envio de Correos. Que no se envie a los seguidores.
 4. Cambios PDF.
+4. Envio de Correos. --- Campo Status send_email.
+5. Envio de correos. --- Hacer Commit.
 
-3. Envio de correos. --- Hacer Commit.
-3. Envio de Correos. --- Campo Status send_email.
+
 3. Crear opcion Generar dispersión de pagos. Seleccionar empleados
 3. Nomina para empleados inactivos... Finiquitos
 3. Enviar Mensajes al calcular la nomina.

@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
     <data>
-
-
-
-
-
-
-
         <template id="recibo">
             <div class="o_nomina" style="width:100%; min-height:460px; border: 0px solid grey;">
                 <!-- ENCABEZADO -->
@@ -62,10 +54,10 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="width: 25% !important;">
+                        <td style="width: 50% !important;">
                             <strong>DEPTO: &amp;nbsp;</strong><span t-esc="rec.get('Departamento')"/>
                         </td>
-                        <td style="width: 75% !important;" colspan="3">
+                        <td style="width: 50% !important;" colspan="3">
                             <span>99 POR DEFINIR&amp;nbsp;</span>
                         </td>
                     </tr>
@@ -92,7 +84,12 @@
                                         <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Clave')"/></td>
                                         <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Concepto')"/></td>
                                         <td style="text-align: right;">
-                                            &amp;nbsp;<span t-esc="l.get('ImporteGravado')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;
+                                            <t t-if="l.get('ImporteGravado') != 0.0 ">
+                                                &amp;nbsp;<span t-esc="l.get('ImporteGravado')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                                            </t>
+                                            <t t-if="l.get('ImporteExento') != 0.0  ">
+                                                &amp;nbsp;<span t-esc="l.get('ImporteExento')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                                            </t>
                                         </td>
                                     </tr>
                                 </t>
@@ -109,7 +106,7 @@
                                         <td style="text-align: left;">&amp;nbsp;<span t-esc="d.get('Clave')"/></td>
                                         <td style="text-align: left;">&amp;nbsp;<span t-esc="d.get('Concepto')"/></td>
                                         <td style="text-align: right; ">
-                                            &amp;nbsp;<span t-esc="d.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;
+                                            &amp;nbsp;<span t-esc="d.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
                                         </td>
                                     </tr>
                                 </t>
