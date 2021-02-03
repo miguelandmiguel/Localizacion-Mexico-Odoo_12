@@ -29,7 +29,26 @@
             <field name="user_signature" eval="False"/>
         </record>
 
-        <!--Email template -->
+        <act_window name="Send Payslip By Email"
+            res_model="mail.compose.message"
+            src_model="hr.payslip"
+            view_mode="form"
+            target="new"
+            key2="client_action_relate"
+            id="account_send_payment_receipt_by_email_action"
+            context="{
+                'default_model': 'hr.payslip',
+                'mail_post_autofollow': True,
+                'default_composition_mode': 'comment',
+                'default_use_template': True,
+                'default_res_id': active_id,
+                'default_template_id': ref('l10n_mx_payroll_cfdi.email_template_payroll'),
+                'force_email': True,
+                'custom_layout': 'mail.mail_notification_light',
+            }"
+        />
+        
+        <!--Email template 
         <act_window name="Send Payslip By Email"
             res_model="mail.compose.message"
             src_model="hr.payslip"
@@ -50,7 +69,8 @@
                 'mail_notify_author': False
             }"
         />
-
+        -->
+        
 
 
 

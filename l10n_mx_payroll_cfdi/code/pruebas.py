@@ -8,16 +8,42 @@ Control de Cambios.
 1. Nominas C99=0 cambiarlas a Done. 												OK
 2. Nominas Especiales. No permitir crear dos veces el mismo registro.(Excel).		OK
 3. Envio de Correos. Que no se envie a los seguidores.
-4. Cambios PDF.
+4. Cambios Nuevo Formato PDF.
 4. Envio de Correos. --- Campo Status send_email.
 5. Envio de correos. --- Hacer Commit.
+6. Cambios reglas en XML y PDF
+7. PDF con contraseña
+8. Corregir proceso de Cancelación.
 
-
+3. Corregir proceso cancelación masiva
+3. Generar asientos contables, empleados seleccionados
 3. Crear opcion Generar dispersión de pagos. Seleccionar empleados
 3. Nomina para empleados inactivos... Finiquitos
+
 3. Enviar Mensajes al calcular la nomina.
 4. Enviar Mensajes al Confirmar la nomina
 5. Correr la nomina con OdooBot
+5. PDF para nominas en 0.0 (No timbradas)
+
+
+
+
+
+313.70
+
+_l10n_mx_edi_finkok_cancel
+client = Client(url, cache=None, timeout=80, plugins=[LogPlugin()])
+
+
+
+bien, estas quincenas que vamos a hacer lo que tengo pensado es borrar la contabilidad y que hagan la póliza a mano... 
+si no no la hacemos, pero vamos a ir trabajando en separar cada proceso, generación, calculo, timbrado, contabilización, y la cancelación de un recibo en dos pasos, una es cancelar el xml y otra es cancelar el recibo
+
+
+
+
+
+
 
 # http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/GuiaNomina11102019.pdf
 

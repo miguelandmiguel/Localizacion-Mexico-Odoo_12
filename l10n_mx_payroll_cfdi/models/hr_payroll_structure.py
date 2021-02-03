@@ -15,14 +15,6 @@ class HrPayrollStructure(models.Model):
         string="Report", domain="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]", default=_get_default_report_id)
 
 
-class HrPayslipLine(models.Model):
-    _name = 'hr.payslip.line'
-    _inherit = 'hr.payslip.line'
-
-    slip_id = fields.Many2one('hr.payslip', string='Pay Slip', required=True, ondelete='cascade', index=True)
-
-
-
 class RegistroPatronal(models.Model):
     _name = 'l10n_mx_payroll.regpat'
     _description = 'Registro Patronal'

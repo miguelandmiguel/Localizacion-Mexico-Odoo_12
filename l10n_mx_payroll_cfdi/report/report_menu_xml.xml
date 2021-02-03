@@ -132,20 +132,18 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="width: 50%; font-size: 11px; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                        <td style="width: 50%; font-size: 11px; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
                             <table style="width: 100% !important">
-                                <td>
-                                    <t t-set="ol" t-value="rec.get('OtrosPagos') and rec['OtrosPagos'] or [] "/>
-                                    <t t-foreach="ol" t-as="l">
-                                        <t t-if="l.get('Importe', 0.0) != 0.0">
-                                            &amp;nbsp;<span t-esc="l.get('Concepto')"/>&amp;nbsp;&amp;nbsp;<strong t-esc="l.get('Importe', 0.0)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/><br />
-                                        </t>
+                                <td style="text-align: center;">
+                                    <t t-if="rec.get('valeDespensa', {}) != {} ">
+                                        <strong><t t-esc=" rec['valeDespensa']['title']"/></strong>
+                                        <span t-esc="rec['valeDespensa']['importe']" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
                                     </t>
                                 </td>
                             </table>
                         </td>
-                        <td style="width: 50%; font-size: 11px; vertical-align:top; text-align: center; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
-                            <h3 style="font-size: 14px; text-align: right;" ><strong>Total a Pagar</strong> &amp;nbsp;<span t-esc="rec.get('Total', 0.0)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/> </h3>
+                        <td style="width: 50%; font-size: 11px; text-align: center; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <h3 style="font-size: 12px; text-align: right;" ><strong>Total a Pagar</strong> &amp;nbsp;<span t-esc="rec.get('Total', 0.0)" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/> </h3>
                         </td>
                     </tr>
                 </table>

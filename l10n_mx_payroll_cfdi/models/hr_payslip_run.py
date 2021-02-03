@@ -239,7 +239,7 @@ class HrPayslipRun(models.Model):
         for payslip_chunk in split_every(1, payslip_to_assign.ids):
             try:
                 _logger.info('-------- Confirmar Nomina %s '%( payslip_chunk ) )
-                self.env['hr.payslip'].browse(payslip_chunk).action_payslip_done()
+                self.env['hr.payslip'].browse(payslip_chunk).with_context(without_compute_sheet=True).action_payslip_done()
                 if use_new_cursor:
                     self._cr.commit()
             except Exception as e:
@@ -282,7 +282,7 @@ class HrPayslipRun(models.Model):
     #---------------------------------------
     @api.model
     def _enviar_nomina_scheduler_tasks(self, use_new_cursor=False, run_id=False):
-        domain = [('state', '=', 'done'), ('payslip_run_id', '=', run_id), ('l10n_mx_edi_sendemail', '=', False)]
+        domain = [('state', '=', 'done'), ('l10n_mx_edi_pac_status', '=', 'signed') ('payslip_run_id', '=', run_id), ('l10n_mx_edi_sendemail', '=', False)]
         payslip_to_assign = self.env['hr.payslip'].search(domain, limit=None,
             order='number desc, id asc')
         for payslip_chunk in split_every(1, payslip_to_assign.ids):

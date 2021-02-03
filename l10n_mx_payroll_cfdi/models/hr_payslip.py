@@ -31,6 +31,8 @@ _logger = logging.getLogger(__name__)
 
 CATALOGO_TIPONOMINA = [('O','Ordinaria'), ('E','Extraordinaria')]
 
+
+
 class LogPlugin(MessagePlugin):
     def pretty_log(self, xml_content):
         try:
@@ -94,6 +96,17 @@ class HrPayslip(models.Model):
     _name = 'hr.payslip'
     _inherit = ['hr.payslip', 'l10n_mx_edi.pac.sw.mixin', 'mail.thread']
 
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('verify', 'Waiting'),
+        ('done', 'Done'),
+        ('cancel', 'Rejected'),
+    ], string='Status', index=True, readonly=True, copy=False, 
+        track_visibility='onchange', default='draft',
+        help="""* When the payslip is created the status is \'Draft\'
+                \n* If the payslip is under verification, the status is \'Waiting\'.
+                \n* If the payslip is confirmed then status is set to \'Done\'.
+                \n* When user cancel payslip the status is \'Rejected\'.""")
     l10n_mx_edi_pac_status = fields.Selection(
         selection=[
             ('none', 'CFDI not necessary'),
@@ -104,6 +117,7 @@ class HrPayslip(models.Model):
             ('cancelled', 'Cancelled')
         ],
         string='PAC status', default='none',
+        track_visibility='onchange', 
         help='Refers to the status of the CFDI inside the PAC.',
         readonly=True, copy=False)
     l10n_mx_edi_sat_status = fields.Selection(
@@ -151,7 +165,6 @@ class HrPayslip(models.Model):
         '\n04|UUID1, UUID2, ...., UUIDn.\n'
         'Example:\n"04|89966ACC-0F5C-447D-AEF3-3EED22E711EE,89966ACC-0F5C-447D-AEF3-3EED22E711EE"')
     l10n_mx_edi_sendemail = fields.Boolean(string="Send Email", default=False)
-
     date_invoice = fields.Date(string='Invoice Date',
         readonly=False, states={'draft': [('readonly', False)]}, index=True,
         help="Keep empty to use the current date", copy=False)
@@ -171,6 +184,7 @@ class HrPayslip(models.Model):
     cfdi_monto = fields.Monetary(string="Monto CFDI", copy=False, oldname="monto_cfdi")
     cfdi_total = fields.Float(string="Total", copy=False, oldname="total")
 
+    # l10n_mx_cfdi_uuid = fields.Char(string='Folio Fiscal')
     #--------------------
     # Layout Dispersion
     #--------------------
@@ -190,7 +204,6 @@ class HrPayslip(models.Model):
             if not bic:
                 payslip.layout_nomina = layout_nomina
                 continue
-
             if bic == '012':
                 layout_nomina = 'bbva'
             else:
@@ -258,35 +271,200 @@ class HrPayslip(models.Model):
         return res
 
     # -------------------------------------------------------------------------
+    # Static Method
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _l10n_mx_get_serie_and_folio(number):
+        values = {'serie': None, 'folio': None}
+        number = (number or '').strip()
+        number_matchs = [rn for rn in re.finditer('\d+', number)]
+        if number_matchs:
+            last_number_match = number_matchs[-1]
+            values['serie'] = number[:last_number_match.start()] or None
+            values['folio'] = last_number_match.group().lstrip('0') or None
+
+        if values.get('serie'):
+            values['serie'] = values['serie'].replace('/', '').replace('-', '').replace('_', '')
+        return values
+
+    @staticmethod
+    def _get_string_cfdi(text, size=100):
+        if not text:
+            return None
+        text = text.replace('|', ' ').replace('/', '').replace('-', '').replace('_', '')
+        return text.strip()[:size]
+
+    @staticmethod
+    def _getRemoverAcentos(self, remover=''):
+        return remove_accents( remover )
+
+    @staticmethod
+    def _getMayusculas(self, palabras='' ):
+        return palabras.upper()
+
+    # -------------------------------------------------------------------------
     # HELPERS
     # -------------------------------------------------------------------------
     @api.model
     def _get_l10n_mx_edi_cadena(self):
         self.ensure_one()
-        #get the xslt path
         xslt_path = CFDI_XSLT_CADENA_TFD
-        #get the cfdi as eTree
         cfdi = base64.decodestring(self.l10n_mx_edi_cfdi)
         cfdi = self.l10n_mx_edi_get_xml_etree(cfdi)
         cfdi = self.l10n_mx_edi_get_tfd_etree(cfdi)
-        #return the cadena
         return self.l10n_mx_edi_generate_cadena(xslt_path, cfdi)
 
     @api.model
     def l10n_mx_edi_generate_cadena(self, xslt_path, cfdi_as_tree):
-        '''Generate the cadena of the cfdi based on an xslt file.
-        The cadena is the sequence of data formed with the information contained within the cfdi.
-        This can be encoded with the certificate to create the digital seal.
-        Since the cadena is generated with the invoice data, any change in it will be noticed resulting in a different
-        cadena and so, ensure the invoice has not been modified.
-        :param xslt_path: The path to the xslt file.
-        :param cfdi_as_tree: The cfdi converted as a tree
-        :return: A string computed with the invoice data called the cadena
-        '''
         res = tools.file_open(xslt_path)
         xslt_root = etree.parse(res)
         return str(etree.XSLT(xslt_root)(cfdi_as_tree))        
 
+    @api.model
+    def l10n_mx_edi_amount_to_text(self, amount_total):
+        self.ensure_one()
+        currency = self.currency_id.name.upper()
+        currency_type = 'M.N' if currency == 'MXN' else 'M.E.'
+        amount_i, amount_d = divmod(amount_total, 1)
+        amount_d = round(amount_d, 2)
+        amount_d = int(round(amount_d * 100, 2))
+        words = self.currency_id.with_context(lang='es_ES').amount_to_text(amount_i).upper()
+        invoice_words = '%(words)s %(amount_d)02d/100 %(curr_t)s' % dict(
+            words=words, amount_d=amount_d, curr_t=currency_type)
+        return invoice_words
+
+    @api.model
+    def l10n_mx_edi_retrieve_attachments(self):
+        self.ensure_one()
+        if not self.l10n_mx_edi_cfdi_name:
+            return []
+        domain = [
+            ('res_id', '=', self.id),
+            ('res_model', '=', self._name),
+            ('name', 'like', self.l10n_mx_edi_cfdi_name )
+        ]
+        return self.env['ir.attachment'].search(domain)
+
+    @api.model
+    def l10n_mx_edi_retrieve_last_attachment(self):
+        attachment_ids = self.l10n_mx_edi_retrieve_attachments()
+        return attachment_ids and attachment_ids[0] or None
+
+    @api.model
+    def l10n_mx_edi_get_xml_etree(self, cfdi=None):
+        self.ensure_one()
+        if cfdi is None:
+            cfdi = base64.decodestring(self.l10n_mx_edi_cfdi)
+        res = fromstring(cfdi)
+        return res
+
+    @api.model
+    def l10n_mx_edi_get_tfd_etree(self, cfdi):
+        if not hasattr(cfdi, 'Complemento'):
+            return None
+        attribute = 'tfd:TimbreFiscalDigital[1]'
+        namespace = {'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'}
+        node = cfdi.Complemento.xpath(attribute, namespaces=namespace)
+        return node[0] if node else None
+
+    @api.model
+    def l10n_mx_edi_get_nomina12_etree(self, cfdi):
+        if not hasattr(cfdi, 'Complemento'):
+            return None
+        attribute = 'nomina12:Nomina[1]'
+        namespace = {'nomina12': 'http://www.sat.gob.mx/nomina12'}
+        node = cfdi.Complemento.xpath(attribute, namespaces=namespace)
+        return node[0] if node else None
+
+    @api.model
+    def l10n_mx_edi_get_payment_etree(self, cfdi):
+        if not hasattr(cfdi, 'Complemento'):
+            return None
+        attribute = '//pago10:DoctoRelacionado'
+        namespace = {'pago10': 'http://www.sat.gob.mx/Pagos'}
+        node = cfdi.Complemento.xpath(attribute, namespaces=namespace)
+        return node
+
+    @api.model
+    def l10n_mx_edi_get_pac_version(self):
+        version = self.env['ir.config_parameter'].sudo().get_param(
+            'l10n_mx_edi_cfdi_version', '3.3')
+        return version
+
+    @api.model
+    def _get_days(self, code=""):
+        dias, horas = 0, 0
+        for line in self.worked_days_line_ids:
+            if line.code == code:
+                dias = line.number_of_days
+                horas = line.number_of_hours
+                break
+        else:
+            message = "<li>Error \n\nNo se encontro entrada de dias trabajados con codigo %s</li>"%code
+            self.action_raisemessage(message)
+        return dias, horas
+
+    @api.model
+    def _get_input(self, line):
+        regla = line.salary_rule_id
+        codigo = ''
+        cantidad = 0
+        for inp in regla.input_ids:
+            codigo = inp.code
+            break
+        for inp in self.input_line_ids:
+            if inp.code == codigo:
+                cantidad = inp.amount
+                break
+        return cantidad
+
+    @api.model
+    def _get_code(self, line):
+        if not line.salary_rule_id.cfdi_codigoagrupador_id:
+            message = "<li>Error \n\nNo tiene codigo SAT: %s</li>"%line.salary_rule_id.name
+            self.action_raisemessage(message)
+        codigo = line.salary_rule_id.cfdi_codigoagrupador_id.code
+        nombre = line.salary_rule_id.cfdi_codigoagrupador_id.name
+        return codigo, nombre
+
+    @api.model
+    def _get_lines_type(self, ttype):
+        Model = self.env['ir.model.data']
+        line_ids = self.line_ids
+        tipos = {
+            'p': Model.get_object("l10n_mx_payroll", "catalogo_tipo_percepcion").id,
+            'd': Model.get_object("l10n_mx_payroll", "catalogo_tipo_deduccion").id,
+            'h': Model.get_object("l10n_mx_payroll", "catalogo_tipo_hora_extra").id,
+            'i': Model.get_object("l10n_mx_payroll", "catalogo_tipo_incapacidad").id,
+            'o': Model.get_object("l10n_mx_payroll", "catalogo_tipo_otro_pago").id
+        }
+        lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype])
+        return lines
+
+    @api.model
+    def _get_agrupadorsat_type(self, ttype):
+        ModelAgrupador = self.env['l10n_mx_payroll.codigo_agrupador']
+        Model = self.env['ir.model.data']
+        tipos = {
+            'p': Model.get_object("l10n_mx_payroll", "catalogo_tipo_percepcion").id,
+            'd': Model.get_object("l10n_mx_payroll", "catalogo_tipo_deduccion").id,
+            'h': Model.get_object("l10n_mx_payroll", "catalogo_tipo_hora_extra").id,
+            'i': Model.get_object("l10n_mx_payroll", "catalogo_tipo_incapacidad").id,
+            'o': Model.get_object("l10n_mx_payroll", "catalogo_tipo_otro_pago").id
+        }
+        res = {}
+        for agrup in ModelAgrupador.search([('cfdi_tipo_id', '=', tipos[ttype])]):
+            res[ agrup.code ] = {
+                'name': agrup.name,
+                'code': agrup.code,
+                'id': agrup.id
+            }
+        return res
+    
+    # -------------------------------------------------------------------------
+    # Datas for PDF reports
+    # -------------------------------------------------------------------------
+    @api.model
     def getDatasXmlPayslip(self):
         RegimenModel = self.env['l10n_mx_payroll.regimen_contratacion']
         RiesgoModel = self.env['l10n_mx_payroll.riesgo_puesto']
@@ -305,7 +483,6 @@ class HrPayslip(models.Model):
         Receptor = cfdi.Receptor
         Nomina = self.l10n_mx_edi_get_nomina12_etree(cfdi)
         tfd = self.l10n_mx_edi_get_tfd_etree(cfdi)
-
         if not cfdi:
             return {
                 'Serie': ''
@@ -452,11 +629,24 @@ class HrPayslip(models.Model):
                 periodo = PeriodicidadModel.search([('code', '=', PeriodicidadPago)], limit=1)
                 PeriodicidadPago = '[%s] %s'%( periodo.code, periodo.name )
             TipoNomina = Nomina.get('TipoNomina')
+
+
+            valeDespensa = {}
+            for percep in Percepciones.get('Lines', []):
+                if percep.get('Clave', '') == 'C109':
+                    valeDespensa['title'] = 'VALES DE DESPENSA'
+                    valeDespensa['importe'] = percep['ImporteExento'] if percep['ImporteExento'] > 0 else percep['ImporteGravado']
+                    totalSueldo = Percepciones['TotalSueldos'] - valeDespensa['importe']
+                    Percepciones['TotalSueldos'] = totalSueldo
+                    break
+            if len( Percepciones.get('Lines', []) ) > 0:
+                pLines = [i for i in Percepciones['Lines'] if not (i['Clave'] == 'C109')]
+                Percepciones['Lines'] = pLines
+
             resNomina = {
                 'RegistroPatronal': NomEmisor.get('RegistroPatronal'),
                 'RfcPatronOrigen': NomEmisor.get('RfcPatronOrigen'),
                 'OrigenRecurso': OrigenRecurso,
-
                 'MontoRecursoPropio': MontoRecursoPropio,
                 'ReceptorCurp': NomReceptor.get('Curp', ''),
                 'NumEmpleado': NomReceptor.get('NumEmpleado'),
@@ -476,7 +666,6 @@ class HrPayslip(models.Model):
                 'NumSeguridadSocial': NomReceptor.get('NumSeguridadSocial'),
                 'CuentaBancaria': NomReceptor.get('CuentaBancaria'),
                 'Banco': NomReceptor.get('Banco'),
-                
                 'FechaPago': Nomina.get('FechaPago'),
                 'FechaInicialPago': Nomina.get('FechaInicialPago'),
                 'FechaFinalPago': Nomina.get('FechaFinalPago'),
@@ -488,120 +677,16 @@ class HrPayslip(models.Model):
                 'Percepciones': Percepciones,
                 'Deducciones': Deducciones,
                 'OtrosPagos': OtrosPagos,
-                'Incapacidad': Incapacidad
+                'Incapacidad': Incapacidad,
+                'valeDespensa': valeDespensa
             }
             res.update(resNomina)
-        _logger.info('------report_payslip_params:\n%s', pprint.pformat(res))
+        # _logger.info('------report_payslip_params:\n%s', pprint.pformat(res))
         return res
 
-    @api.multi
-    def l10n_mx_edi_amount_to_text(self, amount_total):
-        """Method to transform a float amount to text words
-        E.g. 100 - ONE HUNDRED
-        :returns: Amount transformed to words mexican format for invoices
-        :rtype: str
-        """
-        self.ensure_one()
-        currency = self.currency_id.name.upper()
-        # M.N. = Moneda Nacional (National Currency)
-        # M.E. = Moneda Extranjera (Foreign Currency)
-        currency_type = 'M.N' if currency == 'MXN' else 'M.E.'
-        # Split integer and decimal part
-        amount_i, amount_d = divmod(amount_total, 1)
-        amount_d = round(amount_d, 2)
-        amount_d = int(round(amount_d * 100, 2))
-        words = self.currency_id.with_context(lang='es_ES').amount_to_text(amount_i).upper()
-        invoice_words = '%(words)s %(amount_d)02d/100 %(curr_t)s' % dict(
-            words=words, amount_d=amount_d, curr_t=currency_type)
-        return invoice_words
-
-    @api.model
-    def l10n_mx_edi_retrieve_attachments(self):
-        """Retrieve all the cfdi attachments generated for this payment.
-        :return: An ir.attachment recordset
-        """
-        self.ensure_one()
-        if not self.l10n_mx_edi_cfdi_name:
-            return []
-        domain = [
-            ('res_id', '=', self.id),
-            ('res_model', '=', self._name),
-            ('name', 'like', self.l10n_mx_edi_cfdi_name )
-        ]
-        return self.env['ir.attachment'].search(domain)
-
-    @api.model
-    def l10n_mx_edi_retrieve_last_attachment(self):
-        attachment_ids = self.l10n_mx_edi_retrieve_attachments()
-        return attachment_ids and attachment_ids[0] or None
-
-    @api.model
-    def l10n_mx_edi_get_xml_etree(self, cfdi=None):
-        '''Get an objectified tree representing the cfdi.
-        If the cfdi is not specified, retrieve it from the attachment.
-        :param cfdi: The cfdi as string
-        :return: An objectified tree
-        '''
-        #TODO helper which is not of too much help and should be removed
-        self.ensure_one()
-        if cfdi is None:
-            cfdi = base64.decodestring(self.l10n_mx_edi_cfdi)
-        res = fromstring(cfdi)
-        return res
-
-    @api.model
-    def l10n_mx_edi_get_tfd_etree(self, cfdi):
-        '''Get the TimbreFiscalDigital node from the cfdi.
-        :param cfdi: The cfdi as etree
-        :return: the TimbreFiscalDigital node
-        '''
-        if not hasattr(cfdi, 'Complemento'):
-            return None
-        attribute = 'tfd:TimbreFiscalDigital[1]'
-        namespace = {'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'}
-        node = cfdi.Complemento.xpath(attribute, namespaces=namespace)
-        return node[0] if node else None
-
-    @api.model
-    def l10n_mx_edi_get_nomina12_etree(self, cfdi):
-        '''Get the TimbreFiscalDigital node from the cfdi.
-        :param cfdi: The cfdi as etree
-        :return: the TimbreFiscalDigital node
-        '''
-        if not hasattr(cfdi, 'Complemento'):
-            return None
-        attribute = 'nomina12:Nomina[1]'
-        namespace = {'nomina12': 'http://www.sat.gob.mx/nomina12'}
-        node = cfdi.Complemento.xpath(attribute, namespaces=namespace)
-        return node[0] if node else None
-
-    @api.model
-    def l10n_mx_edi_get_payment_etree(self, cfdi):
-        '''Get the Complement node from the cfdi.
-        :param cfdi: The cfdi as etree
-        :return: the Payment node
-        '''
-        if not hasattr(cfdi, 'Complemento'):
-            return None
-        attribute = '//pago10:DoctoRelacionado'
-        namespace = {'pago10': 'http://www.sat.gob.mx/Pagos'}
-        node = cfdi.Complemento.xpath(attribute, namespaces=namespace)
-        return node
-    
-    @api.model
-    def l10n_mx_edi_generate_cadena(self, xslt_path, cfdi_as_tree):
-        '''Generate the cadena of the cfdi based on an xslt file.
-        The cadena is the sequence of data formed with the information contained within the cfdi.
-        This can be encoded with the certificate to create the digital seal.
-        Since the cadena is generated with the invoice data, any change in it will be noticed resulting in a different
-        cadena and so, ensure the invoice has not been modified.
-        :param xslt_path: The path to the xslt file.
-        :param cfdi_as_tree: The cfdi converted as a tree
-        :return: A string computed with the invoice data called the cadena
-        '''
-        xslt_root = etree.parse(tools.file_open(xslt_path))
-        return str(etree.XSLT(xslt_root)(cfdi_as_tree))
-
+    # -------------------------------------------------------------------------
+    # PROCESO TIMBRADO
+    # -------------------------------------------------------------------------
     @api.multi
     def action_date_assign(self):
         self.ensure_one()
@@ -614,19 +699,11 @@ class HrPayslip(models.Model):
 
     @api.multi
     def _l10n_mx_edi_post_sign_process(self, xml_signed, code=None, msg=None):
-        """Post process the results of the sign service.
-        :param xml_signed: the xml signed datas codified in base64
-        :param code: an eventual error code
-        :param msg: an eventual error msg
-        """
-        # TODO - Duplicated
         self.ensure_one()
         if xml_signed:
             body_msg = _('The sign service has been called with success')
-            # Update the pac status
             self.l10n_mx_edi_pac_status = 'signed'
             self.l10n_mx_edi_cfdi = xml_signed
-            # Update the content of the attachment
             attachment_id = self.l10n_mx_edi_retrieve_last_attachment()
             attachment_id.write({
                 'datas': xml_signed,
@@ -714,16 +791,6 @@ class HrPayslip(models.Model):
             return self._l10n_mx_edi_call_service('sign')
         return {'error': 'No se puede timbrar'}
 
-    @api.model
-    def l10n_mx_edi_get_pac_version(self):
-        '''Returns the cfdi version to generate the CFDI.
-        In December, 1, 2017 the CFDI 3.2 is deprecated, after of July 1, 2018
-        the CFDI 3.3 could be used.
-        '''
-        version = self.env['ir.config_parameter'].sudo().get_param(
-            'l10n_mx_edi_cfdi_version', '3.3')
-        return version
-
     @api.multi
     def _l10n_mx_edi_finkok_info(self, company_id, service_type):
         test = company_id.l10n_mx_edi_pac_test_env
@@ -741,114 +808,6 @@ class HrPayslip(models.Model):
             'username': 'cfdi@vauxoo.com' if test else username,
             'password': 'vAux00__' if test else password,
         }
-
-    @staticmethod
-    def _l10n_mx_get_serie_and_folio(number):
-        values = {'serie': None, 'folio': None}
-        number = (number or '').strip()
-        number_matchs = [rn for rn in re.finditer('\d+', number)]
-        if number_matchs:
-            last_number_match = number_matchs[-1]
-            values['serie'] = number[:last_number_match.start()] or None
-            values['folio'] = last_number_match.group().lstrip('0') or None
-
-        if values.get('serie'):
-            values['serie'] = values['serie'].replace('/', '').replace('-', '').replace('_', '')
-        return values
-
-    def _get_days(self, code=""):
-        dias = 0
-        horas = 0
-        if not self.worked_days_line_ids:
-            return dias, horas
-        for line in self.worked_days_line_ids:
-            if line.code == code:
-                dias = line.number_of_days
-                horas = line.number_of_hours
-                break
-        return dias, horas
-
-    @staticmethod
-    def _get_string_cfdi(text, size=100):
-        """Replace from text received the characters that are not found in the
-        regex. This regex is taken from SAT documentation
-        https://goo.gl/C9sKH6
-        text: Text to remove extra characters
-        size: Cut the string in size len
-        Ex. 'Product ABC (small size)' - 'Product ABC small size'"""
-        if not text:
-            return None
-        text = text.replace('|', ' ').replace('/', '').replace('-', '').replace('_', '')
-        return text.strip()[:size]
-
-
-    def _get_days(self, code):
-        context = dict(self._context) or {}
-        dias = 0
-        horas = 0
-        for line in self.worked_days_line_ids:
-            if line.code == code:
-                dias = line.number_of_days
-                horas = line.number_of_hours
-                break
-        else:
-            message = "<li>Error \n\nNo se encontro entrada de dias trabajados con codigo %s</li>"%code
-            self.action_raisemessage(message)
-        return dias, horas
-
-    def _get_input(self, line):
-        regla = line.salary_rule_id
-        codigo = ''
-        cantidad = 0
-        for inp in regla.input_ids:
-            codigo = inp.code
-            break
-        for inp in self.input_line_ids:
-            if inp.code == codigo:
-                cantidad = inp.amount
-                break
-        return cantidad
-
-    def _get_code(self, line):
-        if not line.salary_rule_id.cfdi_codigoagrupador_id:
-            message = "<li>Error \n\nNo tiene codigo SAT: %s</li>"%line.salary_rule_id.name
-            self.action_raisemessage(message)
-        codigo = line.salary_rule_id.cfdi_codigoagrupador_id.code
-        nombre = line.salary_rule_id.cfdi_codigoagrupador_id.name
-        return codigo, nombre
-
-    def _get_lines_type(self, ttype):
-        Model = self.env['ir.model.data']
-        line_ids = self.line_ids
-        tipos = {
-            'p': Model.get_object("l10n_mx_payroll", "catalogo_tipo_percepcion").id,
-            'd': Model.get_object("l10n_mx_payroll", "catalogo_tipo_deduccion").id,
-            'h': Model.get_object("l10n_mx_payroll", "catalogo_tipo_hora_extra").id,
-            'i': Model.get_object("l10n_mx_payroll", "catalogo_tipo_incapacidad").id,
-            'o': Model.get_object("l10n_mx_payroll", "catalogo_tipo_otro_pago").id
-        }
-        # lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype] and r.salary_rule_id.cfdi_appears_onpayslipreport == True)
-        lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype])
-        return lines
-
-    def _get_agrupadorsat_type(self, ttype):
-        ModelAgrupador = self.env['l10n_mx_payroll.codigo_agrupador']
-        Model = self.env['ir.model.data']
-        tipos = {
-            'p': Model.get_object("l10n_mx_payroll", "catalogo_tipo_percepcion").id,
-            'd': Model.get_object("l10n_mx_payroll", "catalogo_tipo_deduccion").id,
-            'h': Model.get_object("l10n_mx_payroll", "catalogo_tipo_hora_extra").id,
-            'i': Model.get_object("l10n_mx_payroll", "catalogo_tipo_incapacidad").id,
-            'o': Model.get_object("l10n_mx_payroll", "catalogo_tipo_otro_pago").id
-        }
-        res = {}
-        for agrup in ModelAgrupador.search([('cfdi_tipo_id', '=', tipos[ttype])]):
-            res[ agrup.code ] = {
-                'name': agrup.name,
-                'code': agrup.code,
-                'id': agrup.id
-            }
-        return res
 
     @api.multi
     def get_cfdi_related(self):
@@ -1097,7 +1056,6 @@ class HrPayslip(models.Model):
 
     def getIncapacidades(self):
         inca_total = self.get_salary_line_total('C110') or 0.0
-        _logger.info('------ Incapacidades %s '%(inca_total) )
         nodo_i = self._get_lines_type('i')
         incapacidades = None
         if nodo_i:
@@ -1111,25 +1069,12 @@ class HrPayslip(models.Model):
                         "ImporteMonetario": "%.2f"%abs(inca_total),
                     }
                     incapacidades.append(nodo_incapacidad)
-        _logger.info('----- INCA %s '%(incapacidades) )
         return incapacidades
 
-    def _get_SalarioBaseCotApor(self):
-        return self.get_salary_line_total('C510D') or 0.0
-
-    def _get_SalarioDiarioIntegrado(self):
-        return self.get_salary_line_total('SD') or 0.0
-
-    def _get_SalarioDiarioIntegradoOLD(self):
-        _logger.info('---------- Table exists %s '%( tools.table_exists(self._cr, 'x_hr_employee_wage') ) )
-        if tools.table_exists(self._cr, 'x_hr_employee_wage'):
-            wage_id = self.env['x_hr_employee_wage'].sudo().search([('x_employee_id','=', self.employee_id.id), ('x_state','=','actual')])
-            if wage_id:
-                return '%.2f'%wage_id.x_cfdi_sueldo_diario or 0.0
-            else:
-                return 0.0
-        else:
-            return self.employee_id.cfdi_sueldo_diario and '%.2f'%self.employee_id.cfdi_sueldo_diario or None
+    # def _get_SalarioBaseCotApor(self):
+    #     return self.get_salary_line_total('C510D') or 0.0
+    # def _get_SalarioDiarioIntegrado(self):
+    #     return self.get_salary_line_total('SD') or 0.0
 
     def _get_RegistroPatronal(self):
         rp = self.employee_id.cfdi_registropatronal_id and self.employee_id.cfdi_registropatronal_id.code or False
@@ -1154,11 +1099,6 @@ class HrPayslip(models.Model):
         return companyName.upper()
 
 
-    def _getRemoverAcentos(self, remover=''):
-        return remove_accents( remover )
-
-    def _getMayusculas(self, palabras='' ):
-        return palabras.upper()
 
     @api.multi
     def _l10n_mx_edi_create_cfdi_values(self):
@@ -1292,10 +1232,10 @@ class HrPayslip(models.Model):
     def l10n_mx_edi_update_pac_status(self):
         '''Synchronize both systems: Odoo & PAC if the invoices need to be signed or cancelled.
         '''
+        # elif record.l10n_mx_edi_pac_status in :
+        #     record.l10n_mx_edi_retry()
         for record in self:
-            if record.state in ['done'] and record.contract_id.is_cfdi:
-                record.l10n_mx_edi_retry()
-            elif record.l10n_mx_edi_pac_status in ('to_sign', 'retry'):
+            if record.state in ['done'] and record.contract_id.is_cfdi and record.l10n_mx_edi_pac_status in ('to_sign', 'retry'):
                 record.l10n_mx_edi_retry()
             elif record.l10n_mx_edi_pac_status == 'to_cancel':
                 record._l10n_mx_edi_cancel()
@@ -1306,13 +1246,15 @@ class HrPayslip(models.Model):
         fechaAlta = self.employee_id.cfdi_date_start or self.employee_id.contract_id.date_start or False
         riesgoPuesto = self.employee_id.job_id and self.employee_id.job_id.cfdi_riesgopuesto_id and self.employee_id.job_id.cfdi_riesgopuesto_id.code or False
         # salarioDiarioIntegrado = self.employee_id.cfdi_sueldo_diario and '%.2f'%self.employee_id.cfdi_sueldo_diario or False
-        salarioBaseCotApor = self._get_SalarioBaseCotApor() or False
-        salarioDiarioIntegrado = self._get_SalarioDiarioIntegrado() or False
+        salarioBaseCotApor = self.get_salary_line_total('C510D') or False
+        salarioDiarioIntegrado = self.get_salary_line_total('SD') or False
         tipoContrato = self.contract_id.type_id and self.contract_id.type_id.code or ''
         periodicidadPago = self.contract_id.cfdi_periodicidadpago_id and self.contract_id.cfdi_periodicidadpago_id.code or ''
         tipoRegimen = self.contract_id.cfdi_regimencontratacion_id and self.contract_id.cfdi_regimencontratacion_id.code or ''
         registroPatronal = self.company_id.cfdi_registropatronal_id and self.company_id.cfdi_registropatronal_id.code or False
-        total = self.get_salary_line_total('C99')
+        # total = self.get_salary_line_total('C99')
+        # if total <= 0:
+        #     post_msg.extend([_('No se puede timbrar Nominas en 0 o Negativos ')])
         res = False
         if not self.employee_id.cfdi_rfc:
             post_msg.extend([_('El Empleado no tiene "RFC" ')])
@@ -1332,8 +1274,7 @@ class HrPayslip(models.Model):
             post_msg.extend([_('El Empleado no tiene "Salario Diario Integrado" ')])
         if not salarioBaseCotApor:
             post_msg.extend([_('El Empleado no tiene "Salario Base de Cotizacion Diario" ')])
-        if total <= 0:
-            post_msg.extend([_('No se puede timbrar Nominas en 0 o Negativos ')])
+
         if not registroPatronal:
             post_msg.extend([_('El atributo Nomina.Emisor.RegistroPatronal se debe registrar')])
         if post_msg:
@@ -1424,21 +1365,120 @@ class HrPayslip(models.Model):
                     return result
         return res
 
+
+    #--------------------------------
+    # Proceso cancelar timbrado batch
+    #--------------------------------
+    @api.multi
+    def action_payslip_cancel_cfdis(self):
+        def getCodeStatusSat(code=''):
+            finkok_codes = {
+                '201' : "UUID Cancelado exitosamente",
+                '202' : "UUID Previamente cancelado",
+                '203' : "UUID No corresponde el RFC del Emisor y de quien solicita la cancelación",
+                '205' : "UUID No existe",
+                '300' : "Usuario y contraseña inválidos",
+                '301' : "XML mal formado",
+                '302' : "Sello mal formado o inválido",
+                '303' : "Sello no corresponde a emisor",
+                '304' : "Certificado Revocado o caduco",
+                '305' : "La fecha de emisión no esta dentro de la vigencia del CSD del Emisor",
+                '306' : "El certificado no es de tipo CSD",
+                '307' : "El CFDI contiene un timbre previo",
+                '308' : "Certificado no expedido por el SAT",
+                '401' : "Fecha y hora de generación fuera de rango",
+                '402' : "RFC del emisor no se encuentra en el régimen de contribuyentes",
+                '403' : "La fecha de emisión no es posterior al 01 de enero de 2012",
+                '501' : "Autenticación no válida",
+                '703' : "Cuenta suspendida",
+                '704' : "Error con la contraseña de la llave Privada",
+                '705' : "XML estructura inválida",
+                '706' : "Socio Inválido",
+                '707' : "XML ya contiene un nodo TimbreFiscalDigital",
+                '708' : "No se pudo conectar al SAT",
+            }
+            return finkok_codes.get( code ) or ''
+
+        PayslipModel = self.env['hr.payslip']
+        company_id = self.env.user.company_id
+        pac_info = self._l10n_mx_edi_finkok_info(company_id, 'cancel')
+        url = pac_info['url']
+        username = pac_info['username']
+        password = pac_info['password']
+
+        certificate_ids = company_id.l10n_mx_edi_certificate_ids
+        certificate_id = certificate_ids.sudo().get_valid_certificate()
+        cer_pem = base64.encodestring(certificate_id.get_pem_cer(
+            certificate_id.content)).decode('UTF-8')
+        key_pem = base64.encodestring(certificate_id.get_pem_key(
+            certificate_id.key, certificate_id.password)).decode('UTF-8')
+
+        uuid_ids = {}
+        try:
+            client = Client(url, cache=None, timeout=80, plugins=[LogPlugin()])
+            invoices_list = client.factory.create("UUIDS")
+            for record in self.filtered(lambda p: p.l10n_mx_edi_cfdi_uuid != False):
+                uuid_ids[ record.l10n_mx_edi_cfdi_uuid ] = record.id
+                invoices_list.uuids.string.append( record.l10n_mx_edi_cfdi_uuid )
+            response = client.service.cancel(invoices_list, username, password, company_id.vat, cer_pem.replace('\n', ''), key_pem)
+            _logger.info('-- _nomina_cfdi-reques: Cancel received:\n%s', pprint.pformat(response))
+        except Exception as e:
+            _logger.info('----------- Error %s '%(e) )
+            return False
+
+        msg = ''
+        try:
+            if hasattr(response, 'CodEstatus'):
+                if response.CodEstatus:
+                    msg = getCodeStatusSat( response.CodEstatus )
+                    # inv.l10n_mx_edi_log_error( msg )
+                    _logger.info('----------- Error Cancel CodEstatus %s '%( response.CodEstatus ) )
+            if not response.Acuse:
+                # inv.l10n_mx_edi_log_error( 'A delay of 2 hours has to be respected before to cancel' )
+                _logger.info('A delay of 2 hours has to be respected before to cancel')
+
+            res_folios = ""
+            for folios in response.Folios:
+                for folio in folios[1]:
+                    if folio.EstatusUUID in ('201', '202'):
+                        cancelled = True
+                        msg = '%s'%( folio.EstatusCancelacion )
+                    else:
+                        msg = '%s'%( getCodeStatusSat( folio.EstatusUUID ) )
+                        cancelled = False
+                    uuid = folio.UUID
+                    code = folio.EstatusUUID
+                    xmlacuse = response.Acuse
+                    xmlacuse = xmlacuse[xmlacuse.find("<CancelaCFDResponse"):xmlacuse.find("</s:Body>")]
+                    xmlacuse = xmlacuse.replace('<CancelaCFDResponse "', '<CancelaCFDResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance " ')
+                    acuse = xmlacuse
+                    print('------------ uuid ', uuid)
+                    for slip in PayslipModel.browse(uuid_ids.get(uuid)):
+                        slip._l10n_mx_edi_post_cancel_process(cancelled, code, msg, acuse)
+                        slip.state = 'cancel'
+                        slip.move_id.reverse_moves()
+
+        except Exception as e:
+            # inv.l10n_mx_edi_log_error(str(e))
+            msg = str(e)
+            _logger.info('-------------- Error al Cancelar 0 %s '%msg )
+        except Exception as e:
+            # inv.l10n_mx_edi_log_error(str(e))
+            msg = str(e)
+            _logger.info('-------------- Error al Cancelar 1 %s '%msg )
+        return True
+
     @api.one
     def action_payslip_cancel_nomina(self):
-        if self.state == 'draft':
-            self.cancel = 'cancel'
         if not self.l10n_mx_edi_cfdi_uuid:
             self.move_id.reverse_moves()
             self.state = 'cancel'
             return True
-        # Manda Cancelar
         message = ''
         res = self.cancel()
         if res:
             self.state = 'cancel'
             self.move_id.reverse_moves()
-
 
     @api.multi
     def cancel(self):
@@ -1455,6 +1495,34 @@ class HrPayslip(models.Model):
 
     @api.one
     def _l10n_mx_edi_finkok_cancel(self, pac_info):
+        def getCodeStatusSat(code=''):
+            finkok_codes = {
+                '201' : "UUID Cancelado exitosamente",
+                '202' : "UUID Previamente cancelado",
+                '203' : "UUID No corresponde el RFC del Emisor y de quien solicita la cancelación",
+                '205' : "UUID No existe",
+                '300' : "Usuario y contraseña inválidos",
+                '301' : "XML mal formado",
+                '302' : "Sello mal formado o inválido",
+                '303' : "Sello no corresponde a emisor",
+                '304' : "Certificado Revocado o caduco",
+                '305' : "La fecha de emisión no esta dentro de la vigencia del CSD del Emisor",
+                '306' : "El certificado no es de tipo CSD",
+                '307' : "El CFDI contiene un timbre previo",
+                '308' : "Certificado no expedido por el SAT",
+                '401' : "Fecha y hora de generación fuera de rango",
+                '402' : "RFC del emisor no se encuentra en el régimen de contribuyentes",
+                '403' : "La fecha de emisión no es posterior al 01 de enero de 2012",
+                '501' : "Autenticación no válida",
+                '703' : "Cuenta suspendida",
+                '704' : "Error con la contraseña de la llave Privada",
+                '705' : "XML estructura inválida",
+                '706' : "Socio Inválido",
+                '707' : "XML ya contiene un nodo TimbreFiscalDigital",
+                '708' : "No se pudo conectar al SAT",
+            }
+            return finkok_codes.get( code ) or ''
+
         url = pac_info['url']
         username = pac_info['username']
         password = pac_info['password']
@@ -1470,29 +1538,46 @@ class HrPayslip(models.Model):
             cancelled = False
             code = False
             acuse = ''
+            msg = ''
             try:
-                client = Client(url, timeout=20)
+                client = Client(url, cache=None, timeout=80, plugins=[LogPlugin()])
                 invoices_list = client.factory.create("UUIDS")
                 invoices_list.uuids.string = [uuid]
                 response = client.service.cancel(invoices_list, username, password, company_id.vat, cer_pem.replace(
                     '\n', ''), key_pem)
                 _logger.info('-- _nomina_cfdi-reques: Cancel received:\n%s', pprint.pformat(response))
-
             except Exception as e:
                 inv.l10n_mx_edi_log_error(str(e))
                 return False
-            if not hasattr(response, 'Folios'):
-                msg = _('A delay of 2 hours has to be respected before to cancel')
-            else:
-                code = getattr(response.Folios[0][0], 'EstatusUUID', None)
-                cancelled = code in ('201', '202')  # cancelled or previously cancelled
-                # no show code and response message if cancel was success
-                code = '' if cancelled else code
-                msg = '' if cancelled else _("Cancelling got an error")
+
+            try:
+                if hasattr(response, 'CodEstatus'):
+                    if response.CodEstatus:
+                        msg = getCodeStatusSat( response.CodEstatus )
+                        inv.l10n_mx_edi_log_error( msg )
+                if not response.Acuse:
+                    inv.l10n_mx_edi_log_error( 'A delay of 2 hours has to be respected before to cancel' )
+
+                res_folios = ""
+                for folios in response.Folios:
+                    for folio in folios[1]:
+                        if folio.EstatusUUID in ('201', '202'):
+                            cancelled = True
+                            msg = '%s'%( folio.EstatusCancelacion )
+                        else:
+                            msg = '%s'%( getCodeStatusSat( folio.EstatusUUID ) )
+                        code = folio.EstatusUUID
                 xmlacuse = response.Acuse
                 xmlacuse = xmlacuse[xmlacuse.find("<CancelaCFDResponse"):xmlacuse.find("</s:Body>")]
                 xmlacuse = xmlacuse.replace('<CancelaCFDResponse "', '<CancelaCFDResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance " ')
                 acuse = xmlacuse
+
+            except Exception as e:
+                inv.l10n_mx_edi_log_error(str(e))
+                msg = str(e)
+            except Exception as e:
+                inv.l10n_mx_edi_log_error(str(e))
+                msg = str(e)
             return inv._l10n_mx_edi_post_cancel_process(cancelled, code, msg, acuse)
 
     @api.multi

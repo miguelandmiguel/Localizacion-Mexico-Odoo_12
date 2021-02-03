@@ -33,7 +33,6 @@ class HrPayslipEmployees(models.TransientModel):
     company_id = fields.Many2one('res.company', string='Company', readonly=True, copy=False,
         default=lambda self: self.env['res.company']._company_default_get() )
 
-
     @api.model
     def _compute_sheet_tasks(self, use_new_cursor=False, active_id=False, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
         intercompany_uid = None
@@ -84,7 +83,6 @@ class HrPayslipEmployees(models.TransientModel):
         if use_new_cursor:
             self._cr.commit()
 
-
     @api.model
     def _compute_sheet_threading_task(self, use_new_cursor=False, active_id=False, from_date=False, to_date=False, credit_note=False, employee_ids=[]):
         try:
@@ -128,8 +126,6 @@ class HrPayslipEmployees(models.TransientModel):
         threaded_calculation.start()
         return {'type': 'ir.actions.act_window_close'}
 
-
-
     @api.multi
     def compute_sheet_all(self):
         for rec in self:
@@ -141,6 +137,10 @@ class HrPayslipEmployees(models.TransientModel):
                 'employee_ids': [(6, 0, employee_ids.ids)]
             })
             rec.compute_sheet()
+
+
+
+
 
 
 

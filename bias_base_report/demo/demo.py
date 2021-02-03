@@ -25,3 +25,5 @@ action = model_id.action_report_zip()
 2. Se crea el contenido del reporte 1, en formato TXT
 ---- action_create_report_data.
 ---- Recibe el nombre del archivo txt, y el contenido
+
+
