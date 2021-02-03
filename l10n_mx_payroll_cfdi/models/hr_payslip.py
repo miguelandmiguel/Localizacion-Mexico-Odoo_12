@@ -1412,7 +1412,6 @@ class HrPayslip(models.Model):
             certificate_id.content)).decode('UTF-8')
         key_pem = base64.encodestring(certificate_id.get_pem_key(
             certificate_id.key, certificate_id.password)).decode('UTF-8')
-
         uuid_ids = {}
         try:
             client = Client(url, cache=None, timeout=80, plugins=[LogPlugin()])
@@ -1452,11 +1451,11 @@ class HrPayslip(models.Model):
                     xmlacuse = xmlacuse[xmlacuse.find("<CancelaCFDResponse"):xmlacuse.find("</s:Body>")]
                     xmlacuse = xmlacuse.replace('<CancelaCFDResponse "', '<CancelaCFDResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance " ')
                     acuse = xmlacuse
-                    print('------------ uuid ', uuid)
                     for slip in PayslipModel.browse(uuid_ids.get(uuid)):
                         slip._l10n_mx_edi_post_cancel_process(cancelled, code, msg, acuse)
                         slip.state = 'cancel'
-                        slip.move_id.reverse_moves()
+                        if slip.move_id:
+                            slip.move_id.reverse_moves()
 
         except Exception as e:
             # inv.l10n_mx_edi_log_error(str(e))
@@ -1471,14 +1470,16 @@ class HrPayslip(models.Model):
     @api.one
     def action_payslip_cancel_nomina(self):
         if not self.l10n_mx_edi_cfdi_uuid:
-            self.move_id.reverse_moves()
+            if self.move_id:
+                self.move_id.reverse_moves()
             self.state = 'cancel'
             return True
         message = ''
         res = self.cancel()
         if res:
             self.state = 'cancel'
-            self.move_id.reverse_moves()
+            if self.move_id:
+                self.move_id.reverse_moves()
 
     @api.multi
     def cancel(self):
