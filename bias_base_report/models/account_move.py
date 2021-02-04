@@ -8,6 +8,7 @@ from odoo import api, fields, models, _
 
 class AccountMove(models.Model):
     _inherit = "account.move"
+
     @api.multi
     @api.depends('line_ids.debit', 'line_ids.credit')
     def _amount_debit_credit_compute(self):

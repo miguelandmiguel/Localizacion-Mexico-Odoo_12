@@ -6,6 +6,7 @@ import datetime
 class ReportXlsx(models.AbstractModel):
     _name = 'report.bias_base_report.report_xlsx_wiz'
     _inherit = 'report.report_xlsx.abstract'
+    _description = 'XLSX Report'
 
     def __init__(self, pool, cr):
         self.sheet_header = None

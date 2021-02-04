@@ -7,6 +7,7 @@ import datetime
 class ReportTxt(models.AbstractModel):
     _name = 'report.bias_base_report.report_txt_wiz'
     _inherit = 'report.report_txt.abstract'
+    _description = 'Base TXT Report'
 
     def __init__(self, pool, cr):
         self.sheet_header = None

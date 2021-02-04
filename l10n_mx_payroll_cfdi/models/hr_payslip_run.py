@@ -56,7 +56,7 @@ class HrPayslipRun(models.Model):
     company_id = fields.Many2one('res.company', related='journal_id.company_id', string='Company', readonly=False,
         index=True, store=True, copy=False)  # related is required
 
-    eval_state = fields.Boolean('Eval State', compute='_compute_state')
+    eval_state = fields.Boolean('Eval States', compute='_compute_state')
     cfdi_es_sncf = fields.Boolean(string='Entidad SNCF', readonly=True, default=False, oldname="es_sncf")
     cfdi_source_sncf = fields.Selection([
             ('', ''),

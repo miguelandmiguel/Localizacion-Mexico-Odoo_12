@@ -83,7 +83,6 @@ class AccountBankStatement(models.Model):
                         'move_line': aml,
                 })
         _logger.info("-------- %s %s "%(counterpart_aml_dicts, balance) )
-
         return True
 
 
@@ -112,8 +111,6 @@ class AccountBankStatement(models.Model):
                 "import_etl": True
             }
         return ctx
-
-
 
 
     def process_bank_statement_etl_line(self):
@@ -308,10 +305,6 @@ class AccountBankStatement(models.Model):
 # Y01|CE662143 + número de sucursal LXXXX
 # Y15|CE662143 + número de sucursal LXXXX
 # Y16| "CI" + número de sucursal 1, 2 o 3 dígit
-
-
-
-
 
 
 class AccountBankStatementLine(models.Model):

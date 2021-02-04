@@ -65,7 +65,6 @@ class company(models.Model):
 
     # cfdi_test = fields.Boolean(string='MX PAC test environment', default=True)
 
-
     @api.multi
     def action_ws_sat(self, service='', params=None):
         cfdi_host = self.env['ir.config_parameter'].sudo().get_param('cfdi.host', DEFAULT_HOST)
@@ -89,11 +88,6 @@ class company(models.Model):
         if res_datas.get('error'):
             return {'error': '%s'%res_datas['error']}
         return res_datas
-
-
-
-
-
 
     @api.multi
     def cfdi_call_service(self, service_type=False, xml64=False):

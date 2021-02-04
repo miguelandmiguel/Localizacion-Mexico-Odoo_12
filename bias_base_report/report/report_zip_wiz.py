@@ -9,6 +9,7 @@ _logger = logging.getLogger(__name__)
 class ReportZip(models.AbstractModel):
     _name = 'report.bias_base_report.report_zip_wiz'
     _inherit = 'report.report_zip.abstract'
+    _description = 'Zip Report'
 
     def __init__(self, pool, cr):
         self.sheet_header = None

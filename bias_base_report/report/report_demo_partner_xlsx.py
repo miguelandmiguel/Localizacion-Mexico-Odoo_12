@@ -5,6 +5,7 @@ from odoo import models
 class PartnerXlsx(models.AbstractModel):
     _name = 'report.bias_base_report.partner_demo'
     _inherit = 'report.report_xlsx.abstract'
+    _description = 'Report XLSX Demo'
 
     def get_workbook_options(self):
         return {'constant_memory': True}

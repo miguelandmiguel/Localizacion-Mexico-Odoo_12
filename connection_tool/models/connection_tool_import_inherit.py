@@ -89,8 +89,6 @@ def loadDataCSV(csv_path, header):
     csvfile.close()
     return reader
 
-
-
 class OdooFTP():
     def __init__(self, host='', port=21, username='', password='', path='', path_done='', security=True, file_ctrl=False, import_id=False, fileext=False):
         self.host = host

@@ -86,6 +86,7 @@ class report_zip_wiz(models.TransientModel):
 
 class ReportZipBinaryFiles(models.TransientModel):
     _name = 'report.zip.binary.files'
+    _description = 'Report Export ZIP'
 
     name = fields.Char("Name", required=True)
     filereport = fields.Binary(string='Reporte')
