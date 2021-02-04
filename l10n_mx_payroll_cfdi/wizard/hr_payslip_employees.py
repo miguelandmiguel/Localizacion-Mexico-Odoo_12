@@ -142,8 +142,6 @@ class HrPayslipEmployees(models.TransientModel):
 
 
 
-
-
     @api.multi
     def compute_sheet_old(self):
         payslips = self.env['hr.payslip']
