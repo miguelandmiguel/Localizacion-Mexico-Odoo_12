@@ -212,3 +212,4 @@ class HrPayslipRunImportInputsWizard(models.TransientModel):
                 else:
                     continue
         return True
+

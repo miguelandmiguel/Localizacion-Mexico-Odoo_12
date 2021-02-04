@@ -77,3 +77,4 @@ class hrPayslipMessageWizardLines(models.TransientModel):
     wizrun_id = fields.Many2one("hr.payslip.message.wizard", "Wizard", ondelete="cascade")
     payslip_id = fields.Many2one('hr.payslip', string='Payslip')
     message_id = fields.Many2one('mail.message', string='Message')
+

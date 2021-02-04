@@ -41,3 +41,4 @@ class RegistroPatronal(models.Model):
         if not recs:
             recs = self.search([('name', operator, name)] + args, limit=limit)
         return recs.name_get()
+
