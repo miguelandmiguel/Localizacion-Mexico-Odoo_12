@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <template id="recibo">
+        <template id="recibo_old">
             <div class="o_nomina" style="width:100%; min-height:460px; border: 0px solid grey;">
                 <!-- ENCABEZADO -->
                 <table class="info" style="width: 100%  !important; font-size: 10px;">
@@ -184,10 +184,183 @@
             </div>
         </template>
 
+
+
+
+        <template id="recibo">
+            <div class="o_nomina" style="width:100%; min-height:460px; border: 0px solid grey;">
+                <table class="info" style="width: 100%  !important; font-size: 10px;">
+                    <tr>
+                        <td style="text-align: center; " colspan="2">
+                            <h3 style="font-size: 14px;"><strong><t t-esc="o.company_id.name" /></strong></h3>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center; font-size: 11px;" colspan="2"><strong><span><t t-esc="o._getCompanyName()" /></span></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <strong>RFC: <span t-esc="o.company_id.vat"/>&amp;nbsp;&amp;nbsp;</strong>
+                        </td>
+                        <td style="text-align: left; ">
+                            <strong>&amp;nbsp;&amp;nbsp;REG. PAT: <span t-esc="o._get_RegistroPatronal()"/></strong>
+                        </td>
+                    </tr>
+                </table>
+                <br />
+                <table class="info" style="width: 100%  !important; font-size: 10px;">
+                    <tr>
+                        <td>
+                            <span t-esc="o.employee_id.cfdi_code_emp"/> &amp;nbsp;<span t-esc="o.employee_id.cfdi_complete_name"/>
+                        </td>
+                        <td>
+                            <strong>&amp;nbsp;CURP: &amp;nbsp;</strong><span t-esc="o.employee_id.cfdi_curp"/>
+                        </td>
+                        <td>
+                            <strong>&amp;nbsp;RFC: &amp;nbsp;</strong><span t-esc="o.employee_id.cfdi_rfc"/>
+                        </td>
+                        <td>
+                            <strong>&amp;nbsp;NSS: &amp;nbsp;</strong><span t-esc="o.employee_id.cfdi_imss"/>
+                        </td>
+                    </tr>
+                </table>
+                <table class="info" style="width: 100%  !important; font-size: 10px;">
+                    <tr>
+                        <td>
+                            <strong>PUESTO: &amp;nbsp;</strong><span t-esc="o.employee_id.job_id and o.employee_id.job_id.name.replace('/', '')"/>
+                        </td>
+                        <td>
+                            <strong>&amp;nbsp;DIAS TRAB: &amp;nbsp;</strong><span t-esc="o._get_NumDiasPagados()"/>
+                        </td>
+                        <td>
+                            <strong>DEL: &amp;nbsp;</strong><span t-esc="o.date_from"/>
+                        </td>
+                        <td>
+                            <strong>AL: &amp;nbsp;</strong><span t-esc="o.date_to"/>
+                        </td>
+                        <td>
+                            <span>JORNADA: 8 hrs&amp;nbsp;</span>
+                        </td>
+                    </tr>
+                </table>
+                <table class="info" style="width: 100%  !important; font-size: 10px;">
+                    <tr>
+                        <td style="width: 50% !important;">
+                            <strong>DEPTO: &amp;nbsp;</strong><span t-esc="o.employee_id.department_id and o.employee_id.department_id.name.replace('/', '')"/>
+                        </td>
+                        <td style="width: 50% !important;" colspan="3">
+                            <strong>FORMA DE PAGO: &amp;nbsp;</strong><span>99 POR DEFINIR&amp;nbsp;</span>
+                        </td>
+                    </tr>
+                </table>
+                <t t-set="pl" t-value="o.getLinesPDFReport('p') or [] "/>
+                <t t-set="dl" t-value="o.getLinesPDFReport('d') or [] "/>
+                <table class="info" style="width: 100%  !important; font-size: 10px;">
+                    <tr>
+                        <td style="width: 50%; font-size: 10px; text-align: center; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <span><strong>PERCEPCIONES</strong></span>
+                        </td>
+                        <td style="width: 50%; font-size: 10px; text-align: center; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <span><strong>DEDUCCIONES</strong></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; font-size: 9px; text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <table style="width: 100% !important">
+                                <t t-foreach="pl.get('Lines', [])" t-as="l">
+                                    <tr>
+                                        <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Clave')"/></td>
+                                        <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Concepto')"/></td>
+                                        <td style="text-align: right;">
+                                            &amp;nbsp;<span t-esc="l.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                                        </td>
+                                    </tr>
+                                </t>
+                            </table>
+                        </td>
+                        <td style="width: 50%; font-size: 9px; text-align: center; vertical-align:top; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <table style="width: 100% !important">
+                                <t t-foreach="dl.get('Lines', [])" t-as="l">
+                                    <tr>
+                                        <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Clave')"/></td>
+                                        <td style="text-align: left;" >&amp;nbsp;<span t-esc="l.get('Concepto')"/></td>
+                                        <td style="text-align: right;">
+                                            &amp;nbsp;<span t-esc="l.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                                        </td>
+                                    </tr>
+                                </t>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; font-size: 10px; text-align: right; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <strong>TOTAL PERCEPCIONES: </strong> &amp;nbsp;
+                            &amp;nbsp;<span t-esc="pl.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                        </td>
+                        <td style="width: 50%; font-size: 10px; text-align: right; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <strong>TOTAL DEDUCCIONES: </strong> &amp;nbsp;
+                            &amp;nbsp;<span t-esc="dl.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 50%; font-size: 10px; text-align: center; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <strong>VALES DE DESPENSA: </strong> &amp;nbsp;
+                            &amp;nbsp;<span t-esc="o.get_salary_line_total('C109')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                        </td>
+                        <td style="width: 50%; font-size: 10px; text-align: right; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                            <strong>TOTAL A PAGAR: </strong> &amp;nbsp;
+                            &amp;nbsp;<span t-esc="pl.get('Importe') - dl.get('Importe')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <tr style="font-size: 9px;">
+                        <span style="font-size: 9px;">RECIBI DE <strong><t t-esc=" o._getMayusculas( o._getRemoverAcentos(rec.get('EmisorNombre')) ) " /></strong>, LA CANTIDAD <strong><t t-esc="rec.get('AmountText')" /></strong>. QUEDO CONFORME CON LOS CONCEPTOS Y LAS CANTIDADES PAGADAS ASI COMO CON LAS DEDUCCIONES EFECTUADAS, OTORGÁNDOLE A ESTA EL MAS AMPLIO FINIQUITO LIBERATORIO DE OBLIGACIONES QUE EN DERECHO PROCEDA Y NO RESERVÁNDOSE NINGUNA ACCIÓN O DERECHO A EJERCITAR EN SU CONTRA.</span>
+                    </tr>
+                </table>
+                <div>&amp;nbsp;</div>
+                <t t-if="o.l10n_mx_edi_cfdi_uuid">
+                    <t t-set="xml" t-value="o.l10n_mx_edi_get_xml_etree()"/>
+                    <t t-set="tfd" t-value="o.l10n_mx_edi_get_tfd_etree(xml)"/>
+                    <t t-set="tfd_original_string" t-value="o._get_l10n_mx_edi_cadena()"/>
+                    <table class="info" style="width: 100%  !important; font-size: 11px;">
+                        <tr>
+                            <td style="width: 20% !important;">
+                                <div class="barcode" t-if="o.l10n_mx_edi_cfdi_uuid">
+                                    <t t-set="sello" t-value="xml.get('Sello', 'No identificado')[-8:]"/>
+                                    <img style="height: 180px; width: 180px;" alt="Barcode"  t-att-src="'/report/barcode/?type=QR&amp;value=%s' % quote_plus(
+                                        'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?' + keep_query(
+                                            re=o.l10n_mx_edi_cfdi_supplier_rfc, rr=o.l10n_mx_edi_cfdi_customer_rfc,
+                                            tt='%.*f' % (o.currency_id.decimal_places,  float(xml.get('Total')) ), id=o.l10n_mx_edi_cfdi_uuid)
+                                            + '&amp;fe=%s' % quote_plus(
+                                                sello, 'utf-8', 'strict', '=/').replace('%2B', '+'))"/>
+                                </div>
+                            </td>
+                            <td style="vertical-align:top; width: 60% !important;" class="dont-break-out">
+                                <span><strong>Folio Fiscal:&amp;nbsp;</strong><t t-esc="tfd.get('UUID')" /></span><br />
+                                <strong>SELLO SAT:</strong><br />
+                                <div class="digital-stamp-content">
+                                    <span style="font-size: 6px;" t-esc="tfd.get('SelloSAT')"/>
+                                </div>
+                                <span><strong>SELLO DIGITAL:&amp;nbsp;</strong><br />
+                                <span style="font-size: 6px;" t-esc="tfd.get('SelloCFD')"/></span><br />
+                            </td>
+                            <td style="vertical-align:top; width: 20% !important; text-align: center;">
+                                <br /><br /><br /><br /><br /><br />
+                                <div style="border-top: 1px solid #BDBDBD !important; ">
+                                    <strong>FIRMA DEL EMPLEADO</strong>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </t>
+            </div>
+        </template>
+
         <template id="report_hr_payslip_mx_document">
             <t t-call="l10n_mx_payroll_cfdi.nomina_external_layout">
                 <div class="page">
-                    <t t-set="rec" t-value="o and o.getDatasXmlPayslip() or {}"/>
+                    <t t-set="rec" t-value="{}"/>
                     <t t-call="l10n_mx_payroll_cfdi.recibo"/>
                     <!-- Separador -->
                     <div style="width:100%; height:20px; margin-top:20px; border-top: 1px dotted #CCC;"/>

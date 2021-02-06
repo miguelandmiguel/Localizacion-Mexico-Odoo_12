@@ -460,6 +460,39 @@ class HrPayslip(models.Model):
                 'id': agrup.id
             }
         return res
+
+    @api.model
+    def _get_lines_type_report(self, ttype):
+        Model = self.env['ir.model.data']
+        line_ids = self.line_ids
+        tipos = {
+            'p': Model.get_object("l10n_mx_payroll", "catalogo_tipo_percepcion").id,
+            'd': Model.get_object("l10n_mx_payroll", "catalogo_tipo_deduccion").id,
+            'h': Model.get_object("l10n_mx_payroll", "catalogo_tipo_hora_extra").id,
+            'i': Model.get_object("l10n_mx_payroll", "catalogo_tipo_incapacidad").id,
+            'o': Model.get_object("l10n_mx_payroll", "catalogo_tipo_otro_pago").id
+        }
+        lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype] and r.salary_rule_id.appears_on_payslip == True )
+        return lines
+
+    def getLinesPDFReport(self, ttype=''):
+        res = {
+            'Lines': [],
+            'Importe': 0.0
+        }
+        for line in self._get_lines_type_report(ttype):
+            if line.code == 'C109':
+                continue
+            if line.total == 0.0:
+                continue
+            line_tmp = {
+                'Clave': line.code,
+                'Concepto': line.name,
+                'Importe': abs(line.total)
+            }
+            res['Lines'].append( line_tmp )
+            res['Importe'] += abs(line.total)
+        return res
     
     # -------------------------------------------------------------------------
     # Datas for PDF reports
@@ -1430,10 +1463,10 @@ class HrPayslip(models.Model):
             if hasattr(response, 'CodEstatus'):
                 if response.CodEstatus:
                     msg = getCodeStatusSat( response.CodEstatus )
-                    # inv.l10n_mx_edi_log_error( msg )
+                    self.l10n_mx_edi_log_error( 'CodEstatus: %s '%( response.CodEstatus ) )
                     _logger.info('----------- Error Cancel CodEstatus %s '%( response.CodEstatus ) )
             if not response.Acuse:
-                # inv.l10n_mx_edi_log_error( 'A delay of 2 hours has to be respected before to cancel' )
+                self.l10n_mx_edi_log_error( 'A delay of 2 hours has to be respected before to cancel' )
                 _logger.info('A delay of 2 hours has to be respected before to cancel')
 
             res_folios = ""
@@ -1556,8 +1589,8 @@ class HrPayslip(models.Model):
                     if response.CodEstatus:
                         msg = getCodeStatusSat( response.CodEstatus )
                         inv.l10n_mx_edi_log_error( msg )
-                if not response.Acuse:
-                    inv.l10n_mx_edi_log_error( 'A delay of 2 hours has to be respected before to cancel' )
+                # if not response.Acuse:
+                #     inv.l10n_mx_edi_log_error( 'A delay of 2 hours has to be respected before to cancel' )
 
                 res_folios = ""
                 for folios in response.Folios:
