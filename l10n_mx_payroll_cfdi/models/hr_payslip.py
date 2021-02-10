@@ -308,7 +308,6 @@ class HrPayslip(models.Model):
     @api.model
     def _get_payslip_lines(self, contract_ids, payslip_id):
         lines = super(HrPayslip, self)._get_payslip_lines(contract_ids, payslip_id)
-
         ruleModel = self.env['hr.salary.rule']
         fields = ['cfdi_tipo_id', 'cfdi_tipohoras_id', 'cfdi_gravado_o_exento', 'cfdi_codigoagrupador_id', 'cfdi_agrupacion_id', 'cfdi_tipo_neg_id', 'cfdi_tipohoras_neg_id', 'cfdi_gravado_o_exento_neg', 'cfdi_codigoagrupador_neg_id', 'cfdi_agrupacion_neg_id']
         for line in lines:
@@ -505,7 +504,7 @@ class HrPayslip(models.Model):
             'i': Model.get_object("l10n_mx_payroll", "catalogo_tipo_incapacidad").id,
             'o': Model.get_object("l10n_mx_payroll", "catalogo_tipo_otro_pago").id
         }
-        lines = self.line_ids.filtered(lambda r: r.cfdi_tipo_id.id == tipos[ttype] and r.appears_on_payslip == True )
+        lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype] and r.salary_rule_id.appears_on_payslip == True )
         return lines
 
     def getLinesPDFReport(self, ttype=''):
