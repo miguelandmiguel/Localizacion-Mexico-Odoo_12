@@ -304,8 +304,10 @@
                     </tr>
                     <tr>
                         <td style="width: 50%; font-size: 10px; text-align: center; border-right: 1px solid #BDBDBD !important; border-left: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
-                            <strong>VALES DE DESPENSA: </strong> &amp;nbsp;
-                            &amp;nbsp;<span t-esc="o.get_salary_line_total('C109')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                            <t t-if="o.get_salary_line_total('C109') != 0">
+                                <strong>VALES DE DESPENSA: </strong> &amp;nbsp;
+                                &amp;nbsp;<span t-esc="o.get_salary_line_total('C109')" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>&amp;nbsp;&amp;nbsp;
+                            </t>
                         </td>
                         <td style="width: 50%; font-size: 10px; text-align: right; border-right: 1px solid #BDBDBD !important; border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
                             <strong>TOTAL A PAGAR: </strong> &amp;nbsp;
@@ -315,7 +317,7 @@
                 </table>
                 <table>
                     <tr style="font-size: 9px;">
-                        <span style="font-size: 9px;">RECIBI DE <strong><t t-esc=" o._getMayusculas( o._getRemoverAcentos(rec.get('EmisorNombre')) ) " /></strong>, LA CANTIDAD <strong><t t-esc="rec.get('AmountText')" /></strong>. QUEDO CONFORME CON LOS CONCEPTOS Y LAS CANTIDADES PAGADAS ASI COMO CON LAS DEDUCCIONES EFECTUADAS, OTORGÁNDOLE A ESTA EL MAS AMPLIO FINIQUITO LIBERATORIO DE OBLIGACIONES QUE EN DERECHO PROCEDA Y NO RESERVÁNDOSE NINGUNA ACCIÓN O DERECHO A EJERCITAR EN SU CONTRA.</span>
+                        <span style="font-size: 9px;">RECIBI DE <strong><t t-esc="o._get_company_name()" /></strong>, LA CANTIDAD <strong><t t-esc="o.l10n_mx_edi_amount_to_text( pl.get('Importe') - dl.get('Importe') )" /></strong>. QUEDO CONFORME CON LOS CONCEPTOS Y LAS CANTIDADES PAGADAS ASI COMO CON LAS DEDUCCIONES EFECTUADAS, OTORGÁNDOLE A ESTA EL MAS AMPLIO FINIQUITO LIBERATORIO DE OBLIGACIONES QUE EN DERECHO PROCEDA Y NO RESERVÁNDOSE NINGUNA ACCIÓN O DERECHO A EJERCITAR EN SU CONTRA.</span>
                     </tr>
                 </table>
                 <div>&amp;nbsp;</div>

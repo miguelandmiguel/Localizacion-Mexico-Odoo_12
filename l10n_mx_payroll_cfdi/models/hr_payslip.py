@@ -295,16 +295,47 @@ class HrPayslip(models.Model):
         return text.strip()[:size]
 
     @staticmethod
-    def _getRemoverAcentos(self, remover=''):
+    def _getRemoverAcentos(remover=''):
         return remove_accents( remover )
 
     @staticmethod
-    def _getMayusculas(self, palabras='' ):
+    def _getMayusculas(palabras=''):
         return palabras.upper()
 
     # -------------------------------------------------------------------------
     # HELPERS
     # -------------------------------------------------------------------------
+    @api.model
+    def _get_payslip_lines(self, contract_ids, payslip_id):
+        lines = super(HrPayslip, self)._get_payslip_lines(contract_ids, payslip_id)
+
+        ruleModel = self.env['hr.salary.rule']
+        fields = ['cfdi_tipo_id', 'cfdi_tipohoras_id', 'cfdi_gravado_o_exento', 'cfdi_codigoagrupador_id', 'cfdi_agrupacion_id', 'cfdi_tipo_neg_id', 'cfdi_tipohoras_neg_id', 'cfdi_gravado_o_exento_neg', 'cfdi_codigoagrupador_neg_id', 'cfdi_agrupacion_neg_id']
+        for line in lines:
+            rule_ids = ruleModel.search_read([('id', '=', line.get('salary_rule_id'))], fields)
+            total =  float(line.get('quantity', 0.0)) * line.get('amount', 0.0) * line.get('rate', 0.0) / 100
+            if total >= 0:
+                for rule_id in rule_ids:
+                    line['cfdi_tipo_id'] = rule_id.get('cfdi_tipo_id') and rule_id['cfdi_tipo_id'][0] or False
+                    line['cfdi_tipohoras_id'] = rule_id.get('cfdi_tipohoras_id') and rule_id['cfdi_tipohoras_id'][0] or False
+                    line['cfdi_gravado_o_exento'] = rule_id.get('cfdi_gravado_o_exento')  or False
+                    line['cfdi_codigoagrupador_id'] = rule_id.get('cfdi_codigoagrupador_id') and rule_id['cfdi_codigoagrupador_id'][0] or False
+                    line['cfdi_agrupacion_id'] = rule_id.get('cfdi_agrupacion_id') and rule_id['cfdi_agrupacion_id'][0] or False
+            elif total < 0:
+                for rule_id in rule_ids:
+                    line['cfdi_tipo_id'] = rule_id.get('cfdi_tipo_neg_id') and rule_id['cfdi_tipo_neg_id'][0] or False
+                    line['cfdi_tipohoras_id'] = rule_id.get('cfdi_tipohoras_neg_id') and rule_id['cfdi_tipohoras_neg_id'][0] or False
+                    line['cfdi_gravado_o_exento'] = rule_id.get('cfdi_gravado_o_exento_neg') or False
+                    line['cfdi_codigoagrupador_id'] = rule_id.get('cfdi_codigoagrupador_neg_id') and rule_id['cfdi_codigoagrupador_neg_id'][0] or False
+                    line['cfdi_agrupacion_id'] = rule_id.get('cfdi_agrupacion_neg_id') and rule_id['cfdi_agrupacion_neg_id'] or False
+        return lines
+
+    @api.model
+    def _get_company_name(self):
+        cia_name = self.company_id.partner_id.name
+        nombre = self._getRemoverAcentos(cia_name)
+        return self._getMayusculas( nombre )
+
     @api.model
     def _get_l10n_mx_edi_cadena(self):
         self.ensure_one()
@@ -401,7 +432,8 @@ class HrPayslip(models.Model):
                 break
         else:
             message = "<li>Error \n\nNo se encontro entrada de dias trabajados con codigo %s</li>"%code
-            self.action_raisemessage(message)
+            # self.action_raisemessage(message)
+            self.message_post(body=_('%s') % message)
         return dias, horas
 
     @api.model
@@ -420,11 +452,12 @@ class HrPayslip(models.Model):
 
     @api.model
     def _get_code(self, line):
-        if not line.salary_rule_id.cfdi_codigoagrupador_id:
-            message = "<li>Error \n\nNo tiene codigo SAT: %s</li>"%line.salary_rule_id.name
-            self.action_raisemessage(message)
-        codigo = line.salary_rule_id.cfdi_codigoagrupador_id.code
-        nombre = line.salary_rule_id.cfdi_codigoagrupador_id.name
+        if not line.cfdi_codigoagrupador_id:
+            message = "<li>Error \n\nNo tiene codigo SAT: %s</li>"%line.name
+            # self.action_raisemessage(message)
+            self.message_post(body=_('%s') % message)
+        codigo = line.cfdi_codigoagrupador_id.code
+        nombre = line.cfdi_codigoagrupador_id.name
         return codigo, nombre
 
     @api.model
@@ -438,7 +471,7 @@ class HrPayslip(models.Model):
             'i': Model.get_object("l10n_mx_payroll", "catalogo_tipo_incapacidad").id,
             'o': Model.get_object("l10n_mx_payroll", "catalogo_tipo_otro_pago").id
         }
-        lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype])
+        lines = self.line_ids.filtered(lambda r: r.cfdi_tipo_id.id == tipos[ttype] and r.cfdi_codigoagrupador_id.code != False )
         return lines
 
     @api.model
@@ -472,7 +505,7 @@ class HrPayslip(models.Model):
             'i': Model.get_object("l10n_mx_payroll", "catalogo_tipo_incapacidad").id,
             'o': Model.get_object("l10n_mx_payroll", "catalogo_tipo_otro_pago").id
         }
-        lines = self.line_ids.filtered(lambda r: r.salary_rule_id.cfdi_tipo_id.id == tipos[ttype] and r.salary_rule_id.appears_on_payslip == True )
+        lines = self.line_ids.filtered(lambda r: r.cfdi_tipo_id.id == tipos[ttype] and r.appears_on_payslip == True )
         return lines
 
     def getLinesPDFReport(self, ttype=''):
@@ -488,10 +521,10 @@ class HrPayslip(models.Model):
             line_tmp = {
                 'Clave': line.code,
                 'Concepto': line.name,
-                'Importe': abs(line.total)
+                'Importe': line.total
             }
             res['Lines'].append( line_tmp )
-            res['Importe'] += abs(line.total)
+            res['Importe'] += line.total
         return res
     
     # -------------------------------------------------------------------------
@@ -529,7 +562,6 @@ class HrPayslip(models.Model):
         nodo_p = self._get_agrupadorsat_type('p')
         nodo_d = self._get_agrupadorsat_type('d')
         nodo_o = self._get_agrupadorsat_type('o')
-
         Total = float(cfdi.get('Total', '0.0'))
         res = {
             'Serie': cfdi.get('Serie'),
@@ -848,9 +880,7 @@ class HrPayslip(models.Model):
         from l10n_mx_edi_origin, hope the next structure:
             relation type|UUIDs separated by ,"""
         self.ensure_one()
-        _logger.info('------------ tipoRelacion 01 %s '%(self.l10n_mx_edi_origin) )
         if not self.l10n_mx_edi_origin:
-            _logger.info('------------ tipoRelacion 02 %s '%(self.l10n_mx_edi_origin) )
             return None
         origin = self.l10n_mx_edi_origin.split('|')
         uuids = origin[1].split(',') if len(origin) > 1 else []
@@ -891,7 +921,7 @@ class HrPayslip(models.Model):
             }
             for percepcion in nodo_p:
                 tipo_percepcion, nombre_percepcion = self._get_code(percepcion)
-                tipo = percepcion.salary_rule_id.cfdi_gravado_o_exento or 'gravado'
+                tipo = percepcion.cfdi_gravado_o_exento or 'gravado'
                 gravado = percepcion.total if tipo == 'gravado' else 0
                 exento = percepcion.total if tipo == 'exento' else 0
                 if gravado + exento == 0:
@@ -1130,8 +1160,6 @@ class HrPayslip(models.Model):
         if self.company_id.partner_id.city:
             companyName += '  %s'%self.company_id.partner_id.city
         return companyName.upper()
-
-
 
     @api.multi
     def _l10n_mx_edi_create_cfdi_values(self):
