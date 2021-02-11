@@ -91,6 +91,9 @@
             <field name="model">hr.payslip</field>
             <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form"/>
             <field name="arch" type="xml">
+                <button name="action_payslip_done" position="replace">
+                    <button string="Confirm" name="action_payslip_done_cfdi" type="object" states="draft" class="oe_highlight" />
+                </button>
                 <button name="refund_sheet" position="replace"></button>
                 <button name="action_payslip_cancel" position="replace">
                     <button string="Cancel Payslip" name="action_payslip_cancel_nomina" type="object" states="draft,hr_check,confirm,verify,done" class="oe_highlight"/>

@@ -1068,7 +1068,7 @@ class HrPayslip(models.Model):
                     'Concepto': nombre_otro_pago.replace(".", "").replace("/", "").replace("(", "").replace(")", ""),
                     'Importe': "%.2f"%abs(otro_pago.total)
                 }
-                totalOtrosPagos += otro_pago.total
+                totalOtrosPagos += abs(otro_pago.total)
                 #--------------------
                 # Subsidio al empleo
                 #--------------------
@@ -1358,9 +1358,14 @@ class HrPayslip(models.Model):
             cfdi = cfdi_values.pop('cfdi', None)
             if error:
                 _logger.info('Error %s '%error )
+                body = error.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_COMPLEX_TYPE_4: Element '{http://www.sat.gob.mx/nomina12}""", "'")
+                body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_MININCLUSIVE_VALID: Element '{http://www.sat.gob.mx/cfd/3}""", "")
+                body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_MININCLUSIVE_VALID: Element '{http://www.sat.gob.mx/nomina12}""", "")
+                body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_PATTERN_VALID: Element '{http://www.sat.gob.mx/cfd/3}""", '')
+                body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_DATATYPE_VALID_1_2_1: Element '{http://www.sat.gob.mx/cfd/3}""", "")
                 # cfdi failed to be generated
                 payslip.l10n_mx_edi_pac_status = 'retry'
-                payslip.message_post(body=error, subtype='account.mt_invoice_validated')
+                payslip.message_post(body=body, subtype='account.mt_invoice_validated')
                 return {'error': error}
             payslip.l10n_mx_edi_pac_status = 'to_sign'
             filename = ('%s-%s-MX-Payslip-%s.xml' % (
@@ -1406,23 +1411,26 @@ class HrPayslip(models.Model):
         return True
 
     @api.multi
-    def action_payslip_done(self):
+    def action_payslip_done_cfdi(self):
         error = None
         res = self.action_payslip_cfdivalues()
+        print('-------- res ', res)
         if res:
             return False
-        res = super(HrPayslip, self).action_payslip_done()
+        # res = super(HrPayslip, self.with_context(without_compute_sheet=True)).action_payslip_done()
         for rec in self:
             if rec.get_salary_line_total('C99') == 0.0:
+                rec.message_post(body='Nomina en 0. ')
+                rec.write({'state': 'done'})
                 continue
             if rec.contract_id.is_cfdi:
                 version = self.l10n_mx_edi_get_pac_version()
                 number = rec.number.replace('SLIP','').replace('/','')
-                rec.l10n_mx_edi_cfdi_name = ('%s-%s-MX-Payslip-%s.xml' % (
-                    rec.journal_id.code, number, version.replace('.', '-'))).replace('/', '')
+                rec.l10n_mx_edi_cfdi_name = ('%s-%s-MX-Payslip-%s.xml' % (rec.journal_id.code, number, version.replace('.', '-'))).replace('/', '')
                 result = rec.l10n_mx_edi_retry()
                 if result.get('error'):
                     return result
+                rec.write({'state': 'done'})
         return res
 
 

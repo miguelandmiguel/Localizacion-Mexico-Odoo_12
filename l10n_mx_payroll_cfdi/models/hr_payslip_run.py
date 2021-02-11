@@ -235,11 +235,13 @@ class HrPayslipRun(models.Model):
     @api.model
     def confirm_sheet_run_scheduler_tasks(self, use_new_cursor=False, run_id=False):
         domain = [('state', 'in', ['draft','verify']), ('payslip_run_id', '=', run_id)]
-        payslip_to_assign = self.env['hr.payslip'].search(domain, limit=None, order='number desc, id asc')
+
+        payslipModel = self.env['hr.payslip'].with_context(without_compute_sheet=True)
+        payslip_to_assign = payslipModel.search(domain, limit=None, order='number desc, id asc')
         for payslip_chunk in split_every(1, payslip_to_assign.ids):
             try:
                 _logger.info('-------- Confirmar Nomina %s '%( payslip_chunk ) )
-                self.env['hr.payslip'].browse(payslip_chunk).with_context(without_compute_sheet=True).action_payslip_done()
+                payslipModel.browse(payslip_chunk).action_payslip_done_cfdi()
                 if use_new_cursor:
                     self._cr.commit()
             except Exception as e:
