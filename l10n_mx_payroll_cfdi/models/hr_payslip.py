@@ -1757,21 +1757,20 @@ class HrPayslip(models.Model):
         for payslip in self:
             if payslip.l10n_mx_edi_cfdi_uuid and payslip.employee_id.address_home_id.email:
                 try:
-                    payslip.write({'l10n_mx_edi_sendemail': True})
                     ctx.update({
                         'default_model': 'hr.payslip',
-                        'default_res_id': payslip.id,
-                        'default_use_template': bool(template),
-                        'default_template_id': template.id,
+                        'mail_post_autofollow': True,
                         'default_composition_mode': 'comment',
-                        'mail_create_nosubscribe': True
+                        'default_use_template': bool(template),
+                        'default_res_id': payslip.id,
+                        'default_template_id': template.id,
+                        'force_email': True,
+                        'custom_layout': 'mail.mail_notification_light',
                     })
                     vals = mailModel.onchange_template_id(template.id, 'comment', 'hr.payslip', payslip.id)
                     mail_message  = mailModel.with_context(ctx).create(vals.get('value',{}))
-                    mail_message.action_send_mail()
+                    mailsend = mail_message.action_send_mail()
+                    payslip.write({'l10n_mx_edi_sendemail': True})
                 except Exception as e:
                     payslip.message_post(body='Error Al enviar Email Nomina %s: %s '%( payslip.number, e ) )
                     _logger.info('------ Error Al enviar Email Nomina %s:  %s '%( payslip.number, e ) )
-
-
-
