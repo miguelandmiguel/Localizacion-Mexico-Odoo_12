@@ -973,7 +973,7 @@ class HrPayslip(models.Model):
                 ultimo_sueldo_mensual = empleado.cfdi_sueldo_imss * 30
                 percepciones["SeparacionIndemnizacion"] = {
                     'TotalPagado': "%.2f"%totalSepIndem,
-                    'NumAniosServicio': empleado.cfdi_anos_servicio,
+                    'NumAniosServicio': empleado.cfdi_anhos_servicio,
                     'UltimoSueldoMensOrd': ultimo_sueldo_mensual,
                     'IngresoAcumulable': "%.2f"%min(totalSepIndem, ultimo_sueldo_mensual),
                     'IngresoNoAcumulable': "%.2f"%totalSepIndem - ultimo_sueldo_mensual
