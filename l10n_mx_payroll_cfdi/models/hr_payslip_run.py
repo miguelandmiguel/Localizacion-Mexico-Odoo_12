@@ -591,7 +591,7 @@ class HrPayslipRun(models.Model):
         }
 
         for department_id in self.slip_ids.mapped('department_id').sorted(key=lambda a: a.code_seq):
-            body_tmp = {
+            departemento = {
                 'departamento': department_id.code_seq or '',
                 'descripcion': department_id.name or '',
                 'trabajadores': [],
@@ -631,6 +631,7 @@ class HrPayslipRun(models.Model):
                     'gravado': 0.0,
                     'exento': 0.0
                 }
+
                 pLines = slip_id.getLinesPDFReport('p') or []
                 for pl in pLines.get('Lines', []):
                     cfdi_gravado_o_exento = pl['id'].salary_rule_id.cfdi_gravado_o_exento
@@ -645,6 +646,7 @@ class HrPayslipRun(models.Model):
                     trabajador_tmp['percepciones'] += pl_tmp.get('importe')
                     trabajador_tmp['gravado'] += pl_tmp.get('gravado')
                     trabajador_tmp['exento'] += pl_tmp.get('exento')
+
                 dLines = slip_id.getLinesPDFReport('d') or []
                 for dl in dLines.get('Lines', []):
                     dl_tmp = {
@@ -659,36 +661,37 @@ class HrPayslipRun(models.Model):
 
                 trabajador_tmp['pagoTotal'] = round((trabajador_tmp['percepciones'] + trabajador_tmp['deducciones']), 2)
                 # TotalesDepartamento
-                body_tmp['totalPercepciones'] += trabajador_tmp.get('percepciones')
-                body_tmp['totalDeducciones'] += trabajador_tmp.get('deducciones')
-                body_tmp['totalPago'] += trabajador_tmp.get('pagoTotal')
-                body_tmp['totalGravado'] += trabajador_tmp.get('gravado')
-                body_tmp['totalExento'] += trabajador_tmp.get('exento')
-                body_tmp['trabajadores'].append( trabajador_tmp )
+                departemento['totalPercepciones'] += trabajador_tmp.get('percepciones')
+                departemento['totalDeducciones'] += trabajador_tmp.get('deducciones')
+                departemento['totalPago'] += trabajador_tmp.get('pagoTotal')
+                departemento['totalGravado'] += trabajador_tmp.get('gravado')
+                departemento['totalExento'] += trabajador_tmp.get('exento')
+                departemento['trabajadores'].append( trabajador_tmp )
+
             
             # linesP
-            linesP, linesD = {}, {}
-            for trab in body_tmp['trabajadores']:
-                for line in trab.get('linesP'):
-                    if line['concepto'] not in linesP:
-                        linesP[ line['concepto'] ] = line
-                    linesP[ line['concepto'] ]['importe'] += line['importe']
-                    linesP[ line['concepto'] ]['gravado'] += line['gravado']
-                    linesP[ line['concepto'] ]['exento'] += line['exento']
+            linesPD, linesDD = {}, {}
+            for trab in departemento['trabajadores']:
+                for linep in trab.get('linesP'):
+                    lpd = linep.copy()
+                    if lpd['concepto'] not in linesPD:
+                        linesPD[ lpd['concepto'] ] = lpd
+                        linesPD[ lpd['concepto'] ]['importe'] = 0.0
+                    linesPD[ lpd['concepto'] ]['importe'] += linep['importe']
 
                 for lined in trab.get('linesD'):
-                    if lined['concepto'] not in linesD:
-                        linesD[ lined['concepto'] ] = lined
-                    linesD[ lined['concepto'] ]['importe'] += lined['importe']
-                    linesD[ lined['concepto'] ]['gravado'] += lined['gravado']
-                    linesD[ lined['concepto'] ]['exento'] += lined['exento']
+                    lpd = lined.copy()
+                    if lpd['concepto'] not in linesDD:
+                        linesDD[ lpd['concepto'] ] = lpd
+                        linesDD[ lpd['concepto'] ]['importe'] = 0.0
+                    linesDD[ lpd['concepto'] ]['importe'] += lined['importe']
+            departemento['totalTrabajadores'] = len( departemento['trabajadores'] )
+            departemento['linesP'] = list(linesPD.values())
+            departemento['linesD'] = list(linesDD.values())
+            datas['body'].append( departemento )
 
-            body_tmp['linesP'] = list(linesP.values())
-            body_tmp['linesD'] = list(linesD.values())
-            body_tmp['totalTrabajadores'] = len( body_tmp['trabajadores'] )
-            datas['body'].append( body_tmp )
 
-        linesP, linesD = {}, {}
+        linesPF, linesDF = {}, {}
         for body in datas.get('body'):
             datas['footer']['totalTrabajadores'] += body['totalTrabajadores']
             datas['footer']['totalPercepciones'] += body['totalPercepciones']
@@ -697,22 +700,22 @@ class HrPayslipRun(models.Model):
             datas['footer']['totalGravado'] += body['totalGravado']
             datas['footer']['totalExento'] += body['totalExento']
 
-            for line in body.get('linesP'):
-                if line['concepto'] not in linesP:
-                    linesP[ line['concepto'] ] = line
-                linesP[ line['concepto'] ]['importe'] += line['importe']
-                linesP[ line['concepto'] ]['gravado'] += line['gravado']
-                linesP[ line['concepto'] ]['exento'] += line['exento']
+            for linepf in body.get('linesP'):
+                lpf = linepf.copy()
+                if lpf['concepto'] not in linesPF:
+                    linesPF[ lpf['concepto'] ] = lpf
+                    linesPF[ lpf['concepto'] ]['importe'] = 0.0
+                linesPF[ lpf['concepto'] ]['importe'] += linepf['importe']
 
-            for lined in body.get('linesD'):
-                if lined['concepto'] not in linesD:
-                    linesD[ lined['concepto'] ] = lined
-                linesD[ lined['concepto'] ]['importe'] += lined['importe']
-                linesD[ lined['concepto'] ]['gravado'] += lined['gravado']
-                linesD[ lined['concepto'] ]['exento'] += lined['exento']
-        
-        datas['footer']['linesP'] = list(linesP.values())
-        datas['footer']['linesD'] = list(linesD.values())
+            for linedf in body.get('linesD'):
+                ldf = linedf.copy()
+                if ldf['concepto'] not in linesDF:
+                    linesDF[ ldf['concepto'] ] = ldf
+                    linesDF[ ldf['concepto'] ]['importe'] = 0.0
+                linesDF[ ldf['concepto'] ]['importe'] += linedf['importe']
+
+        datas['footer']['linesP'] = list(linesPF.values())
+        datas['footer']['linesD'] = list(linesDF.values())
         return datas
 
 

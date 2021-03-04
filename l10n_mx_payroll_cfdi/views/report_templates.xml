@@ -57,6 +57,154 @@
             <t t-call="l10n_mx_payroll_cfdi.external_layout_nomina"><t t-raw="0"/></t>
         </template>
 
+
+
+        <!--- Reporte Educarte -->
+        <template id="external_layout_educartenomina">
+            <div class="header" t-att-style="report_header_style">
+                <div class="o_nomina_header">
+
+                    <table class="table-border" style="width: 100%  !important; font-size: 11px;">
+                        <tr>
+                            <td style="vertical-align:top; text-align: left; width: 15% !important; ">
+                                <span>&amp;nbsp;</span>
+                            </td>
+                            <td style="vertical-align:top; text-align: center; width: 70% !important; ">
+                                <strong>&amp;nbsp;Reporte de Nómina por Departamento</strong>
+                            </td>
+                            <td style="vertical-align:top; text-align: right; font-size: 8px; width: 15% !important;" >
+                                <span t-field="o.date_start"/>&amp;nbsp;&amp;nbsp; <br />
+                                <div t-if="report_type == 'pdf'">
+                                    &amp;nbsp;Página: <span class="page"/> / <span class="topage"/>&amp;nbsp;&amp;nbsp;
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&amp;nbsp;</td>
+                            <td style="vertical-align:top; text-align: center;">
+                                <strong>&amp;nbsp;<span t-esc="o.company_id.name" /></strong>
+                            </td>
+                            <td>&amp;nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="vertical-align:top; text-align: center; width: 40% !important;" >
+                                            <strong>&amp;nbsp;De la fecha: <t t-esc="o.date_start" t-options='{"widget": "date"}' /> </strong>
+                                        </td>
+                                        <td style="vertical-align:top; text-align: center; width: 40% !important;" >
+                                            <strong>&amp;nbsp;De la fecha: <t t-esc="o.date_end" t-options='{"widget": "date"}' /> </strong>
+                                        </td>
+                                        <td><span><strong>&amp;nbsp;Previo</strong></span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <strong>&amp;nbsp;&amp;nbsp;Nómina: <t t-esc="o.name" /></strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px; width: 25% !important;"><span>&amp;nbsp;&amp;nbsp;Centro</span></td>
+                                        <td style="font-size: 8px; width: 25% !important;"><span>&amp;nbsp;Descripción</span></td>
+                                        <td style="font-size: 8px; width: 25% !important;"><span>&amp;nbsp;R.F.C.</span></td>
+                                        <td style="font-size: 8px; width: 25% !important;"><span>&amp;nbsp;Registro Patronal</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px; width: 20% !important;"><span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Departamento</span></td>
+                                        <td style="font-size: 8px; width: 80% !important;"><span>&amp;nbsp;Descripción</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Trabajador</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Nombre</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;R.F.C.</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Afiliación</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;CURP</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Tarjeta</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Fecha Ingreso</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                      <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Departamento Descripción</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Puesto &amp;nbsp;&amp;nbsp;Descripción</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Tipo Empleado &amp;nbsp;&amp;nbsp;Descripción</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Salario</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;S.D.I.</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;&amp;nbsp;Concepto&amp;nbsp;&amp;nbsp;Descripción</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Fecha</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Concepto</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Dato</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Importe</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Saldo</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Gravado</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Excento</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Cerrado</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Calc.</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+
+                    <div class="clearfix mb8"/>
+                </div>
+            </div>
+            <div class="article o_report_layout_nomina"  t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id" t-att-data-oe-lang="o and o.env.context.get('lang')">
+                <t t-call="web.address_layout"/>
+                <t t-raw="0"/>
+            </div>
+            <div class="footer o_nomina_footer">
+            </div>
+        </template>
+
+        <template id="educartenomina_external_layout">
+            <t t-if="not o" t-set="o" t-value="doc"/>
+            <t t-if="not company">
+                <t t-if="company_id">
+                    <t t-set="company" t-value="company_id"/>
+                </t>
+                <t t-elif="o and 'company_id' in o">
+                    <t t-set="company" t-value="o.company_id.sudo()"/>
+                </t>
+                <t t-else="else">
+                    <t t-set="company" t-value="res_company"/>
+                </t>
+            </t>
+            <t t-call="l10n_mx_payroll_cfdi.external_layout_educartenomina"><t t-raw="0"/></t>
+        </template>
+
+
     </data>
 </odoo>
 

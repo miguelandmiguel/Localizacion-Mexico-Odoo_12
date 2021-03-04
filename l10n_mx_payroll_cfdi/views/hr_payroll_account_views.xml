@@ -19,9 +19,6 @@
         </field>
     </record>
 
-    
-
-
     <!-- Adding Account fields to the Salary Rules -->
     <record id="hr_salary_rule_form_inherit" model="ir.ui.view">
         <field name="name">hr.salary.rule.form.inherit</field>
