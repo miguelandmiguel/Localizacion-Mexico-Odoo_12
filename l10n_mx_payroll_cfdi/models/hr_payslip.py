@@ -184,6 +184,8 @@ class HrPayslip(models.Model):
     cfdi_monto = fields.Monetary(string="Monto CFDI", copy=False, oldname="monto_cfdi")
     cfdi_total = fields.Float(string="Total", copy=False, oldname="total")
 
+    department_id = fields.Many2one('hr.department', related='employee_id.department_id', string='Departamento', store=True, readonly=True)
+
     # l10n_mx_cfdi_uuid = fields.Char(string='Folio Fiscal')
     #--------------------
     # Layout Dispersion
@@ -308,6 +310,9 @@ class HrPayslip(models.Model):
     @api.model
     def _get_payslip_lines(self, contract_ids, payslip_id):
         lines = super(HrPayslip, self)._get_payslip_lines(contract_ids, payslip_id)
+
+        context = dict(self.env.context)
+        cfdi_nomina = context.get('cfdi_nomina', {})
         ruleModel = self.env['hr.salary.rule']
         fields = ['cfdi_tipo_id', 'cfdi_tipohoras_id', 'cfdi_gravado_o_exento', 'cfdi_codigoagrupador_id', 'cfdi_agrupacion_id', 'cfdi_tipo_neg_id', 'cfdi_tipohoras_neg_id', 'cfdi_gravado_o_exento_neg', 'cfdi_codigoagrupador_neg_id', 'cfdi_agrupacion_neg_id']
         for line in lines:
@@ -315,6 +320,10 @@ class HrPayslip(models.Model):
             total =  float(line.get('quantity', 0.0)) * line.get('amount', 0.0) * line.get('rate', 0.0) / 100
             if total >= 0:
                 for rule_id in rule_ids:
+                    totales = cfdi_nomina.get( rule_id['id'], {} )
+                    line['total_exento'] = totales.get('total_exento', 0.0)
+                    line['total_gravado'] = totales.get('total_gravado', 0.0)
+
                     line['cfdi_tipo_id'] = rule_id.get('cfdi_tipo_id') and rule_id['cfdi_tipo_id'][0] or False
                     line['cfdi_tipohoras_id'] = rule_id.get('cfdi_tipohoras_id') and rule_id['cfdi_tipohoras_id'][0] or False
                     line['cfdi_gravado_o_exento'] = rule_id.get('cfdi_gravado_o_exento')  or False
@@ -322,6 +331,10 @@ class HrPayslip(models.Model):
                     line['cfdi_agrupacion_id'] = rule_id.get('cfdi_agrupacion_id') and rule_id['cfdi_agrupacion_id'][0] or False
             elif total < 0:
                 for rule_id in rule_ids:
+                    totales = cfdi_nomina.get( rule_id['id'], {} )
+                    line['total_exento'] = totales.get('total_exento', 0.0)
+                    line['total_gravado'] = totales.get('total_gravado', 0.0)
+
                     line['cfdi_tipo_id'] = rule_id.get('cfdi_tipo_neg_id') and rule_id['cfdi_tipo_neg_id'][0] or False
                     line['cfdi_tipohoras_id'] = rule_id.get('cfdi_tipohoras_neg_id') and rule_id['cfdi_tipohoras_neg_id'][0] or False
                     line['cfdi_gravado_o_exento'] = rule_id.get('cfdi_gravado_o_exento_neg') or False
@@ -518,6 +531,7 @@ class HrPayslip(models.Model):
             if line.total == 0.0:
                 continue
             line_tmp = {
+                'id': line,
                 'Clave': line.code,
                 'Concepto': line.name,
                 'Importe': line.total
@@ -973,10 +987,10 @@ class HrPayslip(models.Model):
                 ultimo_sueldo_mensual = empleado.cfdi_sueldo_imss * 30
                 percepciones["SeparacionIndemnizacion"] = {
                     'TotalPagado': "%.2f"%totalSepIndem,
-                    'NumAniosServicio': empleado.cfdi_anhos_servicio,
-                    'UltimoSueldoMensOrd': ultimo_sueldo_mensual,
+                    'NumAniosServicio': round(empleado.cfdi_anhos_servicio),
+                    'UltimoSueldoMensOrd': "%.2f"%ultimo_sueldo_mensual,
                     'IngresoAcumulable': "%.2f"%min(totalSepIndem, ultimo_sueldo_mensual),
-                    'IngresoNoAcumulable': "%.2f"%totalSepIndem - ultimo_sueldo_mensual
+                    'IngresoNoAcumulable': "%.2f"%(totalSepIndem - ultimo_sueldo_mensual)
                 }
                 percepciones["attrs"]["TotalSeparacionIndemnizacion"] = "%.2f"%totalSepIndem
 
@@ -988,7 +1002,7 @@ class HrPayslip(models.Model):
                 vals = {
                    'TotalUnaExhibición': "%.2f"%totalJubilacion,
                    'IngresoAcumulable': "%.2f"%min(totalJubilacion, ultimo_sueldo_mensual),
-                   'IngresoNoAcumulable': "%.2f"%totalJubilacion - ultimo_sueldo_mensual
+                   'IngresoNoAcumulable': "%.2f"%(totalJubilacion - ultimo_sueldo_mensual)
                 }
                 # Si es en parcialidades
                 if tipo_percepcion == '044': 
@@ -1274,7 +1288,7 @@ class HrPayslip(models.Model):
         # Check with xsd
 
         xmlDatas = etree.tostring(tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')
-        # _logger.info('------------------xmlDatas %s '%xmlDatas )
+        _logger.info('------------------xmlDatas %s '%xmlDatas )
         if xsd_datas:
             try:
                 with BytesIO(xsd_datas) as xsd:
@@ -1363,6 +1377,8 @@ class HrPayslip(models.Model):
                 body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_MININCLUSIVE_VALID: Element '{http://www.sat.gob.mx/nomina12}""", "")
                 body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_PATTERN_VALID: Element '{http://www.sat.gob.mx/cfd/3}""", '')
                 body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_CVC_DATATYPE_VALID_1_2_1: Element '{http://www.sat.gob.mx/cfd/3}""", "")
+                body = body.replace(""":1:0:ERROR:SCHEMASV:SCHEMAV_ELEMENT_CONTENT: Element: '{http://www.sat.gob.mx/nomina12}""", "")
+
                 # cfdi failed to be generated
                 payslip.l10n_mx_edi_pac_status = 'retry'
                 payslip.message_post(body=body, subtype='account.mt_invoice_validated')
@@ -1414,7 +1430,6 @@ class HrPayslip(models.Model):
     def action_payslip_done_cfdi(self):
         error = None
         res = self.action_payslip_cfdivalues()
-        print('-------- res ', res)
         if res:
             return False
         # res = super(HrPayslip, self.with_context(without_compute_sheet=True)).action_payslip_done()

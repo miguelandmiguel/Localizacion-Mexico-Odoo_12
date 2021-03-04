@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <record id="hr_payslip_run_report_educarte_form" model="ir.ui.view">
+            <field name="name">hr.payslip.run.report.educarte.form</field>
+            <field name="model">hr.payslip.run.report.educarte</field>
+            <field name="arch" type="xml">
+                <form string="Reporte Nomina Educarte">
+                    <group colspan="4">
+                        <field name="company_id" readonly="1" />
+                        <field name="run_id" readonly="0" domain="[('company_id', '=', company_id)]" />
+                    </group>
+                    <footer>
+                        <button string="Generar Reporte" name="action_create_reports" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="btn btn-default" special="cancel"/>
+                    </footer>                    
+                </form>
+            </field>
+        </record>
+
+        <record id="action_hr_payslip_run_report_educarte" model="ir.actions.act_window">
+            <field name="name">Reporte Nomina Educarte</field>
+            <field name="res_model">hr.payslip.run.report.educarte</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+           <field name="view_id" ref="hr_payslip_run_report_educarte_form"/>
+           <field name="target">new</field>
+        </record>
+
+    <menuitem id="menu_employee_reports" parent="hr.menu_hr_root" name="Informes" />
+
+    <menuitem
+        id="menu_hr_payslip_run_report_educarte"
+        action="action_hr_payslip_run_report_educarte"
+        parent="hr.menu_hr_reporting_timesheet"
+        sequence="200" />
+
+</odoo>

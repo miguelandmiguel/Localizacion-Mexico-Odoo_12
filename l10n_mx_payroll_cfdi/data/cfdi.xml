@@ -123,22 +123,22 @@
                                                 t-att-ImportePagado="HorasExtra.get('ImportePagado')" />
                                         </t>
                                     </nomina12:Percepcion>
-                                    <t t-if="JubilacionPensionRetiro is not None">
-                                        <nomina12:JubilacionPensionRetiro
-                                            t-att-TotalUnaExhibicion="JubilacionPensionRetiro.get('TotalUnaExhibicion')"
-                                            t-att-TotalParcialidad="JubilacionPensionRetiro.get('TotalParcialidad')"
-                                            t-att-MontoDiario="JubilacionPensionRetiro.get('MontoDiario')"
-                                            t-att-IngresoAcumulable="JubilacionPensionRetiro.get('IngresoAcumulable')"
-                                            t-att-IngresoNoAcumulable="JubilacionPensionRetiro.get('IngresoNoAcumulable')" />
-                                    </t>
-                                    <t t-if="SeparacionIndemnizacion is not None">
-                                        <nomina12:SeparacionIndemnizacion
-                                            t-att-TotalPagado="SeparacionIndemnizacion.get('TotalPagado')"
-                                            t-att-NumAñosServicio="SeparacionIndemnizacion.get('NumAniosServicio')"
-                                            t-att-UltimoSueldoMensOrd="SeparacionIndemnizacion.get('UltimoSueldoMensOrd')"
-                                            t-att-IngresoAcumulable="SeparacionIndemnizacion.get('IngresoAcumulable')"
-                                            t-att-IngresoNoAcumulable="SeparacionIndemnizacion.get('IngresoNoAcumulable')" />
-                                    </t>
+                                </t>
+                                <t t-if="JubilacionPensionRetiro is not None">
+                                    <nomina12:JubilacionPensionRetiro
+                                        t-att-TotalUnaExhibicion="JubilacionPensionRetiro.get('TotalUnaExhibicion')"
+                                        t-att-TotalParcialidad="JubilacionPensionRetiro.get('TotalParcialidad')"
+                                        t-att-MontoDiario="JubilacionPensionRetiro.get('MontoDiario')"
+                                        t-att-IngresoAcumulable="JubilacionPensionRetiro.get('IngresoAcumulable')"
+                                        t-att-IngresoNoAcumulable="JubilacionPensionRetiro.get('IngresoNoAcumulable')" />
+                                </t>
+                                <t t-if="SeparacionIndemnizacion is not None">
+                                    <nomina12:SeparacionIndemnizacion
+                                        t-att-TotalPagado="SeparacionIndemnizacion.get('TotalPagado')"
+                                        t-att-NumAñosServicio="SeparacionIndemnizacion.get('NumAniosServicio')"
+                                        t-att-UltimoSueldoMensOrd="SeparacionIndemnizacion.get('UltimoSueldoMensOrd')"
+                                        t-att-IngresoAcumulable="SeparacionIndemnizacion.get('IngresoAcumulable')"
+                                        t-att-IngresoNoAcumulable="SeparacionIndemnizacion.get('IngresoNoAcumulable')" />
                                 </t>
                             </nomina12:Percepciones>
                         </t>

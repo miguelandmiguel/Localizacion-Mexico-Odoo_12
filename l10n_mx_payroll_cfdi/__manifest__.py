@@ -10,13 +10,14 @@
     'author': "OpenBias",
     'website': "https://bias.com.mx",
     'category': 'Uncategorized',
-    'version': '1.10',
+    'version': '1.11',
     'depends': ['base_setup', 'hr', 'hr_payroll', 'account', 'l10n_mx_payroll'],
     'data': [
         'views/report_templates.xml',
         'data/data_report.xml',
         'data/cfdi.xml',
         'report/report_menu_xml.xml',
+        'report/report_educarte.xml',
         'security/ir.model.access.csv',
         'views/hr_payroll_account_views.xml',
         'views/res_company_views.xml',
@@ -27,7 +28,8 @@
         'data/mail_template_data.xml',
         'wizard/hr_payslip_employees_views.xml',
         'wizard/hr_payslip_message_wizard_views.xml',
-        'wizard/hr_payslip_run_import_inputs_views.xml'
+        'wizard/hr_payslip_run_import_inputs_views.xml',
+        'wizard/hr_payslip_run_report_educarte_views.xml'
     ],
     'installable': True,
     'application': False,

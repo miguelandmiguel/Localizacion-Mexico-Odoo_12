@@ -56,6 +56,9 @@ class HrPayslipRun(models.Model):
     company_id = fields.Many2one('res.company', related='journal_id.company_id', string='Company', readonly=False,
         index=True, store=True, copy=False)  # related is required
 
+    journal_id = fields.Many2one('account.journal', 'Salary Journal', states={'draft': [('readonly', False)]}, readonly=True,
+        required=True, default=lambda self: self.env['account.journal'].search([('type', '=', 'general')], limit=1))
+
     eval_state = fields.Boolean('Eval States', compute='_compute_state')
     cfdi_es_sncf = fields.Boolean(string='Entidad SNCF', readonly=True, default=False, oldname="es_sncf")
     cfdi_source_sncf = fields.Selection([
@@ -563,6 +566,154 @@ class HrPayslipRun(models.Model):
             return banco_datas
 
 
+
+    def _getReportNameEducarte(self):
+        return '%s'%self.name
+
+    def getReportDataEducarte(self):
+        datas = {
+            'header': {
+                'fechaInicial': self.date_start,
+                'fechaFinal': self.date_end,
+                'nominaNombre': self.name
+            },
+            'body': [],
+            'footer': {
+                'totalTrabajadores': 0.0,
+                'totalPercepciones': 0.0,
+                'totalDeducciones': 0.0,
+                'totalPago': 0.0,
+                'totalGravado': 0.0,
+                'totalExento': 0.0,
+                'linesP': [],
+                'linesD': [],
+            }
+        }
+
+        for department_id in self.slip_ids.mapped('department_id').sorted(key=lambda a: a.code_seq):
+            body_tmp = {
+                'departamento': department_id.code_seq or '',
+                'descripcion': department_id.name or '',
+                'trabajadores': [],
+                'linesP': [],
+                'linesD': [],
+                'totalTrabajadores': 0.0,
+                'totalPercepciones': 0.0,
+                'totalDeducciones': 0.0,
+                'totalPago': 0.0,
+                'totalGravado': 0.0,
+                'totalExento': 0.0
+            }
+            for slip_id in self.slip_ids.filtered(lambda r: r.department_id == department_id ):
+                emp_id = slip_id.employee_id
+                trabajador_tmp = {
+                    'trabajador': emp_id.cfdi_code_emp or '',
+                    'nombre': emp_id.display_name or '',
+                    'rfc': emp_id.cfdi_rfc or '',
+                    'afiliacion': emp_id.cfdi_imss or '',
+                    'curp': emp_id.cfdi_curp or '',
+                    'tarjeta': emp_id.cfdi_code_emp or '',
+                    'fechaIngreso': emp_id.cfdi_date_contract or '',
+                    
+                    'departamento': department_id.code_seq or '',
+                    'departamentoDesc': department_id.name or '',
+                    'puesto': emp_id.job_reference or '',
+                    'puestoDesc': emp_id.job_id.name or '',
+                    'tipoEmpleado': '  ',
+                    'salario': slip_id.get_salary_line_total('SD'),
+                    'sdi': slip_id.get_salary_line_total('SDI'),
+
+                    'linesP': [],
+                    'linesD': [],
+                    'percepciones': 0.0,
+                    'deducciones': 0.0,
+                    'pagoTotal': 0.0,
+                    'gravado': 0.0,
+                    'exento': 0.0
+                }
+                pLines = slip_id.getLinesPDFReport('p') or []
+                for pl in pLines.get('Lines', []):
+                    cfdi_gravado_o_exento = pl['id'].salary_rule_id.cfdi_gravado_o_exento
+                    pl_tmp = {
+                        'concepto': pl.get('Clave'),
+                        'descripcion': pl.get('Concepto'),
+                        'importe': pl.get('Importe'),
+                        'gravado': pl.get('Importe') if cfdi_gravado_o_exento == 'gravado' else 0.0,
+                        'exento': pl.get('Importe') if cfdi_gravado_o_exento == 'exento' else 0.0,
+                    }
+                    trabajador_tmp['linesP'].append( pl_tmp )
+                    trabajador_tmp['percepciones'] += pl_tmp.get('importe')
+                    trabajador_tmp['gravado'] += pl_tmp.get('gravado')
+                    trabajador_tmp['exento'] += pl_tmp.get('exento')
+                dLines = slip_id.getLinesPDFReport('d') or []
+                for dl in dLines.get('Lines', []):
+                    dl_tmp = {
+                        'concepto': dl.get('Clave'),
+                        'descripcion': dl.get('Concepto'),
+                        'importe': dl.get('Importe'),
+                        'gravado': 0.0,
+                        'exento': 0.0,
+                    }
+                    trabajador_tmp['linesD'].append( dl_tmp )
+                    trabajador_tmp['deducciones'] += dl.get('Importe')
+
+                trabajador_tmp['pagoTotal'] = round((trabajador_tmp['percepciones'] + trabajador_tmp['deducciones']), 2)
+                # TotalesDepartamento
+                body_tmp['totalPercepciones'] += trabajador_tmp.get('percepciones')
+                body_tmp['totalDeducciones'] += trabajador_tmp.get('deducciones')
+                body_tmp['totalPago'] += trabajador_tmp.get('pagoTotal')
+                body_tmp['totalGravado'] += trabajador_tmp.get('gravado')
+                body_tmp['totalExento'] += trabajador_tmp.get('exento')
+                body_tmp['trabajadores'].append( trabajador_tmp )
+            
+            # linesP
+            linesP, linesD = {}, {}
+            for trab in body_tmp['trabajadores']:
+                for line in trab.get('linesP'):
+                    if line['concepto'] not in linesP:
+                        linesP[ line['concepto'] ] = line
+                    linesP[ line['concepto'] ]['importe'] += line['importe']
+                    linesP[ line['concepto'] ]['gravado'] += line['gravado']
+                    linesP[ line['concepto'] ]['exento'] += line['exento']
+
+                for lined in trab.get('linesD'):
+                    if lined['concepto'] not in linesD:
+                        linesD[ lined['concepto'] ] = lined
+                    linesD[ lined['concepto'] ]['importe'] += lined['importe']
+                    linesD[ lined['concepto'] ]['gravado'] += lined['gravado']
+                    linesD[ lined['concepto'] ]['exento'] += lined['exento']
+
+            body_tmp['linesP'] = list(linesP.values())
+            body_tmp['linesD'] = list(linesD.values())
+            body_tmp['totalTrabajadores'] = len( body_tmp['trabajadores'] )
+            datas['body'].append( body_tmp )
+
+        linesP, linesD = {}, {}
+        for body in datas.get('body'):
+            datas['footer']['totalTrabajadores'] += body['totalTrabajadores']
+            datas['footer']['totalPercepciones'] += body['totalPercepciones']
+            datas['footer']['totalDeducciones'] += body['totalDeducciones']
+            datas['footer']['totalPago'] += body['totalPago']
+            datas['footer']['totalGravado'] += body['totalGravado']
+            datas['footer']['totalExento'] += body['totalExento']
+
+            for line in body.get('linesP'):
+                if line['concepto'] not in linesP:
+                    linesP[ line['concepto'] ] = line
+                linesP[ line['concepto'] ]['importe'] += line['importe']
+                linesP[ line['concepto'] ]['gravado'] += line['gravado']
+                linesP[ line['concepto'] ]['exento'] += line['exento']
+
+            for lined in body.get('linesD'):
+                if lined['concepto'] not in linesD:
+                    linesD[ lined['concepto'] ] = lined
+                linesD[ lined['concepto'] ]['importe'] += lined['importe']
+                linesD[ lined['concepto'] ]['gravado'] += lined['gravado']
+                linesD[ lined['concepto'] ]['exento'] += lined['exento']
+        
+        datas['footer']['linesP'] = list(linesP.values())
+        datas['footer']['linesD'] = list(linesD.values())
+        return datas
 
 
 class ReportBanorteTxt(models.AbstractModel):

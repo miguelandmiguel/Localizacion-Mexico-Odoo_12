@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_hr_payslip_educarte_document">
+            <t t-call="l10n_mx_payroll_cfdi.nomina_external_layout">
+                <div class="page">
+                    <t t-set="header" t-value=" rec.get('header') " />
+                    <table class="table-border" style="width: 100%  !important; font-size: 11px;">
+                        <tr>
+                            <td style="vertical-align:top; text-align: left; width: 15% !important; ">
+                                <span>&amp;nbsp;</span>
+                            </td>
+                            <td style="vertical-align:top; text-align: center; width: 70% !important; ">
+                                <strong>&amp;nbsp;Reporte de Nómina por Departamento</strong>
+                            </td>
+                            <td style="vertical-align:top; text-align: right; font-size: 8px; width: 15% !important;" >
+                                <span t-esc="header.get('fechaInicial')"/> <br />
+                                <span>&amp;nbsp;Página </span><span class="page" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&amp;nbsp;</td>
+                            <td style="vertical-align:top; text-align: center;">
+                                <strong>&amp;nbsp;<span t-esc="o.company_id.name" /></strong>
+                            </td>
+                            <td>&amp;nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="vertical-align:top; text-align: center; width: 40% !important;" >
+                                            <strong>&amp;nbsp;De la fecha: <t t-esc="header.get('fechaInicial')" t-options='{"widget": "date"}' /> </strong>
+                                        </td>
+                                        <td style="vertical-align:top; text-align: center; width: 40% !important;" >
+                                            <strong>&amp;nbsp;De la fecha: <t t-esc="header.get('fechaFinal')" t-options='{"widget": "date"}' /> </strong>
+                                        </td>
+                                        <td><span><strong>&amp;nbsp;Previo</strong></span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <strong>&amp;nbsp;&amp;nbsp;Nómina: <t t-esc="header.get('nominaNombre')" /></strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px; width: 25% !important;"><span>&amp;nbsp;&amp;nbsp;Centro</span></td>
+                                        <td style="font-size: 8px; width: 25% !important;"><span>&amp;nbsp;Descripción</span></td>
+                                        <td style="font-size: 8px; width: 25% !important;"><span>&amp;nbsp;R.F.C.</span></td>
+                                        <td style="font-size: 8px; width: 25% !important;"><span>&amp;nbsp;Regfistro Patronal</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px; width: 20% !important;"><span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Departamento</span></td>
+                                        <td style="font-size: 8px; width: 80% !important;"><span>&amp;nbsp;Descripción</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Trabajador</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Nombre</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;R.F.C.</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Afiliación</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;CURP</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Tarjeta</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Fecha Ingreso</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                      <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important; border-bottom: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Departamento Descripción</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Puesto &amp;nbsp;&amp;nbsp;Descripción</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Tipo Empleado &amp;nbsp;&amp;nbsp;Descripción</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Salario</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;S.D.I.</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="border-top: 1px solid #BDBDBD !important;">
+                                <table style="width: 100% !important">
+                                    <tr>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;&amp;nbsp;Concepto&amp;nbsp;&amp;nbsp;Descripción</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Fecha</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Concepto</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Dato</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Importe</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Saldo</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Gravado</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Excento</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Cerrado</span></td>
+                                        <td style="font-size: 8px;"><span>&amp;nbsp;Calc.</span></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <!-- Cuerpo del Reporte -->
+                    <table class="info" style="width: 100%  !important; font-size: 9px;">
+                        <tr>
+                            <td style="color:red; font-weight: bold;">3</td>
+                            <td style="color:red; font-weight: bold;">Educarte DF</td>
+                            <td style="color:red; font-weight: bold;">FDE030624N43</td>
+                            <td style="color:red; font-weight: bold;">Y6243237101</td>
+                        </tr>
+                    </table>
+                    <t t-set="body" t-value=" rec.get('body') " />
+                    <t t-foreach="body" t-as="b">
+                        <table style="width: 100% !important">
+                            <tr>
+                                <td style="font-size: 8px; width: 20% !important; font-weight: bold;"><span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<t t-esc="b.get('departamento')" /></span></td>
+                                <td style="font-size: 8px; width: 80% !important; font-weight: bold;"><span>&amp;nbsp;<t t-esc="b.get('descripcion')" /></span></td>
+                            </tr>
+                        </table>
+
+                        <table style="width: 100% !important">
+                        <t t-foreach="b.get('trabajadores', [])" t-as="tr">
+                            <t t-set="pl" t-value=" tr.get('linesP') " />
+                            <t t-set="dl" t-value=" tr.get('linesD') " />
+                            <tr>
+                                <td style="font-size: 8px; width: 8% !important ;">
+                                    <span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;
+                                        <t t-esc="tr.get('trabajador')" />&amp;nbsp;
+                                    </span>
+                                </td>
+                                <td style="font-size: 8px; width: 35% !important ;">
+                                    <span>&amp;nbsp;<t t-esc="tr.get('nombre')" /></span>
+                                </td>
+                                <td style="font-size: 8px;"><span>&amp;nbsp;<t t-esc="tr.get('rfc')" /></span></td>
+                                <td style="font-size: 8px;"><span>&amp;nbsp;<t t-esc="tr.get('afiliacion')" /></span></td>
+                                <td style="font-size: 8px;"><span>&amp;nbsp;<t t-esc="tr.get('curp')" /></span></td>
+                                <td style="font-size: 8px;"><span>&amp;nbsp;<t t-esc="tr.get('tarjeta')" /></span></td>
+                                <td style="font-size: 8px;"><span>&amp;nbsp;<t t-esc="tr.get('fechaIngreso')" /></span></td>
+                            </tr>
+                            <tr>
+                                <td style="font-size: 8px; width: 8% !important ;">
+                                    <span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 
+                                        <t t-esc="tr.get('departamento')" />&amp;nbsp;
+                                    </span>
+                                </td>
+                                <td style="font-size: 8px; width: 35% !important ;">
+                                    <span>&amp;nbsp;<t t-esc="tr.get('departamentoDesc')" /></span>
+                                </td>
+                                <td style="font-size: 8px;"><span>&amp;nbsp;<t t-esc="tr.get('puesto')" /></span></td>
+                                <td style="font-size: 8px;"><span>&amp;nbsp;<t t-esc="tr.get('puestoDesc')" /></span></td>
+                                <td style="font-size: 8px;"><span>&amp;nbsp;<t t-esc="tr.get('tipoEmpleado')" /></span></td>
+                                <td style="font-size: 8px; text-align: right;"><span>&amp;nbsp;<t t-esc="tr.get('salario')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</span></td>
+                                <td style="font-size: 8px; text-align: right;"><span>&amp;nbsp;<t t-esc="tr.get('sdi')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</span></td>
+                            </tr>
+                            <tr>
+                                <td colspan="7">
+                                    <table style="width: 100% !important">
+                                        <t t-foreach="pl" t-as="l">
+                                            <tr>
+                                                <td style="font-size: 8px; width: 8% !important ;">
+                                                    <span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 
+                                                        <t t-esc="l.get('concepto')" />&amp;nbsp;
+                                                    </span>
+                                                </td>
+                                                <td style="font-size: 8px; width: 35% !important ;">
+                                                    <span>&amp;nbsp;<t t-esc="l.get('descripcion')" /></span>
+                                                </td>
+                                                <td style="font-size: 8px;"><span>&amp;nbsp;</span></td>
+                                                <td style="font-size: 8px;"><span>&amp;nbsp;</span></td>
+                                                <td style="font-size: 8px; text-align: right;"><span>&amp;nbsp;<t t-esc="l.get('importe')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</span></td>
+                                                <td style="font-size: 8px; text-align: right;"><span>&amp;nbsp;<t t-esc="l.get('gravado')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</span></td>
+                                                <td style="font-size: 8px; text-align: right;"><span>&amp;nbsp;<t t-esc="l.get('exento')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</span></td>
+                                            </tr>
+                                        </t>
+                                        <t t-foreach="dl" t-as="l">
+                                            <tr>
+                                                <td style="font-size: 8px; width: 8% !important ;">
+                                                    <span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 
+                                                        <t t-esc="l.get('concepto')" />&amp;nbsp;
+                                                    </span>
+                                                </td>
+                                                <td style="font-size: 8px; width: 35% !important ;">
+                                                    <span>&amp;nbsp;<t t-esc="l.get('descripcion')" /></span>
+                                                </td>
+                                                <td style="font-size: 8px;"><span>&amp;nbsp;</span></td>
+                                                <td style="font-size: 8px;"><span>&amp;nbsp;</span></td>
+                                                <td style="font-size: 8px; text-align: right;"><span>&amp;nbsp;<t t-esc="l.get('importe')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</span></td>
+                                                <td style="font-size: 8px; text-align: right;"><span>&amp;nbsp;<t t-esc="l.get('gravado')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</span></td>
+                                                <td style="font-size: 8px; text-align: right;"><span>&amp;nbsp;<t t-esc="l.get('exento')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</span></td>
+                                            </tr>
+                                        </t>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="7">
+                                    <table style="width: 100% !important">
+                                        <tr>
+                                            <td style="font-size: 9px; width: 20%">
+                                                <span>&amp;nbsp;Percepciones: &amp;nbsp;&amp;nbsp;</span>
+                                            </td>
+                                            <td style="font-size: 9px; text-align: left;">
+                                                <strong>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<t t-esc="tr.get('percepciones')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</strong>
+                                            </td>
+                                            <td style="font-size: 9px; width: 20%">
+                                                <span>&amp;nbsp;Deducciones: &amp;nbsp;&amp;nbsp;</span>
+                                            </td>
+                                            <td style="font-size: 9px; text-align: left;">
+                                                <strong>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<t t-esc="tr.get('deducciones')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</strong>
+                                            </td>
+                                            <td style="font-size: 9px; width: 20%">
+                                                <span>&amp;nbsp;Pago Total: &amp;nbsp;&amp;nbsp;</span>
+                                            </td>
+                                            <td style="font-size: 9px; text-align: left;">
+                                                <strong>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<t t-esc="tr.get('pagoTotal')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</strong>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td style="font-size: 9px; width: 20%">
+                                                <span>&amp;nbsp;Gravado: &amp;nbsp;&amp;nbsp;</span>
+                                            </td>
+                                            <td style="font-size: 9px; text-align: left;">
+                                                <strong>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<t t-esc="tr.get('gravado')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</strong>
+                                            </td>
+                                            <td style="font-size: 9px; width: 20%">
+                                                <span>&amp;nbsp;Exento: &amp;nbsp;&amp;nbsp;</span>
+                                            </td>
+                                            <td style="font-size: 9px; text-align: left;">
+                                                <strong>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<t t-esc="tr.get('exento')" t-options='{"widget": "float", "precision": 2}' />&amp;nbsp;&amp;nbsp;</strong>
+                                            </td>
+                                            <td style="font-size: 9px; width: 20%">
+                                                <span>&amp;nbsp;</span>
+                                            </td>
+                                            <td style="font-size: 9px; text-align: left;">
+                                                <span>&amp;nbsp;</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="7">
+                                    <div style="width:100%; height:1px; border-top: 1px dotted #CCC;"/>
+                                </td>
+                            </tr>
+                        </t>
+                        </table>
+                        <div style="font-size: 8px !important;" >&amp;nbsp;</div>
+                        <table style="width: 100% !important">
+                            <tr>
+                                <td style="font-size: 10px; width: 20% !important; font-weight: bold;"><strong>Total Departamento: </strong><span>&amp;nbsp;<t t-esc="b.get('departamento')" /></span></td>
+                                <td style="font-size: 10px; width: 80% !important; font-weight: bold;"><span>&amp;nbsp;<t t-esc="b.get('descripcion')" /></span></td>
+                            </tr>
+                        </table>
+                        <div style="font-size: 8px !important;" >&amp;nbsp;</div>
+                        <table style="width: 100% !important">
+                            <tr>
+                                <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Trabajadores: </span></td>
+                                <td style="font-size: 9px; width: 80% !important; font-weight: bold;"><span>&amp;nbsp;<t t-esc="b.get('totalTrabajadores')" /></span></td>
+                            </tr>
+                        </table>
+                        <table style="width: 100% !important">
+                            <tr>
+                                <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Percepciones: </span></td>
+                                <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="b.get('totalPercepciones')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                                <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Deducciones: </span></td>
+                                <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="b.get('totalDeducciones')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                                <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Pago Total: </span></td>
+                                <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="b.get('totalPago')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                            </tr>
+                            <tr>
+                                <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Gravado: </span></td>
+                                <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="b.get('totalGravado')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                                <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Exento: </span></td>
+                                <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="b.get('totalExento')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                                <td style="font-size: 9px; width: 20% !important; font-weight: normal;">&amp;nbsp;</td>
+                                <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;</span></td>
+                            </tr>
+                        </table>
+                        <div style="font-size: 8px !important;" >&amp;nbsp;</div>
+                        <t t-set="bpl" t-value=" b.get('linesP') " />
+                        <t t-set="bdl" t-value=" b.get('linesD') " />
+                        <table style="width: 100% !important">
+                            <tr>
+                                <td style="font-size: 9px; width: 40% !important"><strong>Concepto&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Descripción</strong></td>
+                                <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Dato</strong></td>
+                                <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Percepción</strong></td>
+                                <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Deducción</strong></td>
+                                <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Gravado</strong></td>
+                                <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Exento</strong></td>
+                            </tr>
+                            <t t-foreach="bpl" t-as="pl">
+                                <tr>
+                                    <td style="font-size: 8px; width: 40% !important">
+                                        &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<span><t t-esc="pl.get('concepto')" />&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; <t t-esc="pl.get('descripcion')" /></span>
+                                    </td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('importe')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('gravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('exento')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                </tr>
+                            </t>
+                            <t t-foreach="bdl" t-as="dl">
+                                <tr>
+                                    <td style="font-size: 8px; width: 40% !important">
+                                        &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<span><t t-esc="dl.get('concepto')" />&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; <t t-esc="dl.get('descripcion')" /></span>
+                                    </td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('importe')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('gravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('exento')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                </tr>
+                            </t>
+                            <tr>
+                                <td style="font-size: 9px; width: 40% !important; text-align: right;">
+                                    <span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Subtotal: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</span>
+                                </td>
+                                <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                    <span>0.0 &amp;nbsp;&amp;nbsp;</span>
+                                </td>
+                                <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                    <span><t t-esc="b.get('totalPercepciones')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>
+                                </td>
+                                <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                    <span><t t-esc="b.get('totalDeducciones')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>
+                                </td>
+                                <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                    <span><t t-esc="b.get('totalGravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>
+                                </td>
+                                <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                    <span><t t-esc="b.get('totalExento')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>
+                                </td>
+                            </tr>
+                        </table>
+                        <div style="font-size: 13px !important;" >&amp;nbsp;</div>
+                    </t>
+                    <div style="font-size: 13px !important;" >&amp;nbsp;</div>
+                    <t t-set="footer" t-value=" rec.get('footer') " />
+                    <table style="width: 100% !important">
+                        <tr>
+                            <td style="font-size: 10px; width: 40% !important"><strong>&amp;nbsp; Total General</strong></td>
+                        </tr>
+                    </table>
+                    <table style="width: 100% !important">
+                        <tr>
+                            <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Trabajadores: </span></td>
+                            <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="footer.get('totalTrabajadores')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                            <td style="font-size: 9px; width: 20% !important; font-weight: normal;">&amp;nbsp;</td>
+                            <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;</span></td>
+                            <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>&amp;nbsp;</span></td>
+                            <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;</span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Percepciones: </span></td>
+                            <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="footer.get('totalPercepciones')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                            <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Deducciones: </span></td>
+                            <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="footer.get('totalDeducciones')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                            <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Pago Total: </span></td>
+                            <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="footer.get('totalPago')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Gravado: </span></td>
+                            <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="footer.get('totalGravado')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                            <td style="font-size: 9px; width: 20% !important; font-weight: normal;"><span>Total Exento: </span></td>
+                            <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;<t t-esc="footer.get('totalExento')" t-options='{"widget": "float", "precision": 2}' /></span></td>
+                            <td style="font-size: 9px; width: 20% !important; font-weight: normal;">&amp;nbsp;</td>
+                            <td style="font-size: 9px; font-weight: bold;"><span>&amp;nbsp;</span></td>
+                        </tr>
+                    </table>
+                    <div style="font-size: 13px !important;" >&amp;nbsp;</div>
+                    <t t-set="fpl" t-value=" footer.get('linesP') " />
+                    <t t-set="fdl" t-value=" footer.get('linesD') " />
+                    <table style="width: 100% !important">
+                        <tr>
+                            <td style="font-size: 9px; width: 40% !important"><strong>Concepto&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Descripción</strong></td>
+                            <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Dato</strong></td>
+                            <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Percepción</strong></td>
+                            <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Deducción</strong></td>
+                            <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Gravado</strong></td>
+                            <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Exento</strong></td>
+                        </tr>
+                        <t t-foreach="fpl" t-as="pl">
+                            <tr>
+                                <td style="font-size: 8px; width: 40% !important">
+                                    &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<span><t t-esc="pl.get('concepto')" />&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; <t t-esc="pl.get('descripcion')" /></span>
+                                </td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('importe')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('gravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('exento')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                            </tr>
+                        </t>
+                        <t t-foreach="fdl" t-as="dl">
+                            <tr>
+                                <td style="font-size: 8px; width: 40% !important">
+                                    &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<span><t t-esc="dl.get('concepto')" />&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; <t t-esc="dl.get('descripcion')" /></span>
+                                </td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('importe')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('gravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('exento')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
+                            </tr>
+                        </t>
+                        <tr>
+                            <td style="font-size: 9px; width: 40% !important; text-align: right;">
+                                <span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Total: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</span>
+                            </td>
+                            <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                <span>0.0 &amp;nbsp;&amp;nbsp;</span>
+                            </td>
+                            <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                <span><t t-esc="footer.get('totalPercepciones')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>
+                            </td>
+                            <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                <span><t t-esc="footer.get('totalDeducciones')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>
+                            </td>
+                            <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                <span><t t-esc="footer.get('totalGravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>
+                            </td>
+                            <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
+                                <span><t t-esc="footer.get('totalExento')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </t>
+        </template>
+
+        <template id="report_hr_payslip_educarte">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-set="rec" t-value="o.getReportDataEducarte()" />
+                    <t t-call="l10n_mx_payroll_cfdi.report_hr_payslip_educarte_document" />
+                </t>
+            </t>
+        </template>
+
+    </data>
+    <data>
+        <report 
+            id="hr_payslip_educarte"
+            model="hr.payslip.run"
+            string="Nomina Educarte"
+            report_type="qweb-pdf"
+            name="l10n_mx_payroll_cfdi.report_hr_payslip_educarte"
+            file="l10n_mx_payroll_cfdi.report_hr_payslip_educarte"
+            print_report_name="'NOMINA EDUCARTE - %s' % ( object._getReportNameEducarte() )"  />
+    </data>
+    <data>
+        <record id="l10n_mx_payroll_cfdi.hr_payslip_educarte" model="ir.actions.report">
+            <field name="paperformat_id" ref="l10n_mx_payroll_cfdi.paperformat_us_nomina" />
+        </record>
+    </data>
+</odoo>

@@ -4,6 +4,8 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_is_zero
+from odoo.addons import decimal_precision as dp
+from odoo.tools.safe_eval import safe_eval
 
 from PyPDF2 import PdfFileWriter, PdfFileReader 
 
@@ -44,25 +46,7 @@ class IrAttachment(models.Model):
                 with open(full_path, "wb") as f:
                     out.write(f)
 
-class HrPayslipLine(models.Model):
-    _inherit = 'hr.payslip.line'
 
-    slip_id = fields.Many2one('hr.payslip', string='Pay Slip', required=True, ondelete='cascade', index=True)
-
-    def _get_partner_id(self, credit_account):
-        """
-        Get partner_id of slip line to use in account_move_line
-        """
-        # use partner of salary rule or fallback on employee's address
-        register_partner_id = self.salary_rule_id.register_id.partner_id
-        partner_id = register_partner_id.id or self.slip_id.employee_id.address_home_id.id
-        if credit_account:
-            if register_partner_id or self.salary_rule_id.account_credit.internal_type in ('receivable', 'payable'):
-                return partner_id
-        else:
-            if register_partner_id or self.salary_rule_id.account_debit.internal_type in ('receivable', 'payable'):
-                return partner_id
-        return False
 
 class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
@@ -183,6 +167,27 @@ class HrPayslip(models.Model):
             move.post()
         return res
 
+class HrPayslipLine(models.Model):
+    _inherit = 'hr.payslip.line'
+
+    total_exento = fields.Float(string='Total Exento', digits=dp.get_precision('Payroll') )
+    total_gravado = fields.Float(string='Total Gravado', digits=dp.get_precision('Payroll') )
+    slip_id = fields.Many2one('hr.payslip', string='Pay Slip', required=True, ondelete='cascade', index=True)
+
+    def _get_partner_id(self, credit_account):
+        """
+        Get partner_id of slip line to use in account_move_line
+        """
+        # use partner of salary rule or fallback on employee's address
+        register_partner_id = self.salary_rule_id.register_id.partner_id
+        partner_id = register_partner_id.id or self.slip_id.employee_id.address_home_id.id
+        if credit_account:
+            if register_partner_id or self.salary_rule_id.account_credit.internal_type in ('receivable', 'payable'):
+                return partner_id
+        else:
+            if register_partner_id or self.salary_rule_id.account_debit.internal_type in ('receivable', 'payable'):
+                return partner_id
+        return False
 
 class HrSalaryRule(models.Model):
     _inherit = 'hr.salary.rule'
@@ -192,6 +197,38 @@ class HrSalaryRule(models.Model):
     account_debit = fields.Many2one('account.account', 'Debit Account', domain=[('deprecated', '=', False)])
     account_credit = fields.Many2one('account.account', 'Credit Account', domain=[('deprecated', '=', False)])
 
+    @api.multi
+    def _compute_rule(self, localdict):
+        """
+        :param localdict: dictionary containing the environement in which to compute the rule
+        :return: returns a tuple build as the base/amount computed, the quantity and the rate
+        :rtype: (float, float, float)
+        """
+        self.ensure_one()
+        if self.amount_select == 'fix':
+            try:
+                return self.amount_fix, float(safe_eval(self.quantity, localdict)), 100.0
+            except:
+                raise UserError(_('Wrong quantity defined for salary rule %s (%s).') % (self.name, self.code))
+        elif self.amount_select == 'percentage':
+            try:
+                return (float(safe_eval(self.amount_percentage_base, localdict)),
+                        float(safe_eval(self.quantity, localdict)),
+                        self.amount_percentage)
+            except:
+                raise UserError(_('Wrong percentage base or quantity defined for salary rule %s (%s).') % (self.name, self.code))
+        else:
+            context = dict(self.env.context)
+            try:
+                localdict.update({'total_exento': 0.0, 'total_gravado': 0.0})
+                safe_eval(self.amount_python_compute, localdict, mode='exec', nocopy=True)
+                cfdi_nomina = {'total_gravado': localdict.get("total_gravado"), 'total_exento': localdict.get("total_exento")}
+                context.setdefault('cfdi_nomina', {})[self.id] = cfdi_nomina
+                self.env.context = context
+                return float(localdict['result']), 'result_qty' in localdict and localdict['result_qty'] or 1.0, 'result_rate' in localdict and localdict['result_rate'] or 100.0
+            except:
+                raise UserError(_('Wrong python code defined for salary rule %s (%s).') % (self.name, self.code))    
+
 class HrContract(models.Model):
     _inherit = 'hr.contract'
     _description = 'Employee Contract'
@@ -199,11 +236,6 @@ class HrContract(models.Model):
     analytic_account_id = fields.Many2one('account.analytic.account', 'Analytic Account')
     journal_id = fields.Many2one('account.journal', 'Salary Journal')
 
-class HrPayslipRun(models.Model):
-    _inherit = 'hr.payslip.run'
-
-    journal_id = fields.Many2one('account.journal', 'Salary Journal', states={'draft': [('readonly', False)]}, readonly=True,
-        required=True, default=lambda self: self.env['account.journal'].search([('type', '=', 'general')], limit=1))
 
 class HrRuleInput(models.Model):
     _inherit = 'hr.rule.input'

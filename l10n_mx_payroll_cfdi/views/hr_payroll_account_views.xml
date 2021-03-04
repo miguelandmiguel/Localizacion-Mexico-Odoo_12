@@ -10,8 +10,17 @@
                 <field name="journal_id" required="1"/>
                 <field name="move_id" readonly="1"/>
             </field>
+
+            <xpath expr="//field[@name='line_ids']/form/group/field[@name='salary_rule_id']" position="after">
+                <field name="total_exento"/>
+                <field name="total_gravado"/>
+            </xpath>
+
         </field>
     </record>
+
+    
+
 
     <!-- Adding Account fields to the Salary Rules -->
     <record id="hr_salary_rule_form_inherit" model="ir.ui.view">
