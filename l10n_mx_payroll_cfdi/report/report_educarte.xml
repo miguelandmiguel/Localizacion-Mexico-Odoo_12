@@ -191,7 +191,6 @@
                         <table style="width: 100% !important">
                             <tr>
                                 <td style="font-size: 9px; width: 40% !important"><strong>Concepto&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Descripción</strong></td>
-                                <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Dato</strong></td>
                                 <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Percepción</strong></td>
                                 <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Deducción</strong></td>
                                 <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Gravado</strong></td>
@@ -202,7 +201,6 @@
                                     <td style="font-size: 8px; width: 40% !important">
                                         &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<span><t t-esc="pl.get('concepto')" />&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; <t t-esc="pl.get('descripcion')" /></span>
                                     </td>
-                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
                                     <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('importe')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
                                     <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
                                     <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('gravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
@@ -215,7 +213,6 @@
                                         &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<span><t t-esc="dl.get('concepto')" />&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; <t t-esc="dl.get('descripcion')" /></span>
                                     </td>
                                     <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
-                                    <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
                                     <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('importe')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
                                     <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('gravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
                                     <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('exento')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
@@ -224,9 +221,6 @@
                             <tr>
                                 <td style="font-size: 9px; width: 40% !important; text-align: right;">
                                     <span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Subtotal: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</span>
-                                </td>
-                                <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
-                                    <span>0.0 &amp;nbsp;&amp;nbsp;</span>
                                 </td>
                                 <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
                                     <span><t t-esc="b.get('totalPercepciones')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>
@@ -284,7 +278,6 @@
                     <table style="width: 100% !important">
                         <tr>
                             <td style="font-size: 9px; width: 40% !important"><strong>Concepto&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Descripción</strong></td>
-                            <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Dato</strong></td>
                             <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Percepción</strong></td>
                             <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Deducción</strong></td>
                             <td style="font-size: 9px; font-weight: bold; text-align: center;"><strong>Gravado</strong></td>
@@ -295,7 +288,6 @@
                                 <td style="font-size: 8px; width: 40% !important">
                                     &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<span><t t-esc="pl.get('concepto')" />&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; <t t-esc="pl.get('descripcion')" /></span>
                                 </td>
-                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
                                 <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('importe')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
                                 <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
                                 <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="pl.get('gravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
@@ -308,7 +300,6 @@
                                     &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;<span><t t-esc="dl.get('concepto')" />&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; <t t-esc="dl.get('descripcion')" /></span>
                                 </td>
                                 <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
-                                <td style="font-size: 8px; font-weight: normal; text-align: right;"><span>0.0 &amp;nbsp;&amp;nbsp;</span></td>
                                 <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('importe')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
                                 <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('gravado')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
                                 <td style="font-size: 8px; font-weight: normal; text-align: right;"><span><t t-esc="dl.get('exento')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span></td>
@@ -317,9 +308,6 @@
                         <tr>
                             <td style="font-size: 9px; width: 40% !important; text-align: right;">
                                 <span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Total: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</span>
-                            </td>
-                            <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
-                                <span>0.0 &amp;nbsp;&amp;nbsp;</span>
                             </td>
                             <td style="font-size: 9px; font-weight: normal; border-top: 1px solid #BDBDBD !important; text-align: right;">
                                 <span><t t-esc="footer.get('totalPercepciones')" t-options='{"widget": "float", "precision": 2}' /> &amp;nbsp;&amp;nbsp;</span>

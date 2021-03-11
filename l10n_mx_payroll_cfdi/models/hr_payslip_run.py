@@ -205,6 +205,7 @@ class HrPayslipRun(models.Model):
                 _logger.info('-------- Error al Calcular Nomina %s %s '%( payslip_chunk, e ) )
         if use_new_cursor:
             self._cr.commit()
+
     @api.model
     def _compute_sheet_run_threading_task(self, use_new_cursor=False, run_id=False):
         try:
@@ -219,6 +220,7 @@ class HrPayslipRun(models.Model):
                 except Exception:
                     pass
         return {}
+
     def _compute_sheet_run_threading(self, run_id=False):
         with api.Environment.manage():
             new_cr = self.pool.cursor()
@@ -226,6 +228,7 @@ class HrPayslipRun(models.Model):
             self.env['hr.payslip.run']._compute_sheet_run_threading_task(use_new_cursor=self._cr.dbname, run_id=run_id)
             new_cr.close()
             return {}
+
     def cumpute_sheet_run(self):
         run_id = self.id
         threaded_calculation = threading.Thread(target=self._compute_sheet_run_threading, args=([run_id]))
@@ -424,6 +427,9 @@ class HrPayslipRun(models.Model):
             monto_banco += total
             pp_total = '%.2f'%(total)
             pp_total = str(pp_total).replace('.', '')
+
+            _logger.info('---------- Nom: %s - %s - %s -%s  '%(slip.number, bank_type, cuenta, pp_total ))
+
             res_banco.append((
                 'D',
                 '%s'%( date1 ),
@@ -467,6 +473,89 @@ class HrPayslipRun(models.Model):
             p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'banorte')
             return run_id.dispersion_banorte_datas_datos( p_ids.ids )
 
+    #---------------------------------------
+    #  Dispersion Nominas Banorte Interbancarios
+    #---------------------------------------
+    def dispersion_banorte_interbancarias_datas_datos(self, payslip_ids=[]):
+        #---------------
+        # Header Data 
+        #---------------
+        banco_header = self.company_id.clave_emisora or ''
+        self.application_date_banorte or 'AAAAMMDD'
+        date1 = self.application_date_banorte.strftime("%Y%m%d")
+        indx = 0
+        monto_banco = 0.0
+        # ---------------
+        # Detalle
+        # ---------------
+        res_banco_header, res_banco = [], []
+        for slip in self.env['hr.payslip'].browse(payslip_ids):
+            total = slip.get_salary_line_total('C99')
+            if total <= 0:
+                continue
+            employee_id = slip.employee_id or False
+            bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
+            if not bank_account_id:
+                continue
+            bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
+            if not bank_number:
+                continue
+            indx += 1
+            bank_type = '01'
+            if bank_number != '072':
+                bank_type = '40'
+            cuenta = bank_account_id and bank_account_id.acc_number or ''
+            # cuenta = cuenta[ : len(cuenta) -1 ]
+            # cuenta = cuenta[-10:]
+            monto_banco += total
+            pp_total = '%.2f'%(total)
+            pp_total = str(pp_total).replace('.', '')
+
+            _logger.info('---------- Nom: %s - %s - %s -%s  '%(slip.number, bank_type, cuenta, pp_total ))
+
+            res_banco.append((
+                'D',
+                '%s'%( date1 ),
+                '%s'%( str( employee_id.cfdi_code_emp or '' ).rjust(10, "0") ),
+                '%s'%( str(' ').rjust(40, " ") ),
+                '%s'%( str(' ').rjust(40, " ") ),
+                '%s'%( pp_total.rjust(15, "0") ),
+                '%s'%( bank_number ),
+                '%s'%( bank_type ),
+                '%s'%( cuenta.rjust(18, "0") ),
+                '0',
+                ' ',
+                '00000000',
+                '%s'%( str(' ').rjust(18, " ") ),
+            ))
+        if res_banco:
+            monto_banco = '%.2f'%(monto_banco)
+            monto_banco = str(monto_banco).replace('.', '')
+            res_banco_header = [(
+                'H',
+                'NE',
+                '%s'%( banco_header ),
+                '%s'%( date1 ),
+                '01',
+                '%s'%( str(indx).rjust(6, "0") ),
+                '%s'%( monto_banco.rjust(15, "0") ),
+                '000000',
+                '000000000000000',
+                '000000',
+                '000000000000000',
+                '000000',
+                '0',
+                '%s'%( str(' ').rjust(77, " ") )
+            )]
+        banco_datas = self._save_txt(res_banco_header + res_banco)
+        return banco_datas
+
+
+    @api.multi
+    def dispersion_banorte_inter_datas(self):
+        for run_id in self:
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'inter')
+            return run_id.dispersion_banorte_interbancarias_datas_datos( p_ids.ids )
 
 
     #---------------------------------------
@@ -527,7 +616,7 @@ class HrPayslipRun(models.Model):
         for run_id in self:
             res_banco = []
             indx = 1
-            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'bbva_inter')
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'inter')
             _logger.info('---------- Layout BBVA Inter %s '%( len(p_ids) ) )
             for slip in p_ids:
                 employee_id = slip.employee_id or False
@@ -659,7 +748,7 @@ class HrPayslipRun(models.Model):
                     trabajador_tmp['linesD'].append( dl_tmp )
                     trabajador_tmp['deducciones'] += dl.get('Importe')
 
-                trabajador_tmp['pagoTotal'] = round((trabajador_tmp['percepciones'] + trabajador_tmp['deducciones']), 2)
+                trabajador_tmp['pagoTotal'] = round((trabajador_tmp['percepciones'] - trabajador_tmp['deducciones']), 2)
                 # TotalesDepartamento
                 departemento['totalPercepciones'] += trabajador_tmp.get('percepciones')
                 departemento['totalDeducciones'] += trabajador_tmp.get('deducciones')
@@ -677,7 +766,11 @@ class HrPayslipRun(models.Model):
                     if lpd['concepto'] not in linesPD:
                         linesPD[ lpd['concepto'] ] = lpd
                         linesPD[ lpd['concepto'] ]['importe'] = 0.0
+                        linesPD[ lpd['concepto'] ]['gravado'] = 0.0
+                        linesPD[ lpd['concepto'] ]['exento'] = 0.0
                     linesPD[ lpd['concepto'] ]['importe'] += linep['importe']
+                    linesPD[ lpd['concepto'] ]['gravado'] += linep['gravado']
+                    linesPD[ lpd['concepto'] ]['exento'] += linep['exento']
 
                 for lined in trab.get('linesD'):
                     lpd = lined.copy()
@@ -705,7 +798,11 @@ class HrPayslipRun(models.Model):
                 if lpf['concepto'] not in linesPF:
                     linesPF[ lpf['concepto'] ] = lpf
                     linesPF[ lpf['concepto'] ]['importe'] = 0.0
+                    linesPF[ lpf['concepto'] ]['gravado'] = 0.0
+                    linesPF[ lpf['concepto'] ]['exento'] = 0.0
                 linesPF[ lpf['concepto'] ]['importe'] += linepf['importe']
+                linesPF[ lpf['concepto'] ]['gravado'] += linepf['gravado']
+                linesPF[ lpf['concepto'] ]['exento'] += linepf['exento']
 
             for linedf in body.get('linesD'):
                 ldf = linedf.copy()
@@ -733,6 +830,23 @@ class ReportBanorteTxt(models.AbstractModel):
     def generate_txt_reportname(self, objs):
         company_id = self.env.user.company_id
         return '%s.PAG'%( company_id.clave_emisora or 'DispersionBanorte.txt' )
+
+class ReportBanorteInterTxt(models.AbstractModel):
+    _name = 'report.l10n_mx_payroll_cfdi.dispersionbanorteintertxt'
+    _inherit = 'report.report_txt.abstract'
+
+    def __init__(self, pool, cr):
+        self.sheet_header = None
+
+    def generate_txt_report(self, txtfile, data, objects):
+        body = objects.dispersion_banorte_inter_datas()
+        txtfile.write(b'%s'%body.encode('utf-8'))
+
+    def generate_txt_reportname(self, objs):
+        company_id = self.env.user.company_id
+        return '%s.PAG'%( company_id.clave_emisora or 'DispersionBanorte.txt' )
+
+
 
 
 class ReportBBVATxt(models.AbstractModel):

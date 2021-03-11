@@ -193,7 +193,7 @@ class HrPayslip(models.Model):
     layout_nomina = fields.Selection([
             ('banorte', 'Banorte'),
             ('bbva', 'BBVA Bancomer'),
-            ('bbva_inter', 'BBVA Bancomer_inter'),
+            ('inter', 'Interbancarios'),
             ('efectivo', 'Efectivo')
         ], string='Dispersion Nomina', default='efectivo', compute='_compute_dispersionnomina')
 
@@ -206,6 +206,15 @@ class HrPayslip(models.Model):
             if not bic:
                 payslip.layout_nomina = layout_nomina
                 continue
+
+            if bic == '012':
+                layout_nomina = 'bbva'
+            elif bic == '072':
+                layout_nomina = 'banorte'
+            else:
+                layout_nomina = 'inter'
+
+            """
             if bic == '012':
                 layout_nomina = 'bbva'
             else:
@@ -216,6 +225,7 @@ class HrPayslip(models.Model):
                         layout_nomina = 'banorte'
                     elif bic not in ['012', '072']:
                         layout_nomina = 'bbva_inter'
+            """
             payslip.layout_nomina = layout_nomina
 
     @api.one
