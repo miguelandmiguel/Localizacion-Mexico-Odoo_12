@@ -93,12 +93,14 @@
                                 <field name="l10n_mx_edi_coppel_totallotes" attrs="{'required':[('l10n_mx_edi_inv_addenda', '!=', False)]}" />
                             </group>
                             <group string="Muebles" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}">
-                                <field name="l10n_mx_edi_coppel_fechapromesaent" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
+                                <field name="l10n_mx_edi_coppel_fechapromesaent" attrs="{'required':[('l10n_mx_edi_coppel_type', '=', '1')], 'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
                                 <field name="l10n_mx_edi_coppel_bodegadest" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
                                 <field name="l10n_mx_edi_coppel_bodegarecep" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
                                 <field name="l10n_mx_edi_coppel_fleteCaja" string="Nombre Fletero" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
                                 <field name="l10n_mx_edi_coppel_regioncel" />
                                 <field name="l10n_mx_edi_coppel_nopedimento" string="Aduana" attrs="{'required':[('l10n_mx_edi_coppel_type', '=', 1)]}" />
+                                <field name="l10n_mx_edi_coppel_cotizaoro" />
+                                <field name="l10n_mx_edi_coppel_totalpeso" string="Total Peso Joyeria" />
                             </group>
                             <group string="Cargos / Desc. Muebles" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}">
                                 <field name="l10n_mx_edi_coppel_allowancecharge" />
@@ -124,9 +126,26 @@
                                             <field name="invoice_id" invisible="1" />
                                             <field name="line_id" invisible="1" />
                                             <field name="l10n_mx_edi_coppel_palletqty" string="Pallet Quantity" />
-                                            <field name="l10n_mx_edi_coppel_palletprepactqty" string="Pallet Unidad de Empaque" />
                                             <field name="l10n_mx_edi_coppel_palletdesc" />
+                                            <field name="l10n_mx_edi_coppel_modelo" required="1" />
+                                            <field name="l10n_mx_edi_coppel_nolote" />
+                                            <field name="l10n_mx_edi_coppel_proddate" attrs="{'required':[('l10n_mx_edi_coppel_nolote', '!=', False)], 'invisible':[('l10n_mx_edi_coppel_nolote', '=', False)]}" />
+                                        </group>
+                                        <group>
+                                            <field name="l10n_mx_edi_coppel_palletprepactqty" string="Pallet Unidad de Empaque" />
                                             <field name="l10n_mx_edi_coppel_palletmethod" string="Pallet Pago de transporte de embalaje" />
+                                        </group>
+                                    </group>
+                                    <group>
+                                        <group string="Composicion">
+                                            <field name="l10n_mx_edi_coppel_compmaterial" string="Material" />
+                                            <field name="l10n_mx_edi_coppel_compgrmrelleno" string="Gramaje" />
+                                            <field name="l10n_mx_edi_coppel_compgrmrellenoudm" string="Gramaje U de Medida" />
+                                            <field name="l10n_mx_edi_coppel_comppeso" string="Peso" />
+                                            <field name="l10n_mx_edi_coppel_comppesoudm" string="Peso U de Medida" />
+                                        </group>
+                                        <group string="Composicion Detalle Joyeria">
+                                            <field name="l10n_mx_edi_coppel_compkilataje" string="Kilataje" />
                                         </group>
                                     </group>
                                 </form>

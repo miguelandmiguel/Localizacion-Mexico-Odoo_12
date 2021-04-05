@@ -70,6 +70,16 @@ class AccountInvoiceLineCoppel(models.Model):
     line_id = fields.Many2one('account.invoice.line', string="Invoice Line")
     invoice_id = fields.Many2one('account.invoice', string="Invoice")
     
+    l10n_mx_edi_coppel_compmaterial = fields.Char(string='Material ')
+    l10n_mx_edi_coppel_compgrmrelleno = fields.Float(string='Gramaje ')
+    l10n_mx_edi_coppel_compgrmrellenoudm = fields.Char(string='U. de Medida ')
+    l10n_mx_edi_coppel_compkilataje = fields.Float(string='Kilataje ')
+    l10n_mx_edi_coppel_comppeso = fields.Float(string='Peso ')
+    l10n_mx_edi_coppel_comppesoudm = fields.Char(string='Peso UdM')
+
+    l10n_mx_edi_coppel_proddate = fields.Char(string='Fecha de Produccion ')
+    l10n_mx_edi_coppel_nolote = fields.Char(string='No Lote ')
+    l10n_mx_edi_coppel_modelo = fields.Char(string='Modelo ')
     l10n_mx_edi_coppel_palletqty = fields.Integer(string="Pallet Quantity", default=0)
     l10n_mx_edi_coppel_palletprepactqty = fields.Integer(string="Unidad de Embarque", default=0)
     l10n_mx_edi_coppel_palletdesc = fields.Selection([
@@ -139,6 +149,10 @@ class AccountInvoice(models.Model):
     l10n_mx_edi_coppel_regioncel = fields.Selection(REGIONCEL, string="Region Celular")
     l10n_mx_edi_coppel_nopedimento = fields.Char(string='Numero de Pedimento ')
 
+    l10n_mx_edi_coppel_cotizaoro = fields.Float(string='Cotizacion del Oro.', help="Solo Facturacion de Joyerias")
+    l10n_mx_edi_coppel_totalpeso = fields.Float(string='Total Peso.', help="Indica el peso total en gramos de las lineas de articulo. Solo Facturacion de Joyerias")
+    l10n_mx_edi_coppel_totalpesoudm = fields.Float(string='Total Peso UdM.', help="Indica el peso total en gramos de las lineas de articulo. Solo Facturacion de Joyerias")
+
     def action_generate_linescoppel(self):
         if self.state not in ['draft', 'open']:
             return True
@@ -201,16 +215,26 @@ class AccountInvoice(models.Model):
                 'alternateIdType': 'BUYER_ASSIGNED' if alternateId else 'SUPPLIER_ASSIGNED',
                 'codigo': line.product_id.l10n_mx_edi_coppel_codigo or '',
                 'talla': line.product_id.l10n_mx_edi_coppel_talla or '',
-                'descripcion': line.name or '',
+                'descripcion': line.name[:35] or '',
                 'cantidad': line.quantity,
-                'uom': line.uom_id.name,
+                'uom': (line.uom_id.name or '').replace('(', '').replace(')', '').replace('/', ''),
                 'grossPrice': float(grossPrice),
                 'netPrice': float(grossPrice),
                 'palletQuantity': line_coppel.l10n_mx_edi_coppel_palletqty or 0,
                 'palletDescription': line_coppel.l10n_mx_edi_coppel_palletdesc or 'BOX',
                 'methodOfPayment': line_coppel.l10n_mx_edi_coppel_palletmethod or 'PREPAID_BY_SELLER',
                 'prepactCant': line_coppel.l10n_mx_edi_coppel_palletprepactqty or 0,
-                'totalLineAmount': ( float(grossPrice) * line.quantity )
+                'modelo': line_coppel.l10n_mx_edi_coppel_modelo or False,
+                'lotnumber': line_coppel.l10n_mx_edi_coppel_nolote or False,
+                'productionDate': line_coppel.l10n_mx_edi_coppel_proddate or False,
+                'totalLineAmount': ( float(grossPrice) * line.quantity ),
+
+                'compMaterial': line_coppel.l10n_mx_edi_coppel_compmaterial or False,
+                'compGrmRelleno': line_coppel.l10n_mx_edi_coppel_compgrmrelleno or False,
+                'compGrmRellenoUdM': line_coppel.l10n_mx_edi_coppel_compgrmrellenoudm or False,
+                'compKilataje': line_coppel.l10n_mx_edi_coppel_compkilataje or False,
+                'compPeso': line_coppel.l10n_mx_edi_coppel_comppeso or False,
+                'compPesoUdM': line_coppel.l10n_mx_edi_coppel_comppesoudm or False,
             })
             indx += 1
         documentStatus = 'ORIGINAL'
@@ -227,13 +251,13 @@ class AccountInvoice(models.Model):
         TotalLotes = self.l10n_mx_edi_coppel_totallotes if (self.l10n_mx_edi_coppel_totallotes >= 1) else lenTotalLotes
         cadena = self._get_l10n_mx_edi_cadena()
 
-        DeliveryDate = str(self.l10n_mx_edi_coppel_deliverydate or '').replace('-', '')
+        # DeliveryDate = str(self.l10n_mx_edi_coppel_deliverydate or '').replace('-', '')
+        DeliveryDate = self.l10n_mx_edi_coppel_deliverydate or ''
 
-        FechaPromesaEnt = False
+        FechaPromesaEnt = self.l10n_mx_edi_coppel_fechapromesaent
         ReferenceDate = self.l10n_mx_edi_coppel_refdate
         if self.l10n_mx_edi_coppel_type == '2':
             ReferenceDate = str(self.l10n_mx_edi_coppel_refdate or '').replace('-', '')
-            FechaPromesaEnt = self.l10n_mx_edi_coppel_fechapromesaent
 
         res = {
             'adendaType': self.l10n_mx_edi_coppel_type,
@@ -259,6 +283,9 @@ class AccountInvoice(models.Model):
             'bodegaReceptora': self.l10n_mx_edi_coppel_bodegarecep or False,
             'RegionCel': self.l10n_mx_edi_coppel_regioncel or False,
             'noPedimento': self.l10n_mx_edi_coppel_nopedimento or False,
+            'cotizaOro': self.l10n_mx_edi_coppel_cotizaoro or False,
+            'totalPeso': self.l10n_mx_edi_coppel_totalpeso or False,
+            'totalPesoUdM': self.l10n_mx_edi_coppel_totalpesoudm or False,
 
             'fleteCaja': self.l10n_mx_edi_coppel_fleteCaja or False,
             'allowanceChargeType': self.l10n_mx_edi_coppel_allowancecharge or 'ALLOWANCE_GLOBAL',

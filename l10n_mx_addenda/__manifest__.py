@@ -15,8 +15,7 @@
     'data': [
         'security/ir.model.access.csv',
         'data/addenda/coppel.xml',
-        'views/views.xml',
-        # 'views/templates.xml',
+        'views/account_invoice_views.xml',
     ]
 }
 
