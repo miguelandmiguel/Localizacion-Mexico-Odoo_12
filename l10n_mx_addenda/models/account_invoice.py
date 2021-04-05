@@ -251,8 +251,8 @@ class AccountInvoice(models.Model):
         TotalLotes = self.l10n_mx_edi_coppel_totallotes if (self.l10n_mx_edi_coppel_totallotes >= 1) else lenTotalLotes
         cadena = self._get_l10n_mx_edi_cadena()
 
-        # DeliveryDate = str(self.l10n_mx_edi_coppel_deliverydate or '').replace('-', '')
-        DeliveryDate = self.l10n_mx_edi_coppel_deliverydate or ''
+        DeliveryDate = str(self.l10n_mx_edi_coppel_deliverydate or '').replace('-', '')
+        # DeliveryDate = self.l10n_mx_edi_coppel_deliverydate or ''
 
         FechaPromesaEnt = self.l10n_mx_edi_coppel_fechapromesaent
         ReferenceDate = self.l10n_mx_edi_coppel_refdate
