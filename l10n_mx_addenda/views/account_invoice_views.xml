@@ -93,7 +93,7 @@
                                 <field name="l10n_mx_edi_coppel_totallotes" attrs="{'required':[('l10n_mx_edi_inv_addenda', '!=', False)]}" />
                             </group>
                             <group string="Muebles" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}">
-                                <field name="l10n_mx_edi_coppel_fechapromesaent" attrs="{'required':[('l10n_mx_edi_coppel_type', '=', '1')], 'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
+                                <field name="l10n_mx_edi_coppel_fechapromesaent" attrs="{'required':[('l10n_mx_edi_inv_addenda', '!=', False), ('l10n_mx_edi_coppel_type', '=', '1')], 'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
                                 <field name="l10n_mx_edi_coppel_bodegadest" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
                                 <field name="l10n_mx_edi_coppel_bodegarecep" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
                                 <field name="l10n_mx_edi_coppel_fleteCaja" string="Nombre Fletero" attrs="{'invisible':[('l10n_mx_edi_coppel_type', '!=', '1')]}"/>
