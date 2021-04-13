@@ -945,8 +945,10 @@ class HrPayslip(models.Model):
             for percepcion in nodo_p:
                 tipo_percepcion, nombre_percepcion = self._get_code(percepcion)
                 tipo = percepcion.cfdi_gravado_o_exento or 'gravado'
-                gravado = percepcion.total if tipo == 'gravado' else 0
-                exento = percepcion.total if tipo == 'exento' else 0
+                # gravado = percepcion.total if tipo == 'gravado' else 0
+                # exento = percepcion.total if tipo == 'exento' else 0
+                exento = percepcion.total_exento
+                gravado = percepcion.total_gravado
                 if gravado + exento == 0:
                     continue
                 nombre_percepcion = percepcion.name or ''

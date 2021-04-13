@@ -47,7 +47,6 @@ class IrAttachment(models.Model):
                     out.write(f)
 
 
-
 class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
