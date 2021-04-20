@@ -1062,7 +1062,7 @@ class HrPayslip(models.Model):
             if (lines_d and attrs_d):
                 totalDeducciones = totalD + retenido
                 deducciones = {
-                    'totalDeducciones': abs(totalD + retenido),
+                    'totalDeducciones': abs(totalD) + abs(retenido),
                     'lines': lines_d,
                     'attrs': attrs_d
                 }
