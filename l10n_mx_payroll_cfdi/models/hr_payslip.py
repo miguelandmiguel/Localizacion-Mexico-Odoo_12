@@ -996,7 +996,7 @@ class HrPayslip(models.Model):
                 #-------------------
                 # Nodo indemnización
                 #-------------------
-                ultimo_sueldo_mensual = self.get_salary_line_total('SD')
+                ultimo_sueldo_mensual = self.get_salary_line_total('SD') * 30
                 percepciones["SeparacionIndemnizacion"] = {
                     'TotalPagado': "%.2f"%totalSepIndem,
                     'NumAniosServicio': round(empleado.cfdi_anhos_servicio),
@@ -1007,7 +1007,7 @@ class HrPayslip(models.Model):
                 percepciones["attrs"]["TotalSeparacionIndemnizacion"] = "%.2f"%totalSepIndem
 
             if totalJubilacion:
-                ultimo_sueldo_mensual = self.get_salary_line_total('SD')
+                ultimo_sueldo_mensual = self.get_salary_line_total('SD') * 30
                 #-------------------
                 # Nodo Jubilación
                 #-------------------
