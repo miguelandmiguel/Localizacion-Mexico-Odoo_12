@@ -1463,6 +1463,7 @@ class HrPayslip(models.Model):
 
     #--------------------------------
     # Proceso cancelar timbrado batch
+    # Cancelacion Masiva
     #--------------------------------
     @api.multi
     def action_payslip_cancel_cfdis(self):
@@ -1801,3 +1802,19 @@ class HrPayslip(models.Model):
                 except Exception as e:
                     payslip.message_post(body='Error Al enviar Email Nomina %s: %s '%( payslip.number, e ) )
                     _logger.info('------ Error Al enviar Email Nomina %s:  %s '%( payslip.number, e ) )
+
+
+    def reprocesarNomina(self):
+        for payslip in self:
+            contract_ids = payslip.contract_id.ids
+            for lineDict in payslip._get_payslip_lines(contract_ids, payslip.id):
+                total_exento = lineDict.get('total_exento')
+                total_gravado = lineDict.get('total_gravado')
+                for line in payslip.line_ids.filtered(lambda r: r.salary_rule_id.id == lineDict.get('salary_rule_id') and r.code == lineDict.get('code') ):
+                    line.total_exento = total_exento
+                    line.total_gravado = total_gravado
+                    _logger.info(' [%s] - %s Lines %s %s - %s, LE %s - LG %s - LDE %s - LDG %s '%(
+                        payslip.id, payslip.employee_id.display_name,
+                        line.id, line.code, line.total, line.total_exento, line.total_gravado, total_exento, total_gravado) )
+        return True
+
