@@ -99,13 +99,9 @@ class AccountInvoice(models.Model):
 
     @api.one
     def _compute_edi_inv_addenda(self):
-        addenda = (
-            self.partner_id.l10n_mx_edi_addenda or
-            self.partner_id.commercial_partner_id.l10n_mx_edi_addenda)
-        add_addenda = False
-        if addenda:
-            add_addenda = True
-        self.l10n_mx_edi_inv_addenda = add_addenda
+        addenda_coppel = self.env.ref('l10n_mx_addenda.l10n_mx_edi_addenda_coppel_muebles', raise_if_not_found=False)
+        addenda = (self.partner_id.l10n_mx_edi_addenda or self.partner_id.commercial_partner_id.l10n_mx_edi_addenda)
+        self.l10n_mx_edi_inv_addenda = True if addenda.id == addenda_coppel.id else False
 
     @api.one
     @api.depends('invoice_line_ids')

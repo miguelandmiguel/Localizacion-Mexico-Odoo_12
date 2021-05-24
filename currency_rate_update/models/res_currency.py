@@ -3,10 +3,13 @@
 import time, datetime
 from dateutil.relativedelta import relativedelta
 import logging
+from pytz import timezone
 from suds.client import Client
 import requests
-
 from odoo import api, fields, models, tools, _
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
+
+BANXICO_DATE_FORMAT = '%d/%m/%Y'
 
 _logger = logging.getLogger(__name__)
 
@@ -87,7 +90,7 @@ class Currency(models.Model):
             tipomxn = next(tipomxn for tipomxn in tipoCambios.get('MXN') if tipomxn["fecha"] == tipogbp['fecha'] )
             tipogbp['importe_real'] = tipogbp.get('importe')
             tipogbp['importe'] = tipomxn.get('importe', 0.0) / tipogbp.get('importe', 0.0)
-
+        print('--- tipoCambios ', tipoCambios)
         return tipoCambios
 
     def getTipoCambio(self, fechaIni, fechaFin, token):
@@ -146,15 +149,39 @@ class Currency(models.Model):
                         _logger.info('  ** Update currency %s -- date %s --rate %s',currency_id.name, tipo['fecha'], tipo['importe'])
         return True
 
+    def getTipoCambioNO(self, fechaIni, fechaFin, token):
+        foreigns = {
+            'SF46410': 'EUR',
+            'SF60632': 'CAD',
+            'SF46406': 'JPY',
+            'SF46407': 'GBP',
+            'SF60653': 'USD',
+        }
+        url = 'https://www.banxico.org.mx/SieAPIRest/service/v1/series/%s/datos/%s/%s?token=%s'
+        res = requests.get(url % (','.join(foreigns), fechaIni, fechaFin, token))
+        res.raise_for_status()
+        series = res.json()['bmx']['series']
+        series = { foreigns.get( serie['idSerie'] ) : [{'fecha': dato['fecha'], 'importe': float(dato.get('dato') if dato.get('dato') != 'N/E' else '0.0') } for dato in serie['datos']] for serie in series if 'datos' in serie}
+        for index, currency in foreigns.items():
+            if not series.get(index, False):
+                continue
+            if currency == 'USD':
+                continue
+            for tipo in series.get(index, {}):
+                tipomxn = next(tipomxn for tipomxn in series.get('SF60653') if tipomxn["fecha"] == tipo['fecha'] )
+                tipo['importe_real'] = tipo.get('importe')
+                tipo['importe'] = tipomxn.get('importe', 0.0) / tipo.get('importe', 0.0)
+        return series
+
     def run_update_currency_bmx(self, use_new_cursor=False):
         _logger.info(' === Starting the currency rate update cron')
-        tz = self.env.user.tz
-        date_end = fields.Date.today()
-        date_start = date_end #  + relativedelta(days=-5)
+        date_mx = datetime.datetime.now(timezone('America/Mexico_City'))
+        today = date_mx.strftime(DEFAULT_SERVER_DATE_FORMAT)
+        yesterday = (date_mx - datetime.timedelta(days=1)).strftime(DEFAULT_SERVER_DATE_FORMAT)
+        token = self.env['ir.config_parameter'].sudo().get_param('bmx.token', default='')
         try:
-            token = self.env['ir.config_parameter'].sudo().get_param('bmx.token', default='')
             if token:
-                tipoCambios = self.getTipoCambio(date_start, date_end, token)
+                tipoCambios = self.getTipoCambio(yesterday, today, token)
                 self.refresh_currency(tipoCambios)
         except:
             pass

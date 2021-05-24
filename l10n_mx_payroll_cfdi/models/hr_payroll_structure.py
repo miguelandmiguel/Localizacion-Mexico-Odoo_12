@@ -71,6 +71,13 @@ class HrPayrollStructure(models.Model):
 
     report_id = fields.Many2one('ir.actions.report',
         string="Report", domain="[('model','=','hr.payslip'),('report_type','=','qweb-pdf')]", default=_get_default_report_id)
+    l10n_mx_edi_tiponominaespecial = fields.Selection([
+            ('ord', 'Nomina Ordinaria'),
+            ('ext_nom', 'Nomina Extraordinaria'),
+            ('ext_agui', 'Extraordinaria Aguinaldo'),
+            ('ext_fini', 'Extraordinaria Finiquito'),
+            ('ext_ptu', 'Extraordinaria PTU'),],
+        string="Tipo Nomina Especial", default="ord")
 
 
 class RegistroPatronal(models.Model):

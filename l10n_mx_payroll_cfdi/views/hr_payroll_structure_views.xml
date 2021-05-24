@@ -53,7 +53,8 @@
             <field name="inherit_id" ref="hr_payroll.view_hr_employee_grade_form"/>
             <field name="arch" type="xml">
                 <field name="parent_id" position="after">
-                    <field name="report_id" />
+                    <field name="report_id" invisible="1" />
+                    <field name="l10n_mx_edi_tiponominaespecial" />
                 </field>
             </field>
         </record>

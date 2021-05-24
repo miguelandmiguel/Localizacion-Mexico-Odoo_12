@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <template id="l10n_mx_edi_addenda_amece" name="Addenda AMECE">
+            <Addenda>
+                <t t-set="sumary" t-value="record.getAddendaSumary()" />
+                <requestForPayment 
+                    type="SimpleInvoiceType"
+                    contentVersion="1.3.1"
+                    documentStructureVersion="AMC7.1" 
+                    documentStatus="ORIGINAL" 
+                    t-att-DeliveryDate="record.date_invoice" >
+                    <requestForPaymentIdentification>
+                        <entityType t-raw="'INGRESO' if record.type == 'out_invoice' else 'EGRESO'"></entityType>
+                        <uniqueCreatorIdentification t-raw="sumary.get('serie') + sumary.get('folio')"></uniqueCreatorIdentification>
+                    </requestForPaymentIdentification>
+                    <specialInstruction code="ZZZ">
+                        <text t-raw="record.l10n_mx_edi_amount_to_text()" ></text>
+                    </specialInstruction>
+                    <specialInstruction code="AAB">
+                        <text><t t-esc="record.l10n_mx_edi_payment_method_id.code" /></text>
+                    </specialInstruction>
+                    <orderIdentification>
+                        <referenceIdentification type="ON"><t t-esc="record.l10n_mx_edi_amece_referenceidentification"/></referenceIdentification>
+                        <ReferenceDate><t t-esc="record.l10n_mx_edi_amece_referencedate"/></ReferenceDate>
+                    </orderIdentification>
+                    <AdditionalInformation>
+                        <referenceIdentification type="ATZ"><t t-esc="record.l10n_mx_edi_amece_additionalinformation" /></referenceIdentification>
+                    </AdditionalInformation>
+                    <buyer>
+                        <gln><t t-esc="record.partner_id.l10n_mx_edi_coppel_gln" /></gln>
+                        <contactInformation>
+                            <personOrDepartmentName>
+                                <text><t t-esc="record.l10n_mx_edi_amece_personordepartmentname" /></text>
+                            </personOrDepartmentName>
+                        </contactInformation>
+                    </buyer>
+                    <seller>
+                        <gln><t t-esc="record.company_id.l10n_mx_edi_amece_gln" /></gln>
+                        <alternatePartyIdentification type="SELLER_ASSIGNED_IDENTIFIER_FOR_A_PARTY"><t t-esc="record.company_id.l10n_mx_edi_amece_alternateid" /></alternatePartyIdentification>
+                    </seller>
+                    <t t-if="record.l10n_mx_edi_amece_shipto_id">
+                        <shipTo>
+                            <gln><t t-esc="record.l10n_mx_edi_amece_shipto_id.l10n_mx_edi_coppel_gln"/></gln>
+                            <nameAndAddress>
+                                <name><t t-esc="record.l10n_mx_edi_amece_shipto_id.name" /></name>
+                                <streetAddressOne><t t-esc="record.getshipTostreetAddressOne(record.l10n_mx_edi_amece_shipto_id)" /></streetAddressOne>
+                                <city><t t-esc="record.l10n_mx_edi_amece_shipto_id.l10n_mx_edi_locality or record.l10n_mx_edi_amece_shipto_id.city_id.name" /></city>
+                                <postalCode><t t-esc="record.l10n_mx_edi_amece_shipto_id.zip" /></postalCode>
+                            </nameAndAddress>
+                        </shipTo>
+                    </t>
+                    <currency t-att-currencyISOCode="record.currency_id.name">
+                        <currencyFunction>BILLING_CURRENCY</currencyFunction>
+                        <rateOfChange>1</rateOfChange>
+                    </currency>
+                    <t t-set="indx" t-value="1"/>
+                    <t t-foreach="record.invoice_line_ids.filtered(lambda inv: not inv.display_type)" t-as="line">
+                        <t t-set="grossPrice" t-value="line.getGrossPrice()"/>
+                        <lineItem type="SimpleInvoiceLineItemType" t-att-number="indx">
+                            <tradeItemIdentification>
+                                <gtin><t t-esc="line.product_id.barcode" /></gtin>
+                            </tradeItemIdentification>
+                            <tradeItemDescriptionInformation language="ES">
+                                <longText><t t-esc="line.name[:35]" /></longText>
+                            </tradeItemDescriptionInformation>
+                            <invoicedQuantity t-att-unitOfMeasure="(line.uom_id.name or '').replace('(', '').replace(')', '').replace('/', '')"><t t-esc="line.quantity" /></invoicedQuantity>
+                            <grossPrice>
+                                <Amount><t t-esc="grossPrice" /></Amount>
+                            </grossPrice>
+                            <netPrice>
+                                <Amount><t t-esc="grossPrice" /></Amount>
+                            </netPrice>
+                            <AdditionalInformation>
+                                <referenceIdentification type="ON"><t t-esc="line.product_id.default_code" /></referenceIdentification>
+                            </AdditionalInformation>
+                            <totalLineAmount>
+                                <grossAmount>
+                                    <Amount><t t-esc="grossPrice * line.quantity" /></Amount>
+                                </grossAmount>
+                                <netAmount>
+                                    <Amount><t t-esc="grossPrice * line.quantity" /></Amount>
+                                </netAmount>
+                            </totalLineAmount>
+                        </lineItem>
+                        <t t-set="indx" t-value="indx + 1"/>
+                    </t>
+                    <totalAmount>
+                        <Amount><t t-esc="sumary.get('baseAmount')" /></Amount>
+                    </totalAmount>
+                    <TotalAllowanceCharge allowanceOrChargeType="ALLOWANCE">
+                        <Amount><t t-esc="sumary.get('descuento')" /></Amount>
+                    </TotalAllowanceCharge>
+                    <baseAmount>
+                        <Amount><t t-esc="sumary.get('baseAmount')" /></Amount>
+                    </baseAmount>
+                    <tax type="VAT">
+                        <taxPercentage>16.00</taxPercentage>
+                        <taxAmount><t t-esc="sumary.get('taxAmount')" /></taxAmount>
+                    </tax>
+                    <payableAmount>
+                        <Amount><t t-esc="sumary.get('totalAmount')" /></Amount>
+                    </payableAmount>                    
+                </requestForPayment>
+            </Addenda>
+        </template>
+
+        <record id="l10n_mx_edi_addenda_amece" model="ir.ui.view">
+            <field name="l10n_mx_edi_addenda_flag">True</field>
+        </record>
+
+    </data>
+</odoo>

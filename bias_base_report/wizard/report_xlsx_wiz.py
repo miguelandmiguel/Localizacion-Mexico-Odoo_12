@@ -66,8 +66,6 @@ class report_zip_wiz(models.TransientModel):
         file_data.seek(0)
         datafilereport = file_data.read()
 
-        print('datafilereportdatafilereport', datafilereport)
-
         ZipBinaryModel = self.env['report.zip.binary.files']
         res = ZipBinaryModel.create({
             'wizard_id': self.id,

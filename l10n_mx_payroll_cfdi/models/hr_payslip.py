@@ -928,8 +928,9 @@ class HrPayslip(models.Model):
         totalGravadoP = 0.0
         totalExentoP = 0.0
         totalSueldosP = 0.0
-        totalSepIndem = 0.0
-        totalJubilacion = 0.0
+        totalSepIndem, totalSepIndemGravado, totalSepIndemExento = 0.0, 0.0, 0.0
+        totalJubilacion, totalJubilacionGravado, totalJubilacionExento = 0.0, 0.0, 0.0
+
         percepciones = None
         nodo_p = self._get_lines_type('p')
         if nodo_p:
@@ -965,8 +966,12 @@ class HrPayslip(models.Model):
                     totalSueldosP += gravado + exento
                 elif tipo_percepcion in ("022", "023", "025"):
                     totalSepIndem += gravado + exento
+                    totalSepIndemGravado += gravado
+                    totalSepIndemExento += exento
                 elif tipo_percepcion in ("039", "044"):
                     totalJubilacion += gravado + exento
+                    totalJubilacionGravado += gravado
+                    totalJubilacionExento += exento
 
                 horas_extras = None
                 if tipo_percepcion == '019':
@@ -1002,7 +1007,7 @@ class HrPayslip(models.Model):
                     'NumAniosServicio': round(empleado.cfdi_anhos_servicio),
                     'UltimoSueldoMensOrd': "%.2f"%ultimo_sueldo_mensual,
                     'IngresoAcumulable': "%.2f"%min(totalSepIndem, ultimo_sueldo_mensual),
-                    'IngresoNoAcumulable': "%.2f"%(totalSepIndem - ultimo_sueldo_mensual)
+                    'IngresoNoAcumulable': "%.2f"%(totalSepIndemGravado - ultimo_sueldo_mensual)
                 }
                 percepciones["attrs"]["TotalSeparacionIndemnizacion"] = "%.2f"%totalSepIndem
 
@@ -1014,7 +1019,7 @@ class HrPayslip(models.Model):
                 vals = {
                    'TotalUnaExhibición': "%.2f"%totalJubilacion,
                    'IngresoAcumulable': "%.2f"%min(totalJubilacion, ultimo_sueldo_mensual),
-                   'IngresoNoAcumulable': "%.2f"%(totalJubilacion - ultimo_sueldo_mensual)
+                   'IngresoNoAcumulable': "%.2f"%(totalJubilacionGravado - ultimo_sueldo_mensual)
                 }
                 # Si es en parcialidades
                 if tipo_percepcion == '044': 
@@ -1171,6 +1176,8 @@ class HrPayslip(models.Model):
         return rp
 
     def _get_NumDiasPagados(self):
+        if self.struct_id.l10n_mx_edi_tiponominaespecial == 'ext_fini':
+            return "1"
         dias = self.get_salary_line_total('C9') or 0.0
         return "%d"%dias
 
