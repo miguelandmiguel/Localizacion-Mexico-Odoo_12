@@ -45,10 +45,10 @@
                     <page string="Addenda Amece" attrs="{'invisible':[('l10n_mx_edi_amece_addenda', '=', False)]}">
                         <group>
                             <group>
-                                <field name="l10n_mx_edi_amece_referenceidentification" required="1"/>
-                                <field name="l10n_mx_edi_amece_referencedate" required="1"/>
-                                <field name="l10n_mx_edi_amece_additionalinformation" required="1"/>
-                                <field name="l10n_mx_edi_amece_personordepartmentname"  required="1" />
+                                <field name="l10n_mx_edi_amece_referenceidentification" attrs="{'required': [('l10n_mx_edi_amece_addenda', '!=', False)]}" />
+                                <field name="l10n_mx_edi_amece_referencedate" attrs="{'required': [('l10n_mx_edi_amece_addenda', '!=', False)]}" />
+                                <field name="l10n_mx_edi_amece_additionalinformation" attrs="{'required': [('l10n_mx_edi_amece_addenda', '!=', False)]}"/>
+                                <field name="l10n_mx_edi_amece_personordepartmentname" attrs="{'required': [('l10n_mx_edi_amece_addenda', '!=', False)]}" />
                             </group>
                             <group>
                                 <field name="l10n_mx_edi_amece_shipto_id"/>
