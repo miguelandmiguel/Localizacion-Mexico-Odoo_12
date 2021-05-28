@@ -1006,7 +1006,7 @@ class HrPayslip(models.Model):
                     'TotalPagado': "%.2f"%totalSepIndem,
                     'NumAniosServicio': round(empleado.cfdi_anhos_servicio),
                     'UltimoSueldoMensOrd': "%.2f"%ultimo_sueldo_mensual,
-                    'IngresoAcumulable': "%.2f"%min(totalSepIndem, ultimo_sueldo_mensual),
+                    'IngresoAcumulable': "%.2f"%min(totalSepIndemGravado, ultimo_sueldo_mensual),
                     'IngresoNoAcumulable': "%.2f"%(totalSepIndemGravado - ultimo_sueldo_mensual)
                 }
                 percepciones["attrs"]["TotalSeparacionIndemnizacion"] = "%.2f"%totalSepIndem
