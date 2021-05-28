@@ -1182,7 +1182,7 @@ class HrPayslip(models.Model):
         return "%d"%dias
 
     def _getCompanyName(self):
-        companyName = self.company_id.partner_id.street if self.company_id.partner_id.street else ''
+        companyName = self.company_id.partner_id.street_name if self.company_id.partner_id.street_name else ''
         if self.company_id.partner_id.street_number:
             companyName += ' %s'%self.company_id.partner_id.street_number
         if self.company_id.partner_id.l10n_mx_edi_colony:
