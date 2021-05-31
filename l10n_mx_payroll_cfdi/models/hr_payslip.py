@@ -1001,13 +1001,14 @@ class HrPayslip(models.Model):
                 #-------------------
                 # Nodo indemnización
                 #-------------------
+                IngresoNoAcumulable = "%.2f"%(totalSepIndemGravado) if totalSepIndemGravado <= 0 else "%.2f"%(totalSepIndemGravado - ultimo_sueldo_mensual)
                 ultimo_sueldo_mensual = self.get_salary_line_total('SD') * 30
                 percepciones["SeparacionIndemnizacion"] = {
                     'TotalPagado': "%.2f"%totalSepIndem,
                     'NumAniosServicio': round(empleado.cfdi_anhos_servicio),
                     'UltimoSueldoMensOrd': "%.2f"%ultimo_sueldo_mensual,
                     'IngresoAcumulable': "%.2f"%min(totalSepIndemGravado, ultimo_sueldo_mensual),
-                    'IngresoNoAcumulable': "%.2f"%(totalSepIndemGravado - ultimo_sueldo_mensual)
+                    'IngresoNoAcumulable': IngresoNoAcumulable
                 }
                 percepciones["attrs"]["TotalSeparacionIndemnizacion"] = "%.2f"%totalSepIndem
 
@@ -1817,9 +1818,18 @@ class HrPayslip(models.Model):
             for lineDict in payslip._get_payslip_lines(contract_ids, payslip.id):
                 total_exento = lineDict.get('total_exento')
                 total_gravado = lineDict.get('total_gravado')
+                cfdi_codigoagrupador_id = lineDict.get('cfdi_codigoagrupador_id')
+                cfdi_tipo_id = lineDict.get('cfdi_tipo_id')
+                _logger.info(' -- reprocesarNomina %s - %s '%( cfdi_codigoagrupador_id, cfdi_tipo_id ) )
                 for line in payslip.line_ids.filtered(lambda r: r.salary_rule_id.id == lineDict.get('salary_rule_id') and r.code == lineDict.get('code') ):
-                    line.total_exento = total_exento
-                    line.total_gravado = total_gravado
+                    # line.total_exento = total_exento
+                    # line.total_gravado = total_gravado
+                    line.write({
+                        'total_exento': total_exento,
+                        'total_gravado': total_gravado,
+                        'cfdi_codigoagrupador_id': cfdi_codigoagrupador_id,
+                        'cfdi_tipo_id': cfdi_tipo_id
+                    })
                     _logger.info(' [%s] - %s Lines %s %s - %s, LE %s - LG %s - LDE %s - LDG %s '%(
                         payslip.id, payslip.employee_id.display_name,
                         line.id, line.code, line.total, line.total_exento, line.total_gravado, total_exento, total_gravado) )
