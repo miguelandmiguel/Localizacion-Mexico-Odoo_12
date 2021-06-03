@@ -1046,9 +1046,9 @@ class HrPayslip(models.Model):
             for deduccion in nodo_d:
                 tipo_deduccion, nombre_deduccion = self._get_code(deduccion)
                 if tipo_deduccion == '002':
-                    retenido += deduccion.total
+                    retenido += abs(deduccion.total)
                 else:
-                    totalD += deduccion.total
+                    totalD += abs(deduccion.total)
                 if deduccion.total == 0:
                     continue
                 nombre_deduccion = deduccion.name or ''
