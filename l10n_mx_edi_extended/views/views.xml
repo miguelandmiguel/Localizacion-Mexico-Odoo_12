@@ -1,0 +1,30 @@
+<odoo>
+    <data>
+
+
+        <record id="view_partner_property_noident_form" model="ir.ui.view">
+            <field name="name">view_partner_property_noident_form</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="account.view_partner_property_form"/>
+            <field name="arch" type="xml">
+                <page name="accounting" position="inside">
+                    <group string="CFDI Extended">
+                        <group>
+                            <field name="l10n_mx_edi_noidentificacion" />
+                        </group>
+                    </group>
+                </page>
+            </field>
+        </record>
+
+
+        <template id="cfdiv33_extended" inherit_id="l10n_mx_edi.cfdiv33">
+            <xpath expr="(//*[local-name()='Concepto'])" position="attributes">
+                <attribute name="t-att-NoIdentificacion">line.getNoIdentificacion()</attribute>
+            </xpath>
+        </template>
+
+        
+
+    </data>
+</odoo>
