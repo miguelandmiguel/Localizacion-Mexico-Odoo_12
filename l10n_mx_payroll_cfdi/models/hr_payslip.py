@@ -191,6 +191,7 @@ class HrPayslip(models.Model):
     # Layout Dispersion
     #--------------------
     layout_nomina = fields.Selection([
+            ('fdbvenn', ' FDB Venn'),
             ('banorte', 'Banorte'),
             ('bbva', 'BBVA Bancomer'),
             ('inter', 'Interbancarios'),
@@ -211,6 +212,8 @@ class HrPayslip(models.Model):
                 layout_nomina = 'bbva'
             elif bic == '072':
                 layout_nomina = 'banorte'
+            elif bic == '151':
+                layout_nomina = 'fdbvenn'                
             else:
                 layout_nomina = 'inter'
 
@@ -226,6 +229,8 @@ class HrPayslip(models.Model):
                     elif bic not in ['012', '072']:
                         layout_nomina = 'bbva_inter'
             """
+            if bic == '151':
+                _logger.info('------ layout_nomina %s %s - '%(payslip.number, layout_nomina) )
             payslip.layout_nomina = layout_nomina
 
     @api.one
@@ -1835,3 +1840,45 @@ class HrPayslip(models.Model):
                         line.id, line.code, line.total, line.total_exento, line.total_gravado, total_exento, total_gravado) )
         return True
 
+
+
+    def dispersion_bbva_inter_datas(self):
+        res_banco = []
+        indx = 1
+        p_ids = self.filtered(lambda r: r.layout_nomina != 'inter' and r.state == 'done' and r.get_salary_line_total('C99') > 0 )
+        _logger.info('---------- Layout BBVA Inter %s '%( len(p_ids) ) )
+        for slip in p_ids:
+            employee_id = slip.employee_id or False
+            total = slip.get_salary_line_total('C99')
+            if total <= 0:
+                _logger.info('---- Dispersion BBVA NO total=0 %s %s %s '%( slip.id, slip.number, employee_id.id ) )
+                continue
+            bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
+            if not bank_account_id:
+                _logger.info('---- Dispersion BBVA NO bank_account_id %s %s %s '%( slip.id, slip.number, employee_id.id ) )
+                continue
+            bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
+            cuenta = bank_account_id and bank_account_id.acc_number or ''
+            if not cuenta:
+                _logger.info('---- Dispersion BBVA NO CUENTA%s %s %s '%( slip.id, slip.number, employee_id.id ) )
+                continue
+
+            pp_total = '%.2f'%(total)
+            pp_total = str(pp_total).replace('.', '')
+            rfc = '%s'%('0').rjust(16, "0")
+            # nombre = employee_id.cfdi_complete_name[:40]
+            nombre = '%s %s %s'%( employee_id.cfdi_appat, employee_id.cfdi_apmat, employee_id.name )
+            nombre = remove_accents(nombre[:40])
+            res_banco.append((
+                '%s'%( str(indx).rjust(9, "0") ),
+                rfc,
+                '%s'%( '99' if bank_number == '012' else '40' ),
+                '%s'%( cuenta.ljust(20, " ") ),
+                '%s'%( pp_total.rjust(15, "0") ),
+                '%s'%( nombre.ljust(40, " ") ),
+                '%s'%( bank_number ),
+                '001'
+            ))
+            indx += 1
+        banco_datas = slip.payslip_run_id._save_txt(res_banco)
+        return banco_datas

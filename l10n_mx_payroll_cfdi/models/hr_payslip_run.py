@@ -390,6 +390,16 @@ class HrPayslipRun(models.Model):
             file_value += file_row + '\r\n'
         return file_value
 
+
+
+    #---------------------------------------
+    #  Dispersion Nominas Banorte FDB Venn
+    #---------------------------------------
+    def dispersion_banortefdbvenn_datas(self, payslip_ids=[]):
+        for run_id in self:
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'fdbvenn')
+            return run_id.dispersion_banorte_interbancarias_datas_datos( p_ids.ids )
+
     #---------------------------------------
     #  Dispersion Nominas Banorte
     #---------------------------------------
@@ -816,6 +826,21 @@ class HrPayslipRun(models.Model):
         return datas
 
 
+class ReportBanorteFdbVennTxt(models.AbstractModel):
+    _name = 'report.l10n_mx_payroll_cfdi.dispersionfdbvenntxt'
+    _inherit = 'report.report_txt.abstract'
+
+    def __init__(self, pool, cr):
+        self.sheet_header = None
+
+    def generate_txt_report(self, txtfile, data, objects):
+        body = objects.dispersion_banortefdbvenn_datas()
+        txtfile.write(b'%s'%body.encode('utf-8'))
+
+    def generate_txt_reportname(self, objs):
+        company_id = self.env.user.company_id
+        return ' FDBVenn%s.PAG'%( company_id.clave_emisora or 'DispersionBanorte.txt' )
+
 class ReportBanorteTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionbanortetxt'
     _inherit = 'report.report_txt.abstract'
@@ -846,9 +871,6 @@ class ReportBanorteInterTxt(models.AbstractModel):
         company_id = self.env.user.company_id
         return '%s.PAG'%( company_id.clave_emisora or 'DispersionBanorte.txt' )
 
-
-
-
 class ReportBBVATxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvatxt'
     _inherit = 'report.report_txt.abstract'
@@ -870,3 +892,15 @@ class ReportBBVATxt(models.AbstractModel):
     def generate_txt_report(self, txtfile, data, objects):
         body = objects.dispersion_bbva_inter_datas()
         txtfile.write(b'%s'%body.encode('utf-8'))
+
+
+class ReportPayslipBBVATxt(models.AbstractModel):
+    _name = 'report.l10n_mx_payroll_cfdi.payslipdispersionbbvaintertxt'
+    _inherit = 'report.report_txt.abstract'
+
+    def __init__(self, pool, cr):
+        self.sheet_header = None
+
+    def generate_txt_report(self, txtfile, data, objects):
+        body = objects.dispersion_bbva_inter_datas()
+        txtfile.write(b'%s'%body.encode('utf-8'))        
