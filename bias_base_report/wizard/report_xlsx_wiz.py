@@ -43,6 +43,10 @@ class report_xlsx_wiz(models.TransientModel):
 
     name = fields.Char(string='Name', default="Report")
     txt_body = fields.Text(string='TXT Body')
+    encoding = fields.Selection([
+            ('utf-8', 'UTF-8'),
+            ('iso-8859-1', 'iso-8859-1 (ANSI)'),
+        ], default='utf-8', string='Export File Encodig', help="Export File Encodig")    
 
     @api.multi
     def action_report_txt(self):

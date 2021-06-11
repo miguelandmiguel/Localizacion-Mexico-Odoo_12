@@ -17,4 +17,5 @@ class ReportTxt(models.AbstractModel):
         company_id = self.env.user.company_id
         name = report.name
         body = report.txt_body
-        txtfile.write(b'%s'%body.encode('utf-8'))
+        encoding = report.encoding or 'utf-8'
+        txtfile.write(b'%s'%body.encode(encoding))
