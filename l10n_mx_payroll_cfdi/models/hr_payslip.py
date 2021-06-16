@@ -1178,7 +1178,7 @@ class HrPayslip(models.Model):
     def _get_RegistroPatronal(self):
         rp = self.employee_id.cfdi_registropatronal_id and self.employee_id.cfdi_registropatronal_id.code or False
         if rp == False:
-            rp = self.employee_id.cfdi_registropatronal_id and self.employee_id.cfdi_registropatronal_id.code or ''
+            rp = self.company_id.cfdi_registropatronal_id and self.company_id.cfdi_registropatronal_id.code or ''
         return rp
 
     def _get_NumDiasPagados(self):
@@ -1188,15 +1188,21 @@ class HrPayslip(models.Model):
         return "%d"%dias
 
     def _getCompanyName(self):
-        companyName = self.company_id.partner_id.street_name if self.company_id.partner_id.street_name else ''
-        if self.company_id.partner_id.street_number:
-            companyName += ' %s'%self.company_id.partner_id.street_number
-        if self.company_id.partner_id.l10n_mx_edi_colony:
-            companyName += ' COL. %s'%self.company_id.partner_id.l10n_mx_edi_colony
-        if self.company_id.partner_id.zip:
-            companyName += '  %s'%self.company_id.partner_id.zip
-        if self.company_id.partner_id.city:
-            companyName += '  %s'%self.company_id.partner_id.city
+        companyName = ''
+        rp = self.employee_id.cfdi_registropatronal_id and self.employee_id.cfdi_registropatronal_id.address_id or False
+        if rp:
+            companyName = rp.street_name if rp.street_name else ''
+            if rp.street_number:
+                companyName += ' %s'%rp.street_number
+            if rp.l10n_mx_edi_colony:
+                companyName += ' COL. %s'%rp.l10n_mx_edi_colony
+            if rp.zip:
+                companyName += '  %s'%rp.zip
+            if rp.city:
+                companyName += '  %s'%rp.city
+            if rp.state_id:
+                companyName += '  %s'%rp.state_id.name                
+        print('--------- companyName ', companyName)
         return companyName.upper()
 
     @api.multi

@@ -86,6 +86,8 @@ class RegistroPatronal(models.Model):
     
     name = fields.Char(string="Name", required=True, default="")
     code = fields.Char(string="Code", size=64, required=True, default="")
+    address_id = fields.Many2one('res.partner', 'Address')
+
     company_id = fields.Many2one('res.company', string='Company', change_default=True,
         default=lambda self: self.env['res.company']._company_default_get('l10n_mx_payroll.regpat'))
 
