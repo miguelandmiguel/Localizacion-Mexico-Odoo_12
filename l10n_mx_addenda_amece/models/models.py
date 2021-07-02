@@ -6,6 +6,11 @@ from odoo.tools import float_round
 from odoo.exceptions import UserError
 from odoo import _, api, fields, models, tools
 
+import base64
+from lxml import etree, objectify
+from lxml.objectify import fromstring
+
+
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
@@ -31,11 +36,14 @@ class ResConfigSettings(models.TransientModel):
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
-    @api.one
-    def _compute_edi_amece_addenda(self):
+    def l10n_mx_edi_amece_is_required(self):
         addenda_amece = self.env.ref('l10n_mx_addenda_amece.l10n_mx_edi_addenda_amece', raise_if_not_found=False)
         addenda = (self.partner_id.l10n_mx_edi_addenda or self.partner_id.commercial_partner_id.l10n_mx_edi_addenda)
-        self.l10n_mx_edi_amece_addenda = True if addenda.id == addenda_amece.id else False
+        return (True if addenda.id == addenda_amece.id else False)
+
+    @api.one
+    def _compute_edi_amece_addenda(self):
+        self.l10n_mx_edi_amece_addenda = self.l10n_mx_edi_amece_is_required()
 
     l10n_mx_edi_amece_addenda = fields.Boolean(string='Add Amece Addenda', readonly=True, compute='_compute_edi_amece_addenda')
     l10n_mx_edi_amece_referenceidentification = fields.Char(string='Numero de pedido (comprador) ')
@@ -66,6 +74,34 @@ class AccountInvoice(models.Model):
             'taxAmount': TotalImpuestosTrasladados or 0.0,
             'descuento': Descuento
         }
+
+    @api.multi
+    def action_generate_addendaammece(self):
+        self.ensure_one()
+        addenda = self.env.ref('l10n_mx_addenda_amece.l10n_mx_edi_addenda_amece', raise_if_not_found=False)
+        if not addenda:
+            return True
+        values = {
+            'record': self,
+        }
+        addenda_node_str = addenda.render(values=values).strip()
+        if not addenda_node_str:
+            return True
+        addenda_node = fromstring(addenda_node_str)
+        if addenda_node.tag != '{http://www.sat.gob.mx/cfd/3}Addenda':
+            node = etree.Element(etree.QName(
+                'http://www.sat.gob.mx/cfd/3', 'Addenda'))
+            node.append(addenda_node)
+            addenda_node = node
+        cfdi = self.l10n_mx_edi_get_xml_etree()
+        cfdi.Addenda = addenda_node
+        xml_signed = base64.encodestring(etree.tostring( cfdi, pretty_print=True, xml_declaration=True, encoding='UTF-8'))
+        attachment_id = self.l10n_mx_edi_retrieve_last_attachment()
+        attachment_id.write({
+            'datas': xml_signed,
+            'mimetype': 'application/xml'
+        })
+        return True        
 
 class AccountInvoiceLine(models.Model):
     _inherit = 'account.invoice.line'

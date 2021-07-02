@@ -76,7 +76,7 @@
                 </field>
                 <notebook position="inside">
                     <page string="Addenda Coppel" attrs="{'invisible':[('l10n_mx_edi_inv_addenda', '=', False)]}">
-                        <group attrs="{'invisible':[('l10n_mx_edi_cfdi_uuid', '=', False)]}" > 
+                        <group> 
                             <group>
                                 <button name="action_generate_addendacoppel" type="object" string="Generar Addenda Coppel" class="oe_highlight" groups="account.group_account_invoice"/>
                             </group>

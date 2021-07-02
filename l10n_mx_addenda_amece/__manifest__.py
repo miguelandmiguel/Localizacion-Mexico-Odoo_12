@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "l10n_mx_addenda_amece",
+    'name': "Addenda Amece",
     'summary': """
         Short (1 phrase/line) summary of the module's purpose, used as
         subtitle on modules listing or apps.openerp.com""",

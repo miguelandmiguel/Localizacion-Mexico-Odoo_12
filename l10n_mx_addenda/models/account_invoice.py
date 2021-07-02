@@ -319,9 +319,7 @@ class AccountInvoice(models.Model):
         self.ensure_one()
         if not self.action_generate_addendacoppel:
             return True
-        addenda = (
-            self.partner_id.l10n_mx_edi_addenda or
-            self.partner_id.commercial_partner_id.l10n_mx_edi_addenda)
+        addenda = self.env.ref('l10n_mx_addenda.l10n_mx_edi_addenda_coppel_muebles', raise_if_not_found=False)
         if not addenda:
             return True
         values = {

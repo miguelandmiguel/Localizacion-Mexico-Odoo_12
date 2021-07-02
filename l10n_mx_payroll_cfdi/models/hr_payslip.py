@@ -1296,6 +1296,14 @@ class HrPayslip(models.Model):
         pac_name = company_id.l10n_mx_edi_pac
         values = self._l10n_mx_edi_create_cfdi_values()
         _logger.info('--- Values %s '%values )
+
+        total = float(values.get('total', '0.0')) or 0.0
+        if total == 0.0:
+            return {'error': 'No se puede timbrar nominas en 0.0'}
+        importe = float(values.get('importe', '0.0')) or 0.0
+        if importe == 0.0:
+            return {'error': 'El valor del campo ValorUnitario debe ser mayor que cero (0) cuando el tipo de comprobante Nomina'}
+
         # -----------------------
         # Check the configuration
         # -----------------------
@@ -1465,10 +1473,10 @@ class HrPayslip(models.Model):
             return False
         # res = super(HrPayslip, self.with_context(without_compute_sheet=True)).action_payslip_done()
         for rec in self:
-            if rec.get_salary_line_total('C99') == 0.0:
-                rec.message_post(body='Nomina en 0. ')
-                rec.write({'state': 'done'})
-                continue
+            # if rec.get_salary_line_total('C99') == 0.0:
+            #     rec.message_post(body='Nomina en 0. ')
+            #     rec.write({'state': 'done'})
+            #     continue
             if rec.contract_id.is_cfdi:
                 version = self.l10n_mx_edi_get_pac_version()
                 number = rec.number.replace('SLIP','').replace('/','')

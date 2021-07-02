@@ -101,7 +101,7 @@
                     </tax>
                     <payableAmount>
                         <Amount><t t-esc="sumary.get('totalAmount')" /></Amount>
-                    </payableAmount>                    
+                    </payableAmount>
                 </requestForPayment>
             </Addenda>
         </template>
