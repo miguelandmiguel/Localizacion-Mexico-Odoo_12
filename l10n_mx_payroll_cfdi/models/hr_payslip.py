@@ -1299,10 +1299,10 @@ class HrPayslip(models.Model):
 
         total = float(values.get('total', '0.0')) or 0.0
         if total == 0.0:
-            return {'error': 'No se puede timbrar nominas en 0.0'}
+            return {'no_error': ' No es necesario timbrar este recibo porque el Total es 0.0'}
         importe = float(values.get('importe', '0.0')) or 0.0
         if importe == 0.0:
-            return {'error': 'El valor del campo ValorUnitario debe ser mayor que cero (0) cuando el tipo de comprobante Nomina'}
+            return {'no_error': 'No es necesario timbrar este recibo porque no contiene percepciones'}
 
         # -----------------------
         # Check the configuration
@@ -1407,6 +1407,7 @@ class HrPayslip(models.Model):
         for payslip in self:
             number = payslip.number.replace('SLIP','').replace('/','')
             cfdi_values = payslip.l10n_mx_edi_create_cfdi()
+            no_error = cfdi_values.pop('no_error', None)
             error = cfdi_values.pop('error', None)
             cfdi = cfdi_values.pop('cfdi', None)
             if error:
@@ -1422,6 +1423,12 @@ class HrPayslip(models.Model):
                 payslip.l10n_mx_edi_pac_status = 'retry'
                 payslip.message_post(body=body, subtype='account.mt_invoice_validated')
                 return {'error': error}
+            if no_error:
+                _logger.info('No Timbrado: %s '%no_error )
+                payslip.l10n_mx_edi_pac_status = 'none'
+                payslip.message_post(body=no_error, subtype='account.mt_invoice_validated')
+                return {'no_error': no_error}
+
             payslip.l10n_mx_edi_pac_status = 'to_sign'
             filename = ('%s-%s-MX-Payslip-%s.xml' % (
                 payslip.journal_id.code, number, version.replace('.', '-'))).replace('/', '')
