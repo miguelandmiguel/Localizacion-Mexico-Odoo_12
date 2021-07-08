@@ -8,7 +8,7 @@
         Long description of module's purpose
     """,
     'author': "OpenBias",
-    'website': "http://www.yourcompany.com",
+    'website': "http://www.bias.com.mx",
     'category': 'Uncategorized',
     'version': '0.1',
     'depends': ['account'],
