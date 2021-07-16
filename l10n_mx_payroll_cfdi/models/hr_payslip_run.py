@@ -391,7 +391,7 @@ class HrPayslipRun(models.Model):
         return file_value
 
 
-
+    """
     #---------------------------------------
     #  Dispersion Nominas Banorte FDB Venn
     #---------------------------------------
@@ -400,89 +400,12 @@ class HrPayslipRun(models.Model):
             p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'fdbvenn')
             return run_id.dispersion_banorte_interbancarias_datas_datos( p_ids.ids )
 
-    #---------------------------------------
-    #  Dispersion Nominas Banorte
-    #---------------------------------------
-    def dispersion_banorte_datas_datos(self, payslip_ids=[]):
-        #---------------
-        # Header Data 
-        #---------------
-        banco_header = self.company_id.clave_emisora or ''
-        self.application_date_banorte or 'AAAAMMDD'
-        date1 = self.application_date_banorte.strftime("%Y%m%d")
-        indx = 0
-        monto_banco = 0.0
-        # ---------------
-        # Detalle
-        # ---------------
-        res_banco_header, res_banco = [], []
-        for slip in self.env['hr.payslip'].browse(payslip_ids):
-            total = slip.get_salary_line_total('C99')
-            if total <= 0:
-                continue
-            employee_id = slip.employee_id or False
-            bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
-            if not bank_account_id:
-                continue
-            bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
-            if not bank_number:
-                continue
-            indx += 1
-            bank_type = '01'
-            if bank_number != '072':
-                bank_type = '40'
-            cuenta = bank_account_id and bank_account_id.acc_number or ''
-            cuenta = cuenta[ : len(cuenta) -1 ]
-            cuenta = cuenta[-10:]
-            monto_banco += total
-            pp_total = '%.2f'%(total)
-            pp_total = str(pp_total).replace('.', '')
-
-            _logger.info('---------- Nom: %s - %s - %s -%s  '%(slip.number, bank_type, cuenta, pp_total ))
-
-            res_banco.append((
-                'D',
-                '%s'%( date1 ),
-                '%s'%( str( employee_id.cfdi_code_emp or '' ).rjust(10, "0") ),
-                '%s'%( str(' ').rjust(40, " ") ),
-                '%s'%( str(' ').rjust(40, " ") ),
-                '%s'%( pp_total.rjust(15, "0") ),
-                '%s'%( bank_number ),
-                '%s'%( bank_type ),
-                '%s'%( cuenta.rjust(18, "0") ),
-                '0',
-                ' ',
-                '00000000',
-                '%s'%( str(' ').rjust(18, " ") ),
-            ))
-        if res_banco:
-            monto_banco = '%.2f'%(monto_banco)
-            monto_banco = str(monto_banco).replace('.', '')
-            res_banco_header = [(
-                'H',
-                'NE',
-                '%s'%( banco_header ),
-                '%s'%( date1 ),
-                '01',
-                '%s'%( str(indx).rjust(6, "0") ),
-                '%s'%( monto_banco.rjust(15, "0") ),
-                '000000',
-                '000000000000000',
-                '000000',
-                '000000000000000',
-                '000000',
-                '0',
-                '%s'%( str(' ').rjust(77, " ") )
-            )]
-        banco_datas = self._save_txt(res_banco_header + res_banco)
-        return banco_datas
-
     @api.multi
-    def dispersion_banorte_datas(self):
+    def dispersion_banorte_inter_datas(self):
         for run_id in self:
-            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'banorte')
-            return run_id.dispersion_banorte_datas_datos( p_ids.ids )
-
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'inter')
+            return run_id.dispersion_banorte_interbancarias_datas_datos( p_ids.ids )            
+    
     #---------------------------------------
     #  Dispersion Nominas Banorte Interbancarios
     #---------------------------------------
@@ -562,11 +485,95 @@ class HrPayslipRun(models.Model):
 
 
     @api.multi
-    def dispersion_banorte_inter_datas(self):
+    def dispersion_banorte_datas(self):
         for run_id in self:
-            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'inter')
-            return run_id.dispersion_banorte_interbancarias_datas_datos( p_ids.ids )
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'banorte')
+            return run_id.dispersion_banorte_datas_datos( p_ids.ids )        
 
+    #---------------------------------------
+    #  Dispersion Nominas Banorte
+    #---------------------------------------
+    def dispersion_banorte_datas_datos(self, payslip_ids=[]):
+        #---------------
+        # Header Data 
+        #---------------
+        banco_header = self.company_id.clave_emisora or ''
+        self.application_date_banorte or 'AAAAMMDD'
+        date1 = self.application_date_banorte.strftime("%Y%m%d")
+        indx = 0
+        monto_banco = 0.0
+        # ---------------
+        # Detalle
+        # ---------------
+        res_banco_header, res_banco = [], []
+        for slip in self.env['hr.payslip'].browse(payslip_ids):
+            total = slip.get_salary_line_total('C99')
+            if total <= 0:
+                continue
+            employee_id = slip.employee_id or False
+            bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
+            if not bank_account_id:
+                continue
+            bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
+            if not bank_number:
+                continue
+            indx += 1
+            bank_type = '01'
+            if bank_number != '072':
+                bank_type = '40'
+            cuenta = bank_account_id and bank_account_id.acc_number or ''
+            cuenta = cuenta[ : len(cuenta) -1 ]
+            cuenta = cuenta[-10:]
+            monto_banco += total
+            pp_total = '%.2f'%(total)
+            pp_total = str(pp_total).replace('.', '')
+
+            _logger.info('---------- Nom: %s - %s - %s -%s  '%(slip.number, bank_type, cuenta, pp_total ))
+
+            res_banco.append((
+                'D',
+                '%s'%( date1 ),
+                '%s'%( str( employee_id.cfdi_code_emp or '' ).rjust(10, "0") ),
+                '%s'%( str(' ').rjust(40, " ") ),
+                '%s'%( str(' ').rjust(40, " ") ),
+                '%s'%( pp_total.rjust(15, "0") ),
+                '%s'%( bank_number ),
+                '%s'%( bank_type ),
+                '%s'%( cuenta.rjust(18, "0") ),
+                '0',
+                ' ',
+                '00000000',
+                '%s'%( str(' ').rjust(18, " ") ),
+            ))
+        if res_banco:
+            monto_banco = '%.2f'%(monto_banco)
+            monto_banco = str(monto_banco).replace('.', '')
+            res_banco_header = [(
+                'H',
+                'NE',
+                '%s'%( banco_header ),
+                '%s'%( date1 ),
+                '01',
+                '%s'%( str(indx).rjust(6, "0") ),
+                '%s'%( monto_banco.rjust(15, "0") ),
+                '000000',
+                '000000000000000',
+                '000000',
+                '000000000000000',
+                '000000',
+                '0',
+                '%s'%( str(' ').rjust(77, " ") )
+            )]
+        banco_datas = self._save_txt(res_banco_header + res_banco)
+        return banco_datas
+
+    @api.multi
+    def dispersion_bbva_datas(self):
+        for run_id in self:
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'bbva')
+            _logger.info('---------- Layout BBVA %s '%( len(p_ids) ) )
+            banco_datas = run_id.dispersion_bbva_datas_datos( p_ids.ids )
+            return banco_datas
 
     #---------------------------------------
     #  Dispersion Nominas BBVA
@@ -608,62 +615,53 @@ class HrPayslipRun(models.Model):
             ))
             indx += 1
         banco_datas = self._save_txt(res_banco)
-        return banco_datas
+        return banco_datas            
 
-    @api.multi
-    def dispersion_bbva_datas(self):
-        for run_id in self:
-            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'bbva')
-            _logger.info('---------- Layout BBVA %s '%( len(p_ids) ) )
-            banco_datas = run_id.dispersion_bbva_datas_datos( p_ids.ids )
-            return banco_datas
 
     #---------------------------------------
     #  Dispersion Nominas BBVA
     #---------------------------------------
     @api.multi
     def dispersion_bbva_inter_datas(self):
-        for run_id in self:
-            res_banco = []
-            indx = 1
-            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'inter')
-            _logger.info('---------- Layout BBVA Inter %s '%( len(p_ids) ) )
-            for slip in p_ids:
-                employee_id = slip.employee_id or False
-                total = slip.get_salary_line_total('C99')
-                if total <= 0:
-                    _logger.info('---- Dispersion BBVA NO total=0 %s %s %s '%( slip.id, slip.number, employee_id.id ) )
-                    continue
-                bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
-                if not bank_account_id:
-                    _logger.info('---- Dispersion BBVA NO bank_account_id %s %s %s '%( slip.id, slip.number, employee_id.id ) )
-                    continue
-                bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
-                cuenta = bank_account_id and bank_account_id.acc_number or ''
-                if not cuenta:
-                    _logger.info('---- Dispersion BBVA NO CUENTA%s %s %s '%( slip.id, slip.number, employee_id.id ) )
-                    continue
+        res_banco = []
+        indx = 1
+        _logger.info('---------- Layout BBVA Inter %s '%( len(p_ids) ) )
+        for slip in p_ids:
+            employee_id = slip.employee_id or False
+            total = slip.get_salary_line_total('C99')
+            if total <= 0:
+                _logger.info('---- Dispersion BBVA NO total=0 %s %s %s '%( slip.id, slip.number, employee_id.id ) )
+                continue
+            bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
+            if not bank_account_id:
+                _logger.info('---- Dispersion BBVA NO bank_account_id %s %s %s '%( slip.id, slip.number, employee_id.id ) )
+                continue
+            bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
+            cuenta = bank_account_id and bank_account_id.acc_number or ''
+            if not cuenta:
+                _logger.info('---- Dispersion BBVA NO CUENTA%s %s %s '%( slip.id, slip.number, employee_id.id ) )
+                continue
+            pp_total = '%.2f'%(total)
+            pp_total = str(pp_total).replace('.', '')
+            rfc = '%s'%('0').rjust(16, "0")
+            # nombre = employee_id.cfdi_complete_name[:40]
+            nombre = '%s %s %s'%( employee_id.cfdi_appat, employee_id.cfdi_apmat, employee_id.name )
+            nombre = remove_accents(nombre[:40])
+            res_banco.append((
+                '%s'%( str(indx).rjust(9, "0") ),
+                rfc,
+                '%s'%( '99' if bank_number == '012' else '40' ),
+                '%s'%( cuenta.ljust(20, " ") ),
+                '%s'%( pp_total.rjust(15, "0") ),
+                '%s'%( nombre.ljust(40, " ") ),
+                '%s'%( bank_number ),
+                '001'
+            ))
+            indx += 1
+        banco_datas = self._save_txt(res_banco)
+        return banco_datas
 
-                pp_total = '%.2f'%(total)
-                pp_total = str(pp_total).replace('.', '')
-                rfc = '%s'%('0').rjust(16, "0")
-                # nombre = employee_id.cfdi_complete_name[:40]
-                nombre = '%s %s %s'%( employee_id.cfdi_appat, employee_id.cfdi_apmat, employee_id.name )
-                nombre = remove_accents(nombre[:40])
-                res_banco.append((
-                    '%s'%( str(indx).rjust(9, "0") ),
-                    rfc,
-                    '%s'%( '99' if bank_number == '012' else '40' ),
-                    '%s'%( cuenta.ljust(20, " ") ),
-                    '%s'%( pp_total.rjust(15, "0") ),
-                    '%s'%( nombre.ljust(40, " ") ),
-                    '%s'%( bank_number ),
-                    '001'
-                ))
-                indx += 1
-            banco_datas = self._save_txt(res_banco)
-            return banco_datas
-
+    """
 
 
     def _getReportNameEducarte(self):
@@ -688,7 +686,6 @@ class HrPayslipRun(models.Model):
                 'linesD': [],
             }
         }
-
         for department_id in self.slip_ids.mapped('department_id').sorted(key=lambda a: a.code_seq):
             departemento = {
                 'departamento': department_id.code_seq or '',
@@ -713,7 +710,6 @@ class HrPayslipRun(models.Model):
                     'curp': emp_id.cfdi_curp or '',
                     'tarjeta': emp_id.cfdi_code_emp or '',
                     'fechaIngreso': emp_id.cfdi_date_contract or '',
-                    
                     'departamento': department_id.code_seq or '',
                     'departamentoDesc': department_id.name or '',
                     'puesto': emp_id.job_reference or '',
@@ -721,7 +717,6 @@ class HrPayslipRun(models.Model):
                     'tipoEmpleado': '  ',
                     'salario': slip_id.get_salary_line_total('SD'),
                     'sdi': slip_id.get_salary_line_total('SDI'),
-
                     'linesP': [],
                     'linesD': [],
                     'percepciones': 0.0,
@@ -730,7 +725,6 @@ class HrPayslipRun(models.Model):
                     'gravado': 0.0,
                     'exento': 0.0
                 }
-
                 pLines = slip_id.getLinesPDFReport('p') or []
                 for pl in pLines.get('Lines', []):
                     cfdi_gravado_o_exento = pl['id'].salary_rule_id.cfdi_gravado_o_exento
@@ -745,7 +739,6 @@ class HrPayslipRun(models.Model):
                     trabajador_tmp['percepciones'] += pl_tmp.get('importe')
                     trabajador_tmp['gravado'] += pl_tmp.get('gravado')
                     trabajador_tmp['exento'] += pl_tmp.get('exento')
-
                 dLines = slip_id.getLinesPDFReport('d') or []
                 for dl in dLines.get('Lines', []):
                     dl_tmp = {
@@ -757,7 +750,6 @@ class HrPayslipRun(models.Model):
                     }
                     trabajador_tmp['linesD'].append( dl_tmp )
                     trabajador_tmp['deducciones'] += dl.get('Importe')
-
                 trabajador_tmp['pagoTotal'] = round((trabajador_tmp['percepciones'] - trabajador_tmp['deducciones']), 2)
                 # TotalesDepartamento
                 departemento['totalPercepciones'] += trabajador_tmp.get('percepciones')
@@ -766,8 +758,6 @@ class HrPayslipRun(models.Model):
                 departemento['totalGravado'] += trabajador_tmp.get('gravado')
                 departemento['totalExento'] += trabajador_tmp.get('exento')
                 departemento['trabajadores'].append( trabajador_tmp )
-
-            
             # linesP
             linesPD, linesDD = {}, {}
             for trab in departemento['trabajadores']:
@@ -792,8 +782,6 @@ class HrPayslipRun(models.Model):
             departemento['linesP'] = list(linesPD.values())
             departemento['linesD'] = list(linesDD.values())
             datas['body'].append( departemento )
-
-
         linesPF, linesDF = {}, {}
         for body in datas.get('body'):
             datas['footer']['totalTrabajadores'] += body['totalTrabajadores']
@@ -802,7 +790,6 @@ class HrPayslipRun(models.Model):
             datas['footer']['totalPago'] += body['totalPago']
             datas['footer']['totalGravado'] += body['totalGravado']
             datas['footer']['totalExento'] += body['totalExento']
-
             for linepf in body.get('linesP'):
                 lpf = linepf.copy()
                 if lpf['concepto'] not in linesPF:
@@ -813,94 +800,13 @@ class HrPayslipRun(models.Model):
                 linesPF[ lpf['concepto'] ]['importe'] += linepf['importe']
                 linesPF[ lpf['concepto'] ]['gravado'] += linepf['gravado']
                 linesPF[ lpf['concepto'] ]['exento'] += linepf['exento']
-
             for linedf in body.get('linesD'):
                 ldf = linedf.copy()
                 if ldf['concepto'] not in linesDF:
                     linesDF[ ldf['concepto'] ] = ldf
                     linesDF[ ldf['concepto'] ]['importe'] = 0.0
                 linesDF[ ldf['concepto'] ]['importe'] += linedf['importe']
-
         datas['footer']['linesP'] = list(linesPF.values())
         datas['footer']['linesD'] = list(linesDF.values())
         return datas
 
-
-class ReportBanorteFdbVennTxt(models.AbstractModel):
-    _name = 'report.l10n_mx_payroll_cfdi.dispersionfdbvenntxt'
-    _inherit = 'report.report_txt.abstract'
-
-    def __init__(self, pool, cr):
-        self.sheet_header = None
-
-    def generate_txt_report(self, txtfile, data, objects):
-        body = objects.dispersion_banortefdbvenn_datas()
-        txtfile.write(b'%s'%body.encode('utf-8'))
-
-    def generate_txt_reportname(self, objs):
-        company_id = self.env.user.company_id
-        return ' FDBVenn%s.PAG'%( company_id.clave_emisora or 'DispersionBanorte.txt' )
-
-class ReportBanorteTxt(models.AbstractModel):
-    _name = 'report.l10n_mx_payroll_cfdi.dispersionbanortetxt'
-    _inherit = 'report.report_txt.abstract'
-
-    def __init__(self, pool, cr):
-        self.sheet_header = None
-
-    def generate_txt_report(self, txtfile, data, objects):
-        body = objects.dispersion_banorte_datas()
-        txtfile.write(b'%s'%body.encode('utf-8'))
-
-    def generate_txt_reportname(self, objs):
-        company_id = self.env.user.company_id
-        return '%s.PAG'%( company_id.clave_emisora or 'DispersionBanorte.txt' )
-
-class ReportBanorteInterTxt(models.AbstractModel):
-    _name = 'report.l10n_mx_payroll_cfdi.dispersionbanorteintertxt'
-    _inherit = 'report.report_txt.abstract'
-
-    def __init__(self, pool, cr):
-        self.sheet_header = None
-
-    def generate_txt_report(self, txtfile, data, objects):
-        body = objects.dispersion_banorte_inter_datas()
-        txtfile.write(b'%s'%body.encode('utf-8'))
-
-    def generate_txt_reportname(self, objs):
-        company_id = self.env.user.company_id
-        return '%s.PAG'%( company_id.clave_emisora or 'DispersionBanorte.txt' )
-
-class ReportBBVATxt(models.AbstractModel):
-    _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvatxt'
-    _inherit = 'report.report_txt.abstract'
-
-    def __init__(self, pool, cr):
-        self.sheet_header = None
-
-    def generate_txt_report(self, txtfile, data, objects):
-        body = objects.dispersion_bbva_datas()
-        txtfile.write(b'%s'%body.encode('utf-8'))
-
-class ReportBBVATxt(models.AbstractModel):
-    _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvaintertxt'
-    _inherit = 'report.report_txt.abstract'
-
-    def __init__(self, pool, cr):
-        self.sheet_header = None
-
-    def generate_txt_report(self, txtfile, data, objects):
-        body = objects.dispersion_bbva_inter_datas()
-        txtfile.write(b'%s'%body.encode('utf-8'))
-
-
-class ReportPayslipBBVATxt(models.AbstractModel):
-    _name = 'report.l10n_mx_payroll_cfdi.payslipdispersionbbvaintertxt'
-    _inherit = 'report.report_txt.abstract'
-
-    def __init__(self, pool, cr):
-        self.sheet_header = None
-
-    def generate_txt_report(self, txtfile, data, objects):
-        body = objects.dispersion_bbva_inter_datas()
-        txtfile.write(b'%s'%body.encode('utf-8'))        

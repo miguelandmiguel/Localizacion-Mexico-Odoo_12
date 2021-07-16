@@ -1688,8 +1688,6 @@ class HrPayslip(models.Model):
                         inv.l10n_mx_edi_log_error( msg )
                 # if not response.Acuse:
                 #     inv.l10n_mx_edi_log_error( 'A delay of 2 hours has to be respected before to cancel' )
-
-                res_folios = ""
                 for folios in response.Folios:
                     for folio in folios[1]:
                         if folio.EstatusUUID in ('201', '202'):
@@ -1863,7 +1861,7 @@ class HrPayslip(models.Model):
 
 
 
-    def dispersion_bbva_inter_datas(self):
+    def dispersion_bbva_inter_datas_old(self):
         res_banco = []
         indx = 1
         p_ids = self.filtered(lambda r: r.layout_nomina != 'inter' and r.state == 'done' and r.get_salary_line_total('C99') > 0 )
@@ -1901,5 +1899,25 @@ class HrPayslip(models.Model):
                 '001'
             ))
             indx += 1
+        print('--- res_banco ', res_banco)
         banco_datas = slip.payslip_run_id._save_txt(res_banco)
         return banco_datas
+
+        # PSC 014180606007975749 000000000156096999 MXP 0000000002905.44 MENDOZA RIVERA PEDRO          40 014 NOMINA 1A MAYO 2021           0020989H
+        # PSC014680606009625555000000000156096999MXP0000000003310.09OJEDA VARGAS LEON MAER        40 014 NOMINA 1A MAYO 2021           002099 0H
+
+"""
+PSC014180606007975749000000000156096999MXP0000000002905.44MENDOZA RIVERA PEDRO          40014NOMINA 1A MAYO 2021           0020989H
+
+PSC|
+014180606007975749|
+000000000156096999|
+MXP|
+0000000002905.44|
+MENDOZA RIVERA PEDRO          |
+40|
+014|
+NOMINA 1A MAYO 2021           |
+0020989|
+H|
+"""

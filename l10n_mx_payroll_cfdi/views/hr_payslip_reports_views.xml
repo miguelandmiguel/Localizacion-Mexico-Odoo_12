@@ -1,0 +1,69 @@
+<odoo>
+    <data>
+
+        <!--
+            Reporte Banorte
+         -->
+        <report
+            id="dispersionfdbvenntxt"
+            model="hr.payslip.run"
+            string="Banorte Interbancarios FDB (Venn)"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.dispersionfdbvenntxt"
+            file="dispersionfdbvenntxt" />
+
+        <report
+            id="dispersionbanortetxt"
+            model="hr.payslip.run"
+            string="Dispersion Banorte"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.dispersionbanortetxt"
+            file="dispersionbanortetxt" />
+
+        <report
+            id="dispersionbanorteintertxt"
+            model="hr.payslip.run"
+            string="Dispersion Banorte Interbancarias"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.dispersionbanorteintertxt"
+            file="dispersionbanorteintertxt" />
+
+        <report
+            id="dispersionbbvatxt"
+            model="hr.payslip.run"
+            string="Dispersion BBVA"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.dispersionbbvatxt"
+            file="dispersionbbvatxt"
+            attachment_use="True" />
+
+        <report
+            id="dispersionbbvaintertxt"
+            model="hr.payslip.run"
+            string="Dispersion BBVA Interbancarias"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.dispersionbbvaintertxt"
+            file="dispersionbbvaintertxt"
+            attachment_use="True" />
+
+        <!-- -->
+        <report
+            id="payslipdispersionbbvaintertxt"
+            model="hr.payslip"
+            string="Dispersion BBVA Interbancarias"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.payslipdispersionbbvaintertxt"
+            file="payslipdispersionbbvaintertxt"
+            attachment_use="True" />
+
+        <report
+            id="payslipdispersionbbvaintervenntxt"
+            model="hr.payslip.run"
+            string="BBVA Interbancarias (Venn)"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.payslipdispersionbbvaintervenntxt"
+            file="payslipdispersionbbvaintervenntxt"
+            attachment_use="True" />            
+
+    </data>
+</odoo>

@@ -29,7 +29,8 @@
         'wizard/hr_payslip_employees_views.xml',
         'wizard/hr_payslip_message_wizard_views.xml',
         'wizard/hr_payslip_run_import_inputs_views.xml',
-        'wizard/hr_payslip_run_report_educarte_views.xml'
+        'wizard/hr_payslip_run_report_educarte_views.xml',
+        'views/hr_payslip_reports_views.xml'
     ],
     'installable': True,
     'application': False,

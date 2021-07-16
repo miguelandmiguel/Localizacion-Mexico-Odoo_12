@@ -11,7 +11,7 @@
                 documentStatus="ORIGINAL" 
                 t-att-DeliveryDate="record.date_invoice" >
                 <requestForPaymentIdentification>
-                    <entityType t-raw="'INGRESO' if record.type == 'out_invoice' else 'EGRESO'"></entityType>
+                    <entityType t-raw="'INVOICE' if record.type == 'out_invoice' else 'CREDIT_NOTE'"></entityType>
                     <uniqueCreatorIdentification t-raw="sumary.get('serie') + sumary.get('folio')"></uniqueCreatorIdentification>
                 </requestForPaymentIdentification>
                 <specialInstruction code="ZZZ">
