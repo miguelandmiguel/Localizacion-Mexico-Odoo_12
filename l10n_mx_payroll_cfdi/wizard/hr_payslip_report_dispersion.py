@@ -33,7 +33,7 @@ class HrPayslipRun(models.Model):
         for run_id in self:
             p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina == 'fdbvenn')
             if p_ids:
-                return p_ids.dispersion_banorte_interbancarias_datas_datos(run_id)
+                return p_ids.dispersion_bbva_inter_venn_datas(run_id)
         return ''
 
     #---------------------------------------
