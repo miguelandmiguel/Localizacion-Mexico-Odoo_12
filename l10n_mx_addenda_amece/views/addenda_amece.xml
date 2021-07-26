@@ -72,7 +72,7 @@
                             <Amount><t t-esc="grossPrice" /></Amount>
                         </netPrice>
                         <AdditionalInformation>
-                            <referenceIdentification type="ON"><t t-esc="line.product_id.default_code" /></referenceIdentification>
+                            <referenceIdentification type="ON"><t t-esc="record.l10n_mx_edi_amece_referenceidentification" /></referenceIdentification>
                         </AdditionalInformation>
                         <totalLineAmount>
                             <grossAmount>
