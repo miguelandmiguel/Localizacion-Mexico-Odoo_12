@@ -1008,6 +1008,7 @@ class HrPayslip(models.Model):
                 #-------------------
                 ultimo_sueldo_mensual = self.get_salary_line_total('SD') * 30
                 IngresoNoAcumulable = "%.2f"%(0.0) if totalSepIndemGravado <= 0 else "%.2f"%(totalSepIndemGravado - ultimo_sueldo_mensual)
+                IngresoNoAcumulable = "%.2f"%(0.0) if float(IngresoNoAcumulable) <= 0 else "%.2f"%(IngresoNoAcumulable)
                 percepciones["SeparacionIndemnizacion"] = {
                     'TotalPagado': "%.2f"%totalSepIndem,
                     'NumAniosServicio': round(empleado.cfdi_anhos_servicio),
