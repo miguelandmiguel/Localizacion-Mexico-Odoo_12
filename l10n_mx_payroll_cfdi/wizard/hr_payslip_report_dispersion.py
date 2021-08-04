@@ -339,6 +339,9 @@ class HrPayslip(models.Model):
     #---------------------------------------
     @api.multi
     def dispersion_bbva_inter_venn_datas(self, run_id=None):
+        digitos = 'PSC'
+        if 'rechazo' in self.env.context:
+            digitos = 'PTC'
         res_banco = []
         indx = 1
         for slip in self:
@@ -369,11 +372,13 @@ class HrPayslip(models.Model):
             pp_nombre = '%s %s %s'%( employee_id.cfdi_appat, employee_id.cfdi_apmat, employee_id.name )
             pp_nombre = remove_accents(pp_nombre[:30])
             pp_noina = 'Nomina %s'%( slip.payslip_run_id and slip.payslip_run_id.name[:30] or slip.name[:30] )
+            pp_noina = pp_noina[:30]
 
             pp_ref = '%s'%( slip.number.replace('SLIP/', '') )
-            res_banco.append((
-                'PSC',
-                '%s'%( pp_cuenta.ljust(18, " ") ),
+
+            res_banco_tmp = (
+                '%s'%(digitos),
+                '%s'%( pp_cuenta.rjust(18, " ") ),
                 pp_cc,
                 'MXP',
                 pp_total.rjust(16, "0"),
@@ -383,7 +388,17 @@ class HrPayslip(models.Model):
                 '%s'%( remove_accents(pp_noina).ljust(30, " ") ),
                 pp_ref.rjust(7, "0"),
                 'H'
-            ))
+            )
+            if 'rechazo' in self.env.context:
+                res_banco_tmp = (
+                    '%s'%(digitos),
+                    '%s'%( pp_cuenta.rjust(18, " ") ),
+                    pp_cc,
+                    'MXP',
+                    pp_total.rjust(16, "0"),
+                    '%s'%( remove_accents(pp_noina).ljust(30, " ") )
+                )
+            res_banco.append(res_banco_tmp)
             indx += 1
         banco_datas = self._save_txt(res_banco)
         return banco_datas
@@ -486,16 +501,18 @@ class ReportPayslipBBVAInterVennTxt(models.AbstractModel):
         company_id = self.env.user.company_id
         return 'DispersionBBVA_Venn_%s.txt'%( company_id.id or 'DispersionBBVA_Venn' )
 
+
 class ReportPayslipBBVATxt(models.AbstractModel):
-    _name = 'report.l10n_mx_payroll_cfdi.payslipdispersionbbvaintertxt'
+    _name = 'report.l10n_mx_payroll_cfdi.payslipdispersionbbvavenntxt'
     _inherit = 'report.report_txt.abstract'
 
     def __init__(self, pool, cr):
         self.sheet_header = None
 
     def generate_txt_report(self, txtfile, data, objects):
-        objs = objects.filtered(lambda r: r.layout_nomina == 'inter')
-        body = objs.dispersion_bbva_inter_venn_datas()
+        # print('---- objects', objects)
+        # objs = objects.filtered(lambda r: r.layout_nomina == 'inter')
+        body = objects.with_context(rechazo=True).dispersion_bbva_inter_venn_datas()
         # body = obj.dispersion_bbva_inter_datas()
         txtfile.write(b'%s'%body.encode('utf-8'))
 

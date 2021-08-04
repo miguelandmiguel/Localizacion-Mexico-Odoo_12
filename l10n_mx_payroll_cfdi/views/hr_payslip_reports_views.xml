@@ -48,22 +48,24 @@
 
         <!-- -->
         <report
-            id="payslipdispersionbbvaintertxt"
-            model="hr.payslip"
-            string="Dispersion BBVA Interbancarias"
-            report_type="txt"
-            name="l10n_mx_payroll_cfdi.payslipdispersionbbvaintertxt"
-            file="payslipdispersionbbvaintertxt"
-            attachment_use="True" />
-
-        <report
             id="payslipdispersionbbvaintervenntxt"
             model="hr.payslip.run"
             string="BBVA Interbancarias (Venn)"
             report_type="txt"
             name="l10n_mx_payroll_cfdi.payslipdispersionbbvaintervenntxt"
             file="payslipdispersionbbvaintervenntxt"
-            attachment_use="True" />            
+            attachment_use="True" />
+
+        <report
+            id="payslipdispersionbbvavenntxt"
+            model="hr.payslip"
+            string="BBVA Interbancarias (Venn)"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.payslipdispersionbbvavenntxt"
+            file="payslipdispersionbbvavenntxt"
+            attachment_use="True" />
+
+         
 
     </data>
 </odoo>
