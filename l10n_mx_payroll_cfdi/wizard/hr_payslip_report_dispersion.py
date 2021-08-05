@@ -104,7 +104,7 @@ class HrPayslip(models.Model):
         #---------------
         # Header Data 
         #---------------
-        banco_header = self.company_id.clave_emisora or ''
+        banco_header = run_id.company_id.clave_emisora or ''
         run_id.application_date_banorte or 'AAAAMMDD'
         date1 = run_id.application_date_banorte.strftime("%Y%m%d")
         indx = 0
@@ -339,6 +339,71 @@ class HrPayslip(models.Model):
     #---------------------------------------
     @api.multi
     def dispersion_bbva_inter_venn_datas(self, run_id=None):
+        res_banco = []
+        indx = 1
+        for slip in self:
+            employee_id = slip.employee_id or False
+            total = slip.get_salary_line_total('C99')
+            if total <= 0:
+                _logger.info('---- Dispersion BBVA Inter Venn NO total=0 %s %s %s '%( slip.id, slip.number, employee_id.id ) )
+                continue
+
+            bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
+            if not bank_account_id:
+                _logger.info('---- Dispersion BBVA Inter NO bank_account_id %s %s %s '%( slip.id, slip.number, employee_id.id ) )
+                continue
+
+            bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
+            pp_cuenta = bank_account_id and bank_account_id.acc_number or ''
+            if not pp_cuenta:
+                _logger.info('---- Dispersion BBVA Inter NO CUENTA%s %s %s '%( slip.id, slip.number, employee_id.id ) )
+                continue
+
+            pp_total = '%.2f'%(total)
+            pp_cc = ''
+            if slip.company_id.id == 1:
+                pp_cc = '000000000156096999'
+            elif slip.company_id.id == 2:
+                pp_cc = '000000000194219546'
+
+            pp_nombre = '%s %s %s'%( employee_id.cfdi_appat, employee_id.cfdi_apmat, employee_id.name )
+            pp_nombre = remove_accents(pp_nombre[:30])
+            pp_noina = 'Nomina %s'%( slip.payslip_run_id and slip.payslip_run_id.name[:30] or slip.name[:30] )
+            pp_noina = pp_noina[:30]
+
+            pp_ref = '%s'%( slip.number.replace('SLIP/', '') )
+
+            # bbva
+            _logger.info('---------- layout_nomina %s '%( slip.layout_nomina ) )
+            if slip.layout_nomina != 'bbva':
+                res_banco.append((
+                    'PSC',
+                    '%s'%( pp_cuenta.rjust(18, "0") ),
+                    pp_cc,
+                    'MXP',
+                    pp_total.rjust(16, "0"),
+                    '%s'%( pp_nombre.ljust(30, " ") ),
+                    '40',
+                    '%s'%( bank_number ),
+                    '%s'%( remove_accents(pp_noina).ljust(30, " ") ),
+                    pp_ref.rjust(7, "0"),
+                    'H'
+                ))
+            else:
+                res_banco.append((
+                    'PTC',
+                    '%s'%( pp_cuenta.rjust(18, "0") ),
+                    pp_cc,
+                    'MXP',
+                    pp_total.rjust(16, "0"),
+                    '%s'%( remove_accents(pp_noina).ljust(30, " ") )                    
+                ))
+            indx += 1
+
+        banco_datas = self._save_txt(res_banco)
+
+
+        """
         digitos = 'PSC'
         if 'rechazo' in self.env.context:
             digitos = 'PTC'
@@ -378,7 +443,7 @@ class HrPayslip(models.Model):
 
             res_banco_tmp = (
                 '%s'%(digitos),
-                '%s'%( pp_cuenta.rjust(18, " ") ),
+                '%s'%( pp_cuenta.rjust(18, "0") ),
                 pp_cc,
                 'MXP',
                 pp_total.rjust(16, "0"),
@@ -392,7 +457,7 @@ class HrPayslip(models.Model):
             if 'rechazo' in self.env.context:
                 res_banco_tmp = (
                     '%s'%(digitos),
-                    '%s'%( pp_cuenta.rjust(18, " ") ),
+                    '%s'%( pp_cuenta.rjust(18, "0") ),
                     pp_cc,
                     'MXP',
                     pp_total.rjust(16, "0"),
@@ -401,6 +466,7 @@ class HrPayslip(models.Model):
             res_banco.append(res_banco_tmp)
             indx += 1
         banco_datas = self._save_txt(res_banco)
+        """
         return banco_datas
 
 
