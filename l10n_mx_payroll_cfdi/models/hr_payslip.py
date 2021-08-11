@@ -1011,7 +1011,7 @@ class HrPayslip(models.Model):
                 IngresoNoAcumulable = "%.2f"%(0.0) if float(IngresoNoAcumulable) <= 0 else IngresoNoAcumulable
                 percepciones["SeparacionIndemnizacion"] = {
                     'TotalPagado': "%.2f"%totalSepIndem,
-                    'NumAniosServicio': round(empleado.cfdi_anhos_servicio),
+                    'NumAniosServicio': '%s'%round(empleado.cfdi_anhos_servicio),
                     'UltimoSueldoMensOrd': "%.2f"%ultimo_sueldo_mensual,
                     'IngresoAcumulable': "%.2f"%min(totalSepIndemGravado, ultimo_sueldo_mensual),
                     'IngresoNoAcumulable': IngresoNoAcumulable
@@ -1183,7 +1183,7 @@ class HrPayslip(models.Model):
         return rp
 
     def _get_NumDiasPagados(self):
-        if self.struct_id.l10n_mx_edi_tiponominaespecial == 'ext_fini':
+        if self.struct_id.l10n_mx_edi_tiponominaespecial in ['ext_fini', 'ext_nom', 'ext_agui']:
             return "1"
         dias = self.get_salary_line_total('C9') or 0.0
         return "%d"%dias
