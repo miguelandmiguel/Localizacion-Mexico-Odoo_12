@@ -1329,6 +1329,7 @@ class HrPayslip(models.Model):
 
         xmlDatas = etree.tostring(tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')
         _logger.info('------------------xmlDatas %s '%xmlDatas )
+        """
         if xsd_datas:
             try:
                 with BytesIO(xsd_datas) as xsd:
@@ -1339,6 +1340,7 @@ class HrPayslip(models.Model):
             except Exception as e:
                 return {'error': (_('The cfdi generated is not valid') +
                                     create_list_html(str(e).split('\\n')))}
+        """
         return {'cfdi': etree.tostring(tree, xml_declaration=True, encoding='UTF-8')}
         # return {'cfdi': etree.tostring(tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')}
 
