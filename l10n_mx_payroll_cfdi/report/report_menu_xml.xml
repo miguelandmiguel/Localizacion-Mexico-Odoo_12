@@ -210,16 +210,16 @@
                 <br />
                 <table class="info" style="width: 100%  !important; font-size: 10px;">
                     <tr>
-                        <td>
+                        <td style="width: 40% !important;">
                             <span t-esc="o.employee_id.cfdi_code_emp"/> &amp;nbsp;<span t-esc="o.employee_id.cfdi_complete_name"/>
                         </td>
-                        <td>
+                        <td style="width: 20% !important;">
                             <strong>&amp;nbsp;CURP: &amp;nbsp;</strong><span t-esc="o.employee_id.cfdi_curp"/>
                         </td>
-                        <td>
+                        <td style="width: 20% !important;">
                             <strong>&amp;nbsp;RFC: &amp;nbsp;</strong><span t-esc="o.employee_id.cfdi_rfc"/>
                         </td>
-                        <td>
+                        <td style="width: 20% !important;">
                             <strong>&amp;nbsp;NSS: &amp;nbsp;</strong><span t-esc="o.employee_id.cfdi_imss"/>
                         </td>
                     </tr>
@@ -245,10 +245,16 @@
                 </table>
                 <table class="info" style="width: 100%  !important; font-size: 10px;">
                     <tr>
-                        <td style="width: 50% !important;">
+                        <td style="width: 25% !important;">
                             <strong>DEPTO: &amp;nbsp;</strong><span t-esc="o.employee_id.department_id and o.employee_id.department_id.name.replace('/', '')"/>
                         </td>
-                        <td style="width: 50% !important;" colspan="3">
+                        <td style="width: 25% !important;">
+                            <strong>VACACIONES: &amp;nbsp;</strong><span t-esc="o.get_salary_line_total('C2')"/>
+                        </td>
+                        <td style="width: 25% !important;">
+                            <strong>FALTAS : &amp;nbsp;</strong><span t-esc="o.get_salary_line_total('C3') + o.get_salary_line_total('C4')"/>
+                        </td>
+                        <td style="width: 25% !important;" colspan="3">
                             <strong>FORMA DE PAGO: &amp;nbsp;</strong><span>99 POR DEFINIR&amp;nbsp;</span>
                         </td>
                     </tr>
