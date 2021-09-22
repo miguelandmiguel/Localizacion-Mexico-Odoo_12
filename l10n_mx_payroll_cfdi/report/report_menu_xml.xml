@@ -230,32 +230,30 @@
                             <strong>PUESTO: &amp;nbsp;</strong><span t-esc="o.employee_id.job_id and o.employee_id.job_id.name.replace('/', '')"/>
                         </td>
                         <td>
-                            <strong>&amp;nbsp;DIAS TRAB: &amp;nbsp;</strong><span t-esc="o._get_NumDiasPagados()"/>
+                            <strong>DEPTO: &amp;nbsp;</strong><span t-esc="o.employee_id.department_id and o.employee_id.department_id.name.replace('/', '')"/>
+                        </td>
+
+                        <td>
+                            <strong>DEL: &amp;nbsp;</strong><span t-esc="o.date_from"/> <strong>AL: &amp;nbsp;</strong><span t-esc="o.date_to"/>
                         </td>
                         <td>
-                            <strong>DEL: &amp;nbsp;</strong><span t-esc="o.date_from"/>
-                        </td>
+                            <strong>JORNADA: &amp;nbsp;</strong><span> 8 hrs&amp;nbsp;</span>
+                        </td>                        
                         <td>
-                            <strong>AL: &amp;nbsp;</strong><span t-esc="o.date_to"/>
-                        </td>
-                        <td>
-                            <span>JORNADA: 8 hrs&amp;nbsp;</span>
+                            <strong>FORMA DE PAGO: &amp;nbsp;</strong><span>99 POR DEFINIR&amp;nbsp;</span>
                         </td>
                     </tr>
                 </table>
                 <table class="info" style="width: 100%  !important; font-size: 10px;">
                     <tr>
-                        <td style="width: 25% !important;">
-                            <strong>DEPTO: &amp;nbsp;</strong><span t-esc="o.employee_id.department_id and o.employee_id.department_id.name.replace('/', '')"/>
+                        <td>
+                            <strong>DIAS TRABAJADOS: &amp;nbsp;</strong><span t-esc="o._get_NumDiasPagados()"/>
                         </td>
-                        <td style="width: 25% !important;">
-                            <strong>VACACIONES: &amp;nbsp;</strong><span t-esc="o.get_salary_line_total('C2')"/>
+                        <td>
+                            <strong>VACACIONES: &amp;nbsp;</strong><span t-esc="round(o.get_salary_line_total('C2'))"/>
                         </td>
-                        <td style="width: 25% !important;">
-                            <strong>FALTAS : &amp;nbsp;</strong><span t-esc="o.get_salary_line_total('C3') + o.get_salary_line_total('C4')"/>
-                        </td>
-                        <td style="width: 25% !important;" colspan="3">
-                            <strong>FORMA DE PAGO: &amp;nbsp;</strong><span>99 POR DEFINIR&amp;nbsp;</span>
+                        <td>
+                            <strong>FALTAS : &amp;nbsp;</strong><span t-esc="round(o.get_salary_line_total('C3') + o.get_salary_line_total('C4'))"/>
                         </td>
                     </tr>
                 </table>
