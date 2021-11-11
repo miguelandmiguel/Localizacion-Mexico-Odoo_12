@@ -1202,8 +1202,7 @@ class HrPayslip(models.Model):
             if rp.city:
                 companyName += '  %s'%rp.city
             if rp.state_id:
-                companyName += '  %s'%rp.state_id.name                
-        print('--------- companyName ', companyName)
+                companyName += '  %s'%rp.state_id.name
         return companyName.upper()
 
     @api.multi

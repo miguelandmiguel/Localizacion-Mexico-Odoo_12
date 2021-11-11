@@ -361,10 +361,13 @@ class HrPayslip(models.Model):
 
             pp_total = '%.2f'%(total)
             pp_cc = ''
-            if slip.company_id.id == 1:
-                pp_cc = '000000000156096999'
-            elif slip.company_id.id == 2:
-                pp_cc = '000000000194219546'
+            if slip.company_id.bbva_cuenta_emisora:
+                pp_cc = slip.company_id.bbva_cuenta_emisora
+            else:
+                if slip.company_id.id == 1:
+                    pp_cc = '000000000156096999'
+                elif slip.company_id.id == 2:
+                    pp_cc = '000000000194219546'
 
             pp_nombre = '%s %s %s'%( employee_id.cfdi_appat, employee_id.cfdi_apmat, employee_id.name )
             pp_nombre = remove_accents(pp_nombre[:30])
@@ -396,80 +399,12 @@ class HrPayslip(models.Model):
                     pp_cc,
                     'MXP',
                     pp_total.rjust(16, "0"),
-                    '%s'%( remove_accents(pp_noina).ljust(30, " ") )                    
+                    '%s'%( remove_accents(pp_noina).ljust(30, " ") )
                 ))
             indx += 1
 
         banco_datas = self._save_txt(res_banco)
-
-
-        """
-        digitos = 'PSC'
-        if 'rechazo' in self.env.context:
-            digitos = 'PTC'
-        res_banco = []
-        indx = 1
-        for slip in self:
-            employee_id = slip.employee_id or False
-            total = slip.get_salary_line_total('C99')
-            if total <= 0:
-                _logger.info('---- Dispersion BBVA Inter Venn NO total=0 %s %s %s '%( slip.id, slip.number, employee_id.id ) )
-                continue
-
-            bank_account_id = employee_id.bank_account_id and slip.employee_id.bank_account_id or False
-            if not bank_account_id:
-                _logger.info('---- Dispersion BBVA Inter NO bank_account_id %s %s %s '%( slip.id, slip.number, employee_id.id ) )
-                continue
-
-            bank_number = bank_account_id and bank_account_id.bank_id.bic or ''
-            pp_cuenta = bank_account_id and bank_account_id.acc_number or ''
-            if not pp_cuenta:
-                _logger.info('---- Dispersion BBVA Inter NO CUENTA%s %s %s '%( slip.id, slip.number, employee_id.id ) )
-                continue
-
-            pp_total = '%.2f'%(total)
-            pp_cc = ''
-            if slip.company_id.id == 1:
-                pp_cc = '000000000156096999'
-            elif slip.company_id.id == 2:
-                pp_cc = '000000000194219546'
-
-            pp_nombre = '%s %s %s'%( employee_id.cfdi_appat, employee_id.cfdi_apmat, employee_id.name )
-            pp_nombre = remove_accents(pp_nombre[:30])
-            pp_noina = 'Nomina %s'%( slip.payslip_run_id and slip.payslip_run_id.name[:30] or slip.name[:30] )
-            pp_noina = pp_noina[:30]
-
-            pp_ref = '%s'%( slip.number.replace('SLIP/', '') )
-
-            res_banco_tmp = (
-                '%s'%(digitos),
-                '%s'%( pp_cuenta.rjust(18, "0") ),
-                pp_cc,
-                'MXP',
-                pp_total.rjust(16, "0"),
-                '%s'%( pp_nombre.ljust(30, " ") ),
-                '40',
-                '%s'%( bank_number ),
-                '%s'%( remove_accents(pp_noina).ljust(30, " ") ),
-                pp_ref.rjust(7, "0"),
-                'H'
-            )
-            if 'rechazo' in self.env.context:
-                res_banco_tmp = (
-                    '%s'%(digitos),
-                    '%s'%( pp_cuenta.rjust(18, "0") ),
-                    pp_cc,
-                    'MXP',
-                    pp_total.rjust(16, "0"),
-                    '%s'%( remove_accents(pp_noina).ljust(30, " ") )
-                )
-            res_banco.append(res_banco_tmp)
-            indx += 1
-        banco_datas = self._save_txt(res_banco)
-        """
         return banco_datas
-
-
 
     def _save_txt(self, data):
         file_value = ''
@@ -479,9 +414,6 @@ class HrPayslip(models.Model):
                 file_row += u'%s'%item
             file_value += file_row + '\r\n'
         return file_value
-
-
-
 
 class ReportBanorteFdbVennTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionfdbvenntxt'

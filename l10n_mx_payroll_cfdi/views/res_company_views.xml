@@ -43,6 +43,19 @@
                             </div>
                         </div>
                     </div>
+                    <h2>Dispersión BBVA</h2>
+                    <div class="row mt16 o_settings_container" id="hr_payroll_accountant_bbva">
+                        <div class="col-lg-6 col-12 o_setting_box">
+                            <div class="o_setting_left_pane">
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <div class="o_form_label">
+                                    Clave Emisora
+                                </div>
+                                <field name="bbva_cuenta_emisora"/>
+                            </div>
+                        </div>                        
+                    </div>
                 </div>
             </field>
         </record>
