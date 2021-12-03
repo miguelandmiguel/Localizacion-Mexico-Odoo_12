@@ -10,7 +10,7 @@
     'author': "OpenBias",
     'website': "http://www.bias.com.mx",
     'category': 'Uncategorized',
-    'version': '1.0.3',
+    'version': '1.0.4',
     'depends': ['mail', 'account'],
     'data': [
         'security/ir.model.access.csv',

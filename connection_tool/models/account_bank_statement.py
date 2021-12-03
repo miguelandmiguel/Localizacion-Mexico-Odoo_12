@@ -181,13 +181,13 @@ class AccountBankStatement(models.Model):
             codigo_transaccion = transaccion and transaccion[0].strip() or ""
             concepto_transaccion = transaccion and transaccion[1].strip() or ""
             ref = st_line.ref
-            if codigo_transaccion in ['T17'] and ref:
+            if codigo_transaccion in ['T17'] and ref: 
                 # ref = ref.replace('0000001','')
                 ref = ref[7:]
                 std_ids = statementLines.search_read(
                     [
-                        ('statement_id', '=', self.id),
-                        ('name', '=', st_line.name),
+                        ('statement_id', '=', self.id), 
+                        ('name', '=', st_line.name), 
                         ('ref', '=', st_line.ref),
                         ('note', 'like', 'T22|')
                     ], ['name', 'ref', 'note', 'amount'])
@@ -215,7 +215,7 @@ class AccountBankStatement(models.Model):
                 ):
                 movel_line_ids = layoutline_id.get('movel_line_ids') and layoutline_id['movel_line_ids'] or []
                 move_lines = AccountMoveLine.browse(movel_line_ids)
-                line_residual = st_line.currency_id and st_line.amount_currency or st_line.counterpart_aml_id
+                line_residual = st_line.currency_id and st_line.amount_currency or st_line.amount
                 line_currency = st_line.currency_id or st_line.journal_id.currency_id or st_line.company_id.currency_id
                 amount_residual = move_lines and sum(aml.currency_id and aml.amount_residual_currency or aml.amount_residual for aml in move_lines)
                 total_residual = amount_residual or 0.0
