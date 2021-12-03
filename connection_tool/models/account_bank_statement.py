@@ -181,12 +181,13 @@ class AccountBankStatement(models.Model):
             codigo_transaccion = transaccion and transaccion[0].strip() or ""
             concepto_transaccion = transaccion and transaccion[1].strip() or ""
             ref = st_line.ref
-            if codigo_transaccion in ['T17'] and ref: 
-                ref = ref.replace('0000001','')
+            if codigo_transaccion in ['T17'] and ref:
+                # ref = ref.replace('0000001','')
+                ref = ref[7:]
                 std_ids = statementLines.search_read(
                     [
-                        ('statement_id', '=', self.id), 
-                        ('name', '=', st_line.name), 
+                        ('statement_id', '=', self.id),
+                        ('name', '=', st_line.name),
                         ('ref', '=', st_line.ref),
                         ('note', 'like', 'T22|')
                     ], ['name', 'ref', 'note', 'amount'])
@@ -214,7 +215,7 @@ class AccountBankStatement(models.Model):
                 ):
                 movel_line_ids = layoutline_id.get('movel_line_ids') and layoutline_id['movel_line_ids'] or []
                 move_lines = AccountMoveLine.browse(movel_line_ids)
-                line_residual = st_line.currency_id and st_line.amount_currency or st_line.amount
+                line_residual = st_line.currency_id and st_line.amount_currency or st_line.counterpart_aml_id
                 line_currency = st_line.currency_id or st_line.journal_id.currency_id or st_line.company_id.currency_id
                 amount_residual = move_lines and sum(aml.currency_id and aml.amount_residual_currency or aml.amount_residual for aml in move_lines)
                 total_residual = amount_residual or 0.0
@@ -223,7 +224,9 @@ class AccountBankStatement(models.Model):
                 counterpart_aml_dicts = []
                 amount_total = abs(line_residual)
                 payment_aml_rec = self.env['account.move.line']
+                reconciliationModel = self.env['account.reconciliation.widget']
                 _logger.info(" TEST: Move IDS %s -%s "%(move_lines, st_line.name) )
+                reconcileWidget = False
                 for aml in move_lines:
                     if aml.full_reconcile_id:
                         continue
@@ -232,7 +235,28 @@ class AccountBankStatement(models.Model):
                     if aml.currency_id:
                         break
                     amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
-                    if round(amount_total, 2) >= round(abs(amount), 2):
+                    if round(amount_total, 2) <= round(abs(amount), 2):
+                        st_line_ids = st_line.ids
+                        counterpart_aml_dicts.append({
+                                'name': aml.name if aml.name != '/' else aml.move_id.name,
+                                'credit': amount_total < 0 and -amount_total or 0,
+                                'debit': amount_total > 0 and amount_total or 0,
+                                'counterpart_aml_id': aml.id,
+                                'move_line': aml.id
+                        })
+                        data = [{
+                            'partner_id': aml.partner_id.id,
+                            'counterpart_aml_dicts': counterpart_aml_dicts,
+                            'payment_aml_ids': [],
+                            'new_aml_dicts': [],
+                            'move_line': False,
+                        }]
+                        reconcileWidget = True
+                        res=True
+                        reconciliationModel.process_bank_statement_line(st_line_ids, data)
+                        _logger.info("03 ----------- Start Reconcile %s - %s - %s - %s -%s -%s "%(data, st_line.name, st_line_ids, amount, amount_total, balance))
+                        break
+                    elif round(amount_total, 2) >= round(abs(amount), 2):
                         amount_total -= abs(amount)
                         counterpart_aml_dicts.append({
                                 'name': aml.name if aml.name != '/' else aml.move_id.name,
@@ -247,11 +271,12 @@ class AccountBankStatement(models.Model):
                                 'credit': balance > 0 and balance or 0,
                                 'move_line': aml,
                         })
-                _logger.info("03 ----------- Start Reconcile %s - %s"%(counterpart_aml_dicts, st_line.name))
-                res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
+                if reconcileWidget == False:
+                    _logger.info("03 ----------- Start Reconcile %s - %s - %s - %s -%s -%s "%(counterpart_aml_dicts, st_line.name, payment_aml_rec, amount, amount_total, balance))
+                    res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
                 if use_new_cursor:
                     cr.commit()
-                _logger.info("04 ----------- End Reconcile: %s - %s"%(res.name, st_line.name))
+                _logger.info("04 ----------- End Reconcile: %s - %s"%(res or '', st_line.name))
                 if res:
                     break
             if res:
