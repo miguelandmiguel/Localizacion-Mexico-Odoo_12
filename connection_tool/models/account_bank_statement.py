@@ -225,17 +225,16 @@ class AccountBankStatement(models.Model):
                 amount_total = abs(line_residual)
                 payment_aml_rec = self.env['account.move.line']
                 reconciliationModel = self.env['account.reconciliation.widget']
-                _logger.info(" TEST: Move IDS %s -%s "%(move_lines, st_line.name) )
+                _logger.info(" TEST: Move IDS %s - %s "%(move_lines, st_line.name) )
                 reconcileWidget = False
+
                 for aml in move_lines:
                     if aml.full_reconcile_id:
                         continue
-                    # Convertir a la moneda...
-                    #
                     if aml.currency_id:
                         break
                     amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
-                    if round(amount_total, 2) <= round(abs(amount), 2):
+                    if round(amount_total, 2) < round(abs(amount), 2):
                         st_line_ids = st_line.ids
                         counterpart_aml_dicts.append({
                                 'name': aml.name if aml.name != '/' else aml.move_id.name,
