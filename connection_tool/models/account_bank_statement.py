@@ -228,6 +228,7 @@ class AccountBankStatement(models.Model):
                 _logger.info(" TEST: Move IDS %s - %s "%(move_lines, st_line.name) )
                 reconcileWidget = False
 
+                amount = 0
                 for aml in move_lines:
                     if aml.full_reconcile_id:
                         continue
@@ -270,7 +271,7 @@ class AccountBankStatement(models.Model):
                                 'credit': balance > 0 and balance or 0,
                                 'move_line': aml,
                         })
-                if reconcileWidget == False:
+                if reconcileWidget == False and len(counterpart_aml_dicts) > 0:
                     _logger.info("03 ----------- Start Reconcile %s - %s - %s - %s -%s -%s "%(counterpart_aml_dicts, st_line.name, payment_aml_rec, amount, amount_total, balance))
                     res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
                 if use_new_cursor:
