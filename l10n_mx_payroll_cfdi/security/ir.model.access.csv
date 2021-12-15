@@ -1,5 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_hr_rule_input_code,hr_rule_input_code user,model_hr_rule_input_code,,1,1,1,1
-access_hr_payslip_run_import_inputs,hr_payslip_run_import_inputs users,model_hr_payslip_run_import_inputs,,1,1,1,1
-access_hr_payslip_run_import_inputs,hr_payslip_run_import_inputs users,model_hr_payslip_run_import_inputs,,1,1,1,1
-access_hr_payslip_run_report_educarte,hr_payslip_run_report_educarte users,model_hr_payslip_run_report_educarte,,1,1,1,1
