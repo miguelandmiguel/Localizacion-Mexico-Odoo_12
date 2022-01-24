@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- QWeb Reports -->
+        <report 
+            id="cfdi_traslado_mx"
+            model="cfdi.traslados"
+            string="CFDI Traslado"
+            report_type="qweb-pdf"
+            name="cfd_mx_traslado.report_traslado_mx"
+            file="cfd_mx_traslado.report_traslado_mx"
+            usage="default"
+            header="False"
+            attachment_use="True"
+            attachment="(object.state in ('open','paid')) and ('INV'+(object.cfdi_uuid or '').replace('/','')+'.pdf')" />
+
+        <template id="report_traslado_mx_document">
+            <t t-call="web.external_layout">
+                <t t-set="o" t-value="o.with_context(lang=lang)"/>
+                <div class="page">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <img 
+                                t-if="o.company_id.logo" 
+                                t-att-src="'data:image/png;base64,%s' % o.company_id.logo" 
+                                class="img img-responsive" style="max-height:104px;" />
+                        </div>
+                        <div class="col-xs-5 text-center">
+                            <strong class="font_theme_color" t-field="o.company_id.partner_id.name" /><br />
+                            <div class="text-center" name="company_address">
+                                <div t-field="o.company_id.partner_id" 
+                                    t-field-options='{
+                                        "widget": "contact", 
+                                        "fields": ["address", "phone", "email", "vat", "regimen_id"], 
+                                        "no_marker": false, "phone_icons": true}'
+                                    class="company_address" />
+                            </div>
+                        </div>
+                        <div class="col-xs-4 calidad_page">
+                            <div class="row">
+                                <div class="col-xs-12 bg_theme_color text-left">
+                                    <span class="fa fa-building-o"></span>
+                                    <strong>CFDI TRASLADO <t t-if="o.cfdi_require_cartaporte"> CARTA PORTE</t></strong>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 text-left">
+                                    <strong>Serie y Folio: </strong><br /><span t-field="o.name" />
+                                </div>
+                                <div class="col-xs-12 text-left">
+                                    <strong>Fecha y Hora de Emisión: </strong><br />
+                                    <span t-field="o.date_invoice" /> <span t-field="o.l10n_mx_edi_time_invoice" />
+                                </div>
+                                <div class="col-xs-12 text-left">
+                                    <strong>Lugar de Expedición</strong><br />
+                                    [<span t-field="o.partner_id.zip" />] <span t-field="o.partner_id.city" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <t t-set="xml" t-value="o._compute_cfdi_values()" />
+                    <t t-if="xml.get('SelloCFD')">
+                        <div class="row" id='complement'>
+                            <div class="barcode col-3">
+                                <t t-set="sello" t-value="xml.get('SelloCFD', 'No identificado')[-8:]"/>
+                                <img alt="Barcode" t-att-src="'/report/barcode/?type=QR&amp;value=%s' % quote_plus(
+                                    'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?' + keep_query(
+                                        re=xml.get('RfcEmisor'), rr=xml.get('RfcReceptor'),
+                                        tt='%.*f' % (2, xml.get('Total')), id=xml.get('UUID'))
+                                        + '&amp;fe=%s' % quote_plus(
+                                            sello, 'utf-8', 'strict', '=/').replace('%2B', '+'))"/>
+                            </div>
+                        </div>
+                    </t>                    
+                </div>
+            </t>
+        </template>
+
+        <template id="report_traslado_mx">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-set="lang" t-value="o.partner_id.lang or o.company_id.partner_id.lang"/>
+                    <t t-call="cfd_mx_traslado.report_traslado_mx_document" t-lang="lang"/>
+                </t>
+            </t>
+        </template>
+
+
+
+    </data>
+</odoo>

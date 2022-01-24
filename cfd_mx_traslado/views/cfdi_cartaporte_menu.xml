@@ -1,0 +1,23 @@
+<odoo>
+    <data>
+
+        <menuitem
+            id="menu_cfdi_traslado"
+            name="CFDI de Traslado"
+            parent="stock.menu_stock_config_settings"  />
+
+        <menuitem 
+            action="cfdi_cartaporte_transporte_action" 
+            id="cfdi_traslado_transporte_view_menu"
+            name="Catalogo Transporte Carta Porte"
+            parent="cfd_mx_traslado.menu_cfdi_traslado" 
+            sequence="80"/>            
+
+        <menuitem 
+            action="cfdi_traslados_view_action" 
+            id="cfdi_traslados_view_menu"
+            name="CFDI de Traslado"
+            parent="cfd_mx_traslado.menu_cfdi_traslado" 
+            sequence="90"/>
+    </data>
+</odoo>

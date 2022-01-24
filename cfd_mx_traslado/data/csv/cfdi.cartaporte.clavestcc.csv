@@ -1,0 +1,466 @@
+id,clave,name
+cfd_mx_traslado.cartaporte_clavestcc_01,01,Productos agrícolas
+cfd_mx_traslado.cartaporte_clavestcc_011,011,Cultivos de campo
+cfd_mx_traslado.cartaporte_clavestcc_0112,0112,Algodón en bruto
+cfd_mx_traslado.cartaporte_clavestcc_01131,01131,Cebada
+cfd_mx_traslado.cartaporte_clavestcc_01132,01132,Maíz
+cfd_mx_traslado.cartaporte_clavestcc_01133,01133,Avena
+cfd_mx_traslado.cartaporte_clavestcc_01134,01134,Arroz
+cfd_mx_traslado.cartaporte_clavestcc_01135,01135,Centeno
+cfd_mx_traslado.cartaporte_clavestcc_01136,01136,Sorgo
+cfd_mx_traslado.cartaporte_clavestcc_01137,01137,Trigo
+cfd_mx_traslado.cartaporte_clavestcc_01139,01139,Grano
+cfd_mx_traslado.cartaporte_clavestcc_0114,0114,"Semillas oleaginosas, nueces y granos"
+cfd_mx_traslado.cartaporte_clavestcc_01144,01144,Soja
+cfd_mx_traslado.cartaporte_clavestcc_0115,0115,Semillas de campo excluidas semillas oleaginosas
+cfd_mx_traslado.cartaporte_clavestcc_0119,0119,Cultivos de campo misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_01193,01193,Tabaco de hoja
+cfd_mx_traslado.cartaporte_clavestcc_01195,01195,Patatas distintas de las dulces
+cfd_mx_traslado.cartaporte_clavestcc_01197,01197,Remolacha azucarera
+cfd_mx_traslado.cartaporte_clavestcc_012,012,Frutas frescas y nueces de árbol
+cfd_mx_traslado.cartaporte_clavestcc_0121,0121,Frutas cítricas
+cfd_mx_traslado.cartaporte_clavestcc_0122,0122,Frutos caducifolios
+cfd_mx_traslado.cartaporte_clavestcc_01221,01221,Manzanas
+cfd_mx_traslado.cartaporte_clavestcc_01224,01224,Uvas
+cfd_mx_traslado.cartaporte_clavestcc_01226,01226,Melocotones
+cfd_mx_traslado.cartaporte_clavestcc_0123,0123,Frutas tropicales excluidos cítricos
+cfd_mx_traslado.cartaporte_clavestcc_01232,01232,Plátanos
+cfd_mx_traslado.cartaporte_clavestcc_0129,0129,Varias frutas frescas y nueces
+cfd_mx_traslado.cartaporte_clavestcc_01295,01295,Café verde
+cfd_mx_traslado.cartaporte_clavestcc_013,013,Vegetales frescos
+cfd_mx_traslado.cartaporte_clavestcc_0131,0131,"Bulbos, raíces y tubérculos"
+cfd_mx_traslado.cartaporte_clavestcc_01318,01318,Cebollas secas
+cfd_mx_traslado.cartaporte_clavestcc_0133,0133,Verduras frescas de hoja
+cfd_mx_traslado.cartaporte_clavestcc_01334,01334,Apio
+cfd_mx_traslado.cartaporte_clavestcc_01335,01335,Lechuga
+cfd_mx_traslado.cartaporte_clavestcc_0134,0134,"Semillas de verduras maduras secas, etc."
+cfd_mx_traslado.cartaporte_clavestcc_01341,01341,Frijoles maduros secos
+cfd_mx_traslado.cartaporte_clavestcc_01342,01342,Guisantes secos
+cfd_mx_traslado.cartaporte_clavestcc_0139,0139,Verduras frescas varias
+cfd_mx_traslado.cartaporte_clavestcc_01392,01392,Sandías
+cfd_mx_traslado.cartaporte_clavestcc_01394,01394,Tomates
+cfd_mx_traslado.cartaporte_clavestcc_01398,01398,Melones excluyendo sandías
+cfd_mx_traslado.cartaporte_clavestcc_014,014,Ganadería y ganadería
+cfd_mx_traslado.cartaporte_clavestcc_0141,0141,Ganado
+cfd_mx_traslado.cartaporte_clavestcc_01411,01411,Vacas
+cfd_mx_traslado.cartaporte_clavestcc_01413,01413,"Porcinos, jabalíes y cerdos"
+cfd_mx_traslado.cartaporte_clavestcc_01414,01414,Ovejas y corderos
+cfd_mx_traslado.cartaporte_clavestcc_0142,0142,Granja lechera
+cfd_mx_traslado.cartaporte_clavestcc_0143,0143,Fibras animales
+cfd_mx_traslado.cartaporte_clavestcc_01431,01431,Lana
+cfd_mx_traslado.cartaporte_clavestcc_015,015,Aves de corral
+cfd_mx_traslado.cartaporte_clavestcc_0151,0151,Aves de corral vivas
+cfd_mx_traslado.cartaporte_clavestcc_0152,0152,Huevos de aves de corral
+cfd_mx_traslado.cartaporte_clavestcc_019,019,Productos agrícolas varios
+cfd_mx_traslado.cartaporte_clavestcc_0191,0191,Especialidades hortícolas
+cfd_mx_traslado.cartaporte_clavestcc_0192,0192,Especialidades animales
+cfd_mx_traslado.cartaporte_clavestcc_08,08,Productos extranjeros
+cfd_mx_traslado.cartaporte_clavestcc_084,084,"Gomas y cortezas, crudas"
+cfd_mx_traslado.cartaporte_clavestcc_08423,08423,Látex y encías afines
+cfd_mx_traslado.cartaporte_clavestcc_086,086,Productos forestales diversos
+cfd_mx_traslado.cartaporte_clavestcc_09,09,Pescado fresco
+cfd_mx_traslado.cartaporte_clavestcc_091,091,Pescado fresco y productos marinos
+cfd_mx_traslado.cartaporte_clavestcc_0912,0912,Pescado y ballena
+cfd_mx_traslado.cartaporte_clavestcc_09131,09131,"Conchas (ostras, cangrejos, etc.)"
+cfd_mx_traslado.cartaporte_clavestcc_098,098,"Criaderos de peces, granjas"
+cfd_mx_traslado.cartaporte_clavestcc_10,10,Minerales metálicos
+cfd_mx_traslado.cartaporte_clavestcc_101,101,Minerales de hierro
+cfd_mx_traslado.cartaporte_clavestcc_10112,10112,Beneficio de mineral de grado
+cfd_mx_traslado.cartaporte_clavestcc_102,102,Minerales de cobre
+cfd_mx_traslado.cartaporte_clavestcc_103,103,Minerales de plomo y zinc
+cfd_mx_traslado.cartaporte_clavestcc_1031,1031,Minerales de plomo
+cfd_mx_traslado.cartaporte_clavestcc_1032,1032,Minerales de zinc
+cfd_mx_traslado.cartaporte_clavestcc_104,104,Minerales de oro y plata
+cfd_mx_traslado.cartaporte_clavestcc_105,105,Minerales de bauxita y aluminio
+cfd_mx_traslado.cartaporte_clavestcc_106,106,Minerales de manganeso
+cfd_mx_traslado.cartaporte_clavestcc_107,107,Minerales de tungsteno
+cfd_mx_traslado.cartaporte_clavestcc_108,108,Minerales de cromo
+cfd_mx_traslado.cartaporte_clavestcc_109,109,Minerales metálicos misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_11,11,Carbón
+cfd_mx_traslado.cartaporte_clavestcc_111,111,Antracita
+cfd_mx_traslado.cartaporte_clavestcc_11111,11111,Antracita cruda
+cfd_mx_traslado.cartaporte_clavestcc_11112,11112,Antracita limpia
+cfd_mx_traslado.cartaporte_clavestcc_112,112,Carbón bituminoso y lignito
+cfd_mx_traslado.cartaporte_clavestcc_1121,1121,Carbón bituminoso
+cfd_mx_traslado.cartaporte_clavestcc_13,13,Petróleo crudo y gasolina natural
+cfd_mx_traslado.cartaporte_clavestcc_131,131,Petróleo crudo y GNL
+cfd_mx_traslado.cartaporte_clavestcc_132,132,Gasolina natural
+cfd_mx_traslado.cartaporte_clavestcc_14,14,Minerales no metálicos
+cfd_mx_traslado.cartaporte_clavestcc_141,141,"Piedra de dimensión, cantera"
+cfd_mx_traslado.cartaporte_clavestcc_142,142,Piedra triturada y rota
+cfd_mx_traslado.cartaporte_clavestcc_14211,14211,Caliza agrícola
+cfd_mx_traslado.cartaporte_clavestcc_14212,14212,Piedra fundente o cales
+cfd_mx_traslado.cartaporte_clavestcc_14219,14219,Piedra triturada y rota
+cfd_mx_traslado.cartaporte_clavestcc_144,144,Arena y grava
+cfd_mx_traslado.cartaporte_clavestcc_14411,14411,Arena (agregado y lastre)
+cfd_mx_traslado.cartaporte_clavestcc_14412,14412,Grava (agregado y lastre)
+cfd_mx_traslado.cartaporte_clavestcc_14413,14413,Arena industrial cruda
+cfd_mx_traslado.cartaporte_clavestcc_145,145,"Arcilla, cerámica y refractaria"
+cfd_mx_traslado.cartaporte_clavestcc_14511,14511,Bentonita bruta
+cfd_mx_traslado.cartaporte_clavestcc_14512,14512,Arcilla de fuego cruda
+cfd_mx_traslado.cartaporte_clavestcc_14514,14514,Bola bruta y arcilla de caolín
+cfd_mx_traslado.cartaporte_clavestcc_147,147,Minerales químicos y fertilizantes
+cfd_mx_traslado.cartaporte_clavestcc_14711,14711,Barita cruda
+cfd_mx_traslado.cartaporte_clavestcc_14713,14713,"Borato crudo, potasa y soda"
+cfd_mx_traslado.cartaporte_clavestcc_14714,14714,Roca de apatita y fosfato
+cfd_mx_traslado.cartaporte_clavestcc_14715,14715,Sal de roca bruta
+cfd_mx_traslado.cartaporte_clavestcc_14716,14716,Azufre crudo
+cfd_mx_traslado.cartaporte_clavestcc_149,149,Minerales no metálicos misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_14911,14911,Anhidrita bruta y yeso
+cfd_mx_traslado.cartaporte_clavestcc_14913,14913,Asfalto y betunes nativos
+cfd_mx_traslado.cartaporte_clavestcc_14914,14914,Piedra pómez y pumicita cruda
+cfd_mx_traslado.cartaporte_clavestcc_19,19,Artillería
+cfd_mx_traslado.cartaporte_clavestcc_191,191,"Armas, obuses y morteros"
+cfd_mx_traslado.cartaporte_clavestcc_192,192,"Municiones, más de 30 mm"
+cfd_mx_traslado.cartaporte_clavestcc_193,193,Vehículos de combate con orugas completas
+cfd_mx_traslado.cartaporte_clavestcc_194,194,Equipo de avistamiento y control de incendios
+cfd_mx_traslado.cartaporte_clavestcc_195,195,"Brazos pequeños, LTE 30 mm"
+cfd_mx_traslado.cartaporte_clavestcc_196,196,"Munición para armas pequeñas, LTE 30 mm"
+cfd_mx_traslado.cartaporte_clavestcc_199,199,Miscelánea de municiones y accesorios
+cfd_mx_traslado.cartaporte_clavestcc_20,20,Productos alimenticios
+cfd_mx_traslado.cartaporte_clavestcc_201,201,Carne y aves de corral
+cfd_mx_traslado.cartaporte_clavestcc_2011,2011,"Carne, fresca o refrigerada"
+cfd_mx_traslado.cartaporte_clavestcc_2012,2012,Carne fresca congelada
+cfd_mx_traslado.cartaporte_clavestcc_2013,2013,Productos de carne
+cfd_mx_traslado.cartaporte_clavestcc_2014,2014,Subproductos animales no comestibles
+cfd_mx_traslado.cartaporte_clavestcc_20141,20141,"Cueros y pieles, sin curtir"
+cfd_mx_traslado.cartaporte_clavestcc_2015,2015,Aves frescas aliñadas
+cfd_mx_traslado.cartaporte_clavestcc_2016,2016,Aves de corral congeladas
+cfd_mx_traslado.cartaporte_clavestcc_2017,2017,Aves procesadas y caza menor
+cfd_mx_traslado.cartaporte_clavestcc_202,202,Productos lácteos
+cfd_mx_traslado.cartaporte_clavestcc_2021,2021,Crema de mantequilla
+cfd_mx_traslado.cartaporte_clavestcc_2023,2023,Evaporar leche en polvo condensada
+cfd_mx_traslado.cartaporte_clavestcc_2024,2024,Helados y postres helados
+cfd_mx_traslado.cartaporte_clavestcc_2025,2025,Queso y lácteos especiales prd
+cfd_mx_traslado.cartaporte_clavestcc_2026,2026,Leche y nata procesadas
+cfd_mx_traslado.cartaporte_clavestcc_203,203,Alimentos enlatados y en conserva
+cfd_mx_traslado.cartaporte_clavestcc_2031,2031,Mariscos enlatados y curados
+cfd_mx_traslado.cartaporte_clavestcc_2032,2032,Especialidades enlatadas
+cfd_mx_traslado.cartaporte_clavestcc_2033,2033,"Frutas, verduras y mermeladas enlatadas"
+cfd_mx_traslado.cartaporte_clavestcc_2034,2034,Frutas y verduras secas y deshidratadas
+cfd_mx_traslado.cartaporte_clavestcc_2035,2035,"Frutas y verduras en escabeche, salsas"
+cfd_mx_traslado.cartaporte_clavestcc_2036,2036,Pescado envasado
+cfd_mx_traslado.cartaporte_clavestcc_2037,2037,"Frutas, jugos y verduras congeladas"
+cfd_mx_traslado.cartaporte_clavestcc_2038,2038,Especialidades congeladas
+cfd_mx_traslado.cartaporte_clavestcc_2039,2039,Frutas y verduras enlatadas y en conserva
+cfd_mx_traslado.cartaporte_clavestcc_204,204,Productos de molino de grano
+cfd_mx_traslado.cartaporte_clavestcc_2041,2041,Molino de harina y otros granos prd
+cfd_mx_traslado.cartaporte_clavestcc_20411,20411,Harina de trigo excl. Mezclada
+cfd_mx_traslado.cartaporte_clavestcc_20412,20412,Salvado de trigo
+cfd_mx_traslado.cartaporte_clavestcc_20421,20421,Pienso preparado para animales
+cfd_mx_traslado.cartaporte_clavestcc_20423,20423,Alimentos enlatados para animales
+cfd_mx_traslado.cartaporte_clavestcc_2043,2043,Preparaciones de cereales
+cfd_mx_traslado.cartaporte_clavestcc_2044,2044,"Harina, harina y arroz molidos"
+cfd_mx_traslado.cartaporte_clavestcc_2045,2045,Harina mezclada y preparada
+cfd_mx_traslado.cartaporte_clavestcc_2046,2046,Productos de molienda de maíz húmedo
+cfd_mx_traslado.cartaporte_clavestcc_20461,20461,Jarabe de maíz
+cfd_mx_traslado.cartaporte_clavestcc_20462,20462,Maicena
+cfd_mx_traslado.cartaporte_clavestcc_20463,20463,Azúcar de maíz
+cfd_mx_traslado.cartaporte_clavestcc_20471,20471,Alimentos para mascotas no enlatados
+cfd_mx_traslado.cartaporte_clavestcc_20472,20472,Alimentos enlatados para mascotas
+cfd_mx_traslado.cartaporte_clavestcc_205,205,Productos de panadería
+cfd_mx_traslado.cartaporte_clavestcc_206,206,Azúcar
+cfd_mx_traslado.cartaporte_clavestcc_2061,2061,Prd y subproductos de molino de azúcar
+cfd_mx_traslado.cartaporte_clavestcc_20611,20611,Azúcar crudo de caña y remolacha
+cfd_mx_traslado.cartaporte_clavestcc_20616,20616,"Melazas de azúcar, exc blackstrap"
+cfd_mx_traslado.cartaporte_clavestcc_20617,20617,Melaza
+cfd_mx_traslado.cartaporte_clavestcc_2062,2062,Azúcar refinado de caña y remolacha
+cfd_mx_traslado.cartaporte_clavestcc_20625,20625,Subproductos del refino de azúcar
+cfd_mx_traslado.cartaporte_clavestcc_20626,20626,"Pulpa, melaza, remolacha"
+cfd_mx_traslado.cartaporte_clavestcc_207,207,Confitería y prd relacionados
+cfd_mx_traslado.cartaporte_clavestcc_208,208,Bebidas y extractos
+cfd_mx_traslado.cartaporte_clavestcc_20821,20821,"Cerveza, ale, porter, grueso"
+cfd_mx_traslado.cartaporte_clavestcc_20823,20823,Cerveceros granos gastados
+cfd_mx_traslado.cartaporte_clavestcc_2083,2083,Malta
+cfd_mx_traslado.cartaporte_clavestcc_2084,2084,"Vinos, brandy, licores"
+cfd_mx_traslado.cartaporte_clavestcc_20851,20851,Licores destilados y mezclados
+cfd_mx_traslado.cartaporte_clavestcc_20859,20859,Destilados de licor
+cfd_mx_traslado.cartaporte_clavestcc_2086,2086,Refrescos enlatados
+cfd_mx_traslado.cartaporte_clavestcc_2087,2087,Extractos misceláneos sin chocolate
+cfd_mx_traslado.cartaporte_clavestcc_209,209,Preparaciones alimenticias diversas
+cfd_mx_traslado.cartaporte_clavestcc_20911,20911,Aceite de algodón
+cfd_mx_traslado.cartaporte_clavestcc_20914,20914,Pastel o harina de semillas de algodón
+cfd_mx_traslado.cartaporte_clavestcc_20921,20921,Aceite de soja
+cfd_mx_traslado.cartaporte_clavestcc_20923,20923,Pastel o harina de soja
+cfd_mx_traslado.cartaporte_clavestcc_2093,2093,Aceites vegetales y de nueces
+cfd_mx_traslado.cartaporte_clavestcc_2094,2094,Grasas y aceites marinos
+cfd_mx_traslado.cartaporte_clavestcc_2095,2095,Café tostado
+cfd_mx_traslado.cartaporte_clavestcc_2096,2096,"Manteca, aceites de mesa, etc."
+cfd_mx_traslado.cartaporte_clavestcc_2097,2097,"Hielo, natural o elaborado"
+cfd_mx_traslado.cartaporte_clavestcc_2098,2098,"Macarrones, espaguetis, etc."
+cfd_mx_traslado.cartaporte_clavestcc_21,21,Productos de tabaco
+cfd_mx_traslado.cartaporte_clavestcc_211,211,Cigarrillos
+cfd_mx_traslado.cartaporte_clavestcc_212,212,Puros
+cfd_mx_traslado.cartaporte_clavestcc_213,213,Mascar y fumar tabaco
+cfd_mx_traslado.cartaporte_clavestcc_214,214,Tabaco despalillado y resecado
+cfd_mx_traslado.cartaporte_clavestcc_22,22,Productos textiles para fábricas
+cfd_mx_traslado.cartaporte_clavestcc_221,221,Tejidos anchos de algodón
+cfd_mx_traslado.cartaporte_clavestcc_222,222,Fibra y seda artificiales
+cfd_mx_traslado.cartaporte_clavestcc_223,223,Tejidos anchos de lana
+cfd_mx_traslado.cartaporte_clavestcc_224,224,Tejidos estrechos
+cfd_mx_traslado.cartaporte_clavestcc_225,225,Tejidos de punto
+cfd_mx_traslado.cartaporte_clavestcc_227,227,"Revestimientos de suelo, textiles"
+cfd_mx_traslado.cartaporte_clavestcc_228,228,Hilo e hilo
+cfd_mx_traslado.cartaporte_clavestcc_229,229,Productos textiles diversos
+cfd_mx_traslado.cartaporte_clavestcc_2296,2296,Cordones y tejidos para neumáticos
+cfd_mx_traslado.cartaporte_clavestcc_2297,2297,Lana y mohair
+cfd_mx_traslado.cartaporte_clavestcc_2298,2298,Cordaje y bramante
+cfd_mx_traslado.cartaporte_clavestcc_23,23,Ropa y otros textiles acabados
+cfd_mx_traslado.cartaporte_clavestcc_231,231,Ropa para hombres y niños
+cfd_mx_traslado.cartaporte_clavestcc_233,233,"Ropa para mujeres, niñas y bebés"
+cfd_mx_traslado.cartaporte_clavestcc_235,235,"Sombrerería, sombreros y gorras"
+cfd_mx_traslado.cartaporte_clavestcc_237,237,Artículos de piel
+cfd_mx_traslado.cartaporte_clavestcc_238,238,Ropa y accesorios misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_239,239,Textil fabricado misceláneo
+cfd_mx_traslado.cartaporte_clavestcc_24,24,Madera y productos de madera
+cfd_mx_traslado.cartaporte_clavestcc_241,241,Productos forestales primarios
+cfd_mx_traslado.cartaporte_clavestcc_24114,24114,Troncos de madera para pasta
+cfd_mx_traslado.cartaporte_clavestcc_24115,24115,Astillas de madera
+cfd_mx_traslado.cartaporte_clavestcc_24116,24116,"Postes, postes y pilotes de madera"
+cfd_mx_traslado.cartaporte_clavestcc_242,242,Aserradero y cepillado prd
+cfd_mx_traslado.cartaporte_clavestcc_2421,2421,Stock de madera y dimensiones
+cfd_mx_traslado.cartaporte_clavestcc_24212,24212,Corbatas aserradas
+cfd_mx_traslado.cartaporte_clavestcc_2429,2429,Varios aserradores y plng mill prd
+cfd_mx_traslado.cartaporte_clavestcc_243,243,"Carpintería, chapa, madera contrachapada"
+cfd_mx_traslado.cartaporte_clavestcc_2431,2431,Carpintería
+cfd_mx_traslado.cartaporte_clavestcc_2432,2432,Chapa y madera contrachapada
+cfd_mx_traslado.cartaporte_clavestcc_244,244,Contenedores de madera
+cfd_mx_traslado.cartaporte_clavestcc_249,249,Productos de madera diversos
+cfd_mx_traslado.cartaporte_clavestcc_2491,2491,Madera creosotada o tratada con aceite
+cfd_mx_traslado.cartaporte_clavestcc_25,25,Muebles y Accesorios
+cfd_mx_traslado.cartaporte_clavestcc_251,251,Mobiliario de hogar y oficina
+cfd_mx_traslado.cartaporte_clavestcc_253,253,Edificio público y mobiliario rltd
+cfd_mx_traslado.cartaporte_clavestcc_254,254,"Tabiques, estanterías, taquillas"
+cfd_mx_traslado.cartaporte_clavestcc_259,259,Mobiliario y accesorios varios
+cfd_mx_traslado.cartaporte_clavestcc_26,26,Productos de pulpa y papel
+cfd_mx_traslado.cartaporte_clavestcc_261,261,Productos de pulpa y plantas de celulosa
+cfd_mx_traslado.cartaporte_clavestcc_26111,26111,Pulpa
+cfd_mx_traslado.cartaporte_clavestcc_262,262,"Papel, excepto papel de construcción"
+cfd_mx_traslado.cartaporte_clavestcc_26211,26211,Papel prensa
+cfd_mx_traslado.cartaporte_clavestcc_26212,26212,"Papel para madera molida, sin revestimiento"
+cfd_mx_traslado.cartaporte_clavestcc_26213,26213,Papel para imprimir
+cfd_mx_traslado.cartaporte_clavestcc_26214,26214,Papel de regalo
+cfd_mx_traslado.cartaporte_clavestcc_26217,26217,Papel industrial especial
+cfd_mx_traslado.cartaporte_clavestcc_26218,26218,Stock de tejido sanitario
+cfd_mx_traslado.cartaporte_clavestcc_263,263,"Cartón, pulpbrd y fiberbrd"
+cfd_mx_traslado.cartaporte_clavestcc_264,264,Papel y papel convertidos brd prd
+cfd_mx_traslado.cartaporte_clavestcc_2643,2643,Bolsas de papel
+cfd_mx_traslado.cartaporte_clavestcc_26471,26471,Tejidos sanitarios / salud prd
+cfd_mx_traslado.cartaporte_clavestcc_265,265,Envases de cartón
+cfd_mx_traslado.cartaporte_clavestcc_266,266,Papel de construcción y cartón para edificios
+cfd_mx_traslado.cartaporte_clavestcc_26613,26613,Tablero
+cfd_mx_traslado.cartaporte_clavestcc_27,27,Impresos
+cfd_mx_traslado.cartaporte_clavestcc_271,271,Periódicos
+cfd_mx_traslado.cartaporte_clavestcc_272,272,Publicaciones periódicas
+cfd_mx_traslado.cartaporte_clavestcc_273,273,Libros
+cfd_mx_traslado.cartaporte_clavestcc_274,274,Material impreso misceláneo
+cfd_mx_traslado.cartaporte_clavestcc_276,276,Formularios comerciales múltiples
+cfd_mx_traslado.cartaporte_clavestcc_277,277,"Tarjetas de felicitación, sellos, etiquetas."
+cfd_mx_traslado.cartaporte_clavestcc_278,278,"Libros en blanco, carpetas de hojas sueltas"
+cfd_mx_traslado.cartaporte_clavestcc_279,279,Productos de industrias de servicios
+cfd_mx_traslado.cartaporte_clavestcc_28,28,Químicos
+cfd_mx_traslado.cartaporte_clavestcc_281,281,"Productos químicos industriales, org / inorg"
+cfd_mx_traslado.cartaporte_clavestcc_2812,2812,"Sodio, ptsm y otros químicos inorgánicos"
+cfd_mx_traslado.cartaporte_clavestcc_28123,28123,"Sodio cpd, exc alcalinos"
+cfd_mx_traslado.cartaporte_clavestcc_2813,2813,Gases industriales comprimidos
+cfd_mx_traslado.cartaporte_clavestcc_2814,2814,Prd crudo de alquitrán de carbón
+cfd_mx_traslado.cartaporte_clavestcc_2816,2816,Pigmentos inorgánicos
+cfd_mx_traslado.cartaporte_clavestcc_2818,2818,Sustancias químicas orgánicas diversas
+cfd_mx_traslado.cartaporte_clavestcc_28184,28184,Alcoholes
+cfd_mx_traslado.cartaporte_clavestcc_2819,2819,Varios productos químicos de inorg industriales
+cfd_mx_traslado.cartaporte_clavestcc_28193,28193,Ácido sulfurico
+cfd_mx_traslado.cartaporte_clavestcc_282,282,Plásticos y resinas sintéticas
+cfd_mx_traslado.cartaporte_clavestcc_28212,28212,Caucho sintético
+cfd_mx_traslado.cartaporte_clavestcc_28213,28213,Fibras sintéticas
+cfd_mx_traslado.cartaporte_clavestcc_283,283,Medicamentos y farmacéuticos prd
+cfd_mx_traslado.cartaporte_clavestcc_284,284,Preparaciones de limpieza y jabón
+cfd_mx_traslado.cartaporte_clavestcc_2841,2841,Jabón y otros detergentes
+cfd_mx_traslado.cartaporte_clavestcc_285,285,"Pinturas, barnices y lacas"
+cfd_mx_traslado.cartaporte_clavestcc_286,286,Productos químicos de goma y madera
+cfd_mx_traslado.cartaporte_clavestcc_287,287,Químicos agriculturales
+cfd_mx_traslado.cartaporte_clavestcc_2871,2871,Fertilizantes
+cfd_mx_traslado.cartaporte_clavestcc_289,289,Productos químicos misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_2892,2892,Explosivos
+cfd_mx_traslado.cartaporte_clavestcc_28991,28991,Sal común
+cfd_mx_traslado.cartaporte_clavestcc_29,29,Productos de petróleo y carbón
+cfd_mx_traslado.cartaporte_clavestcc_291,291,Productos de refino de petróleo
+cfd_mx_traslado.cartaporte_clavestcc_29111,29111,"Gasolina, combustible para aviones, etc."
+cfd_mx_traslado.cartaporte_clavestcc_29112,29112,Queroseno
+cfd_mx_traslado.cartaporte_clavestcc_29113,29113,Aceite combustible destilado
+cfd_mx_traslado.cartaporte_clavestcc_29114,29114,Aceites lubricantes y similares
+cfd_mx_traslado.cartaporte_clavestcc_29115,29115,Grasas lubricantes
+cfd_mx_traslado.cartaporte_clavestcc_29116,29116,"Asfalto, alquitrán y brea"
+cfd_mx_traslado.cartaporte_clavestcc_29117,29117,Aceite combustible residual
+cfd_mx_traslado.cartaporte_clavestcc_29119,29119,"Prd de refino de gasolina, nec"
+cfd_mx_traslado.cartaporte_clavestcc_2912,2912,Gases licuados del petróleo
+cfd_mx_traslado.cartaporte_clavestcc_295,295,Materiales de pavimentación y techado
+cfd_mx_traslado.cartaporte_clavestcc_2951,2951,Bloques y mezclas de pavimento de asfalto
+cfd_mx_traslado.cartaporte_clavestcc_2952,2952,Fieltro y revestimientos asfálticos
+cfd_mx_traslado.cartaporte_clavestcc_299,299,Varios petróleo y carbón
+cfd_mx_traslado.cartaporte_clavestcc_29911,29911,Briquetas de carbón y coque
+cfd_mx_traslado.cartaporte_clavestcc_29913,29913,Coque de gasolina sin briquetas
+cfd_mx_traslado.cartaporte_clavestcc_29914,29914,Coque producido a partir del carbón
+cfd_mx_traslado.cartaporte_clavestcc_30,30,Productos de caucho y plástico
+cfd_mx_traslado.cartaporte_clavestcc_301,301,Neumáticos y cámaras de aire
+cfd_mx_traslado.cartaporte_clavestcc_302,302,Calzado de caucho y plástico
+cfd_mx_traslado.cartaporte_clavestcc_303,303,Caucho recuperado
+cfd_mx_traslado.cartaporte_clavestcc_304,304,Mangueras y correas de caucho y plástico
+cfd_mx_traslado.cartaporte_clavestcc_306,306,Caucho fabricado misceláneo
+cfd_mx_traslado.cartaporte_clavestcc_307,307,Productos diversos de plástico
+cfd_mx_traslado.cartaporte_clavestcc_31,31,Cuero y productos de cuero
+cfd_mx_traslado.cartaporte_clavestcc_311,311,Cuero
+cfd_mx_traslado.cartaporte_clavestcc_312,312,Cinturones de cuero industriales
+cfd_mx_traslado.cartaporte_clavestcc_313,313,Stock de corte de bota y zapato
+cfd_mx_traslado.cartaporte_clavestcc_314,314,"Calzado, excepto caucho o plástico"
+cfd_mx_traslado.cartaporte_clavestcc_315,315,Guantes y manoplas de cuero
+cfd_mx_traslado.cartaporte_clavestcc_316,316,"Equipaje, bolsos"
+cfd_mx_traslado.cartaporte_clavestcc_319,319,Marroquinería miscelánea
+cfd_mx_traslado.cartaporte_clavestcc_32,32,"Productos de piedra, arcilla y vidrio"
+cfd_mx_traslado.cartaporte_clavestcc_321,321,Vidrio plano
+cfd_mx_traslado.cartaporte_clavestcc_322,322,Vidrio y cristalería
+cfd_mx_traslado.cartaporte_clavestcc_3221,3221,Contenedores de vidrio
+cfd_mx_traslado.cartaporte_clavestcc_324,324,Cemento hidráulico
+cfd_mx_traslado.cartaporte_clavestcc_32411,32411,"Cemento, hydlc, portland, nat"
+cfd_mx_traslado.cartaporte_clavestcc_325,325,Productos de arcilla estructural
+cfd_mx_traslado.cartaporte_clavestcc_3251,3251,Ladrillos y teja de arcilla estructural
+cfd_mx_traslado.cartaporte_clavestcc_32511,32511,"Ladrillos y bloques, arcilla y pizarra"
+cfd_mx_traslado.cartaporte_clavestcc_3253,3253,Baldosas y baldosas de cerámica
+cfd_mx_traslado.cartaporte_clavestcc_3255,3255,"Refractarios, arcilla y no arcilla."
+cfd_mx_traslado.cartaporte_clavestcc_3259,3259,Productos misceláneos de arcilla estructural
+cfd_mx_traslado.cartaporte_clavestcc_32594,32594,Teja de arcilla
+cfd_mx_traslado.cartaporte_clavestcc_326,326,Cerámica y productos relacionados
+cfd_mx_traslado.cartaporte_clavestcc_327,327,"Hormigón, yeso y yeso prd"
+cfd_mx_traslado.cartaporte_clavestcc_3271,3271,Prd de hormigón
+cfd_mx_traslado.cartaporte_clavestcc_3274,3274,Yeso de cal y cal
+cfd_mx_traslado.cartaporte_clavestcc_3275,3275,Productos de yeso
+cfd_mx_traslado.cartaporte_clavestcc_328,328,Cortar piedra y productos de piedra
+cfd_mx_traslado.cartaporte_clavestcc_329,329,"Abrasivos, amianto y misceláneas"
+cfd_mx_traslado.cartaporte_clavestcc_3291,3291,Productos abrasivos
+cfd_mx_traslado.cartaporte_clavestcc_3295,3295,Tierras o minerales no metidos
+cfd_mx_traslado.cartaporte_clavestcc_33,33,Productos de metales primarios
+cfd_mx_traslado.cartaporte_clavestcc_331,331,Acerías y laminación prd
+cfd_mx_traslado.cartaporte_clavestcc_33111,33111,Arrabio
+cfd_mx_traslado.cartaporte_clavestcc_33112,33112,Escoria de horno
+cfd_mx_traslado.cartaporte_clavestcc_33119,33119,Horno de coque y blast furn prd
+cfd_mx_traslado.cartaporte_clavestcc_3312,3312,Prd de hierro y acero primario
+cfd_mx_traslado.cartaporte_clavestcc_33121,33121,Lingote de acero y semiacabado
+cfd_mx_traslado.cartaporte_clavestcc_3313,3313,Prd electrometalúrgico
+cfd_mx_traslado.cartaporte_clavestcc_3315,3315,"Alambre de acero, clavos y púas"
+cfd_mx_traslado.cartaporte_clavestcc_332,332,Fundiciones de hierro y acero
+cfd_mx_traslado.cartaporte_clavestcc_33211,33211,Tubo de fundición de hierro y acero
+cfd_mx_traslado.cartaporte_clavestcc_333,333,Productos de fundición no ferrosos
+cfd_mx_traslado.cartaporte_clavestcc_3331,3331,"Cobre, latón o bronce"
+cfd_mx_traslado.cartaporte_clavestcc_3332,3332,Productos de fundición de plomo
+cfd_mx_traslado.cartaporte_clavestcc_3333,3333,Productos de fundición de zinc
+cfd_mx_traslado.cartaporte_clavestcc_3334,3334,Productos de fundición de aluminio
+cfd_mx_traslado.cartaporte_clavestcc_335,335,Formas básicas de metales no ferrosos
+cfd_mx_traslado.cartaporte_clavestcc_3351,3351,"Cobre, latón o bronce"
+cfd_mx_traslado.cartaporte_clavestcc_3352,3352,Aluminio
+cfd_mx_traslado.cartaporte_clavestcc_3357,3357,Metal no ferroso y aislado
+cfd_mx_traslado.cartaporte_clavestcc_336,336,Piezas fundidas no ferrosas
+cfd_mx_traslado.cartaporte_clavestcc_3361,3361,Aleación a base de aluminio y alumbre
+cfd_mx_traslado.cartaporte_clavestcc_3362,3362,"Latón, bronce, cobre y cba"
+cfd_mx_traslado.cartaporte_clavestcc_339,339,Productos varios de metales primarios
+cfd_mx_traslado.cartaporte_clavestcc_3391,3391,Forjas de hierro y acero
+cfd_mx_traslado.cartaporte_clavestcc_3392,3392,Forjas de metales no ferrosos
+cfd_mx_traslado.cartaporte_clavestcc_34,34,Productos de metal fabricados
+cfd_mx_traslado.cartaporte_clavestcc_341,341,Latas de metal
+cfd_mx_traslado.cartaporte_clavestcc_342,342,"Cubiertos, herramientas manuales y ferretería"
+cfd_mx_traslado.cartaporte_clavestcc_343,343,Fontanería fxtrs y calefacción
+cfd_mx_traslado.cartaporte_clavestcc_3433,3433,"Equipo de calefacción, exc eléctrico"
+cfd_mx_traslado.cartaporte_clavestcc_344,344,Prd metal estructural fabricado
+cfd_mx_traslado.cartaporte_clavestcc_3441,3441,Productos metálicos estructurales fabricados
+cfd_mx_traslado.cartaporte_clavestcc_34411,34411,Hierro o acero estructural fabricado
+cfd_mx_traslado.cartaporte_clavestcc_345,345,"Pernos, tuercas, tornillos, remaches"
+cfd_mx_traslado.cartaporte_clavestcc_346,346,Estampado de metal
+cfd_mx_traslado.cartaporte_clavestcc_348,348,Productos diversos de alambre fabricado
+cfd_mx_traslado.cartaporte_clavestcc_349,349,Productos metálicos diversos
+cfd_mx_traslado.cartaporte_clavestcc_3491,3491,Contenedores de transporte metálicos
+cfd_mx_traslado.cartaporte_clavestcc_3494,3494,Válvulas y accesorios de tubería
+cfd_mx_traslado.cartaporte_clavestcc_35,35,"Maquinaria, excepto eléctrica"
+cfd_mx_traslado.cartaporte_clavestcc_351,351,Motores y turbinas
+cfd_mx_traslado.cartaporte_clavestcc_352,352,Maquinaria y equipo agrícola
+cfd_mx_traslado.cartaporte_clavestcc_3524,3524,Tractores y equipos de jardín
+cfd_mx_traslado.cartaporte_clavestcc_353,353,"Construcción, minería y materiales hndlng"
+cfd_mx_traslado.cartaporte_clavestcc_3531,3531,Maquinaria y equipo de construcción
+cfd_mx_traslado.cartaporte_clavestcc_3532,3532,Maquinaria y equipo para minería
+cfd_mx_traslado.cartaporte_clavestcc_3533,3533,Maquinaria y equipo para campos petroleros
+cfd_mx_traslado.cartaporte_clavestcc_3537,3537,Camiones y tractores industriales
+cfd_mx_traslado.cartaporte_clavestcc_354,354,Maquinaria y equipo para metalurgia
+cfd_mx_traslado.cartaporte_clavestcc_355,355,Maquinaria industrial especial
+cfd_mx_traslado.cartaporte_clavestcc_356,356,Maquinaria industrial general
+cfd_mx_traslado.cartaporte_clavestcc_357,357,Equipo de oficina e informática
+cfd_mx_traslado.cartaporte_clavestcc_358,358,Máquinas de la industria de servicios
+cfd_mx_traslado.cartaporte_clavestcc_359,359,"Maquinaria no eléctrica, nec"
+cfd_mx_traslado.cartaporte_clavestcc_36,36,"Maquina eléctrica, equipo y alimentación"
+cfd_mx_traslado.cartaporte_clavestcc_361,361,Equipo de transmisión y distribución eléctrica
+cfd_mx_traslado.cartaporte_clavestcc_362,362,Aparatos industriales eléctricos
+cfd_mx_traslado.cartaporte_clavestcc_363,363,Electrodomésticos
+cfd_mx_traslado.cartaporte_clavestcc_3631,3631,Equipo de cocina para el hogar
+cfd_mx_traslado.cartaporte_clavestcc_3632,3632,Refrigeradores y congeladores domésticos
+cfd_mx_traslado.cartaporte_clavestcc_3633,3633,Equipo de lavandería para el hogar
+cfd_mx_traslado.cartaporte_clavestcc_364,364,Equipo de iluminación y cableado eléctrico
+cfd_mx_traslado.cartaporte_clavestcc_365,365,Aparatos de radio y televisión
+cfd_mx_traslado.cartaporte_clavestcc_366,366,Equipo de comunicación
+cfd_mx_traslado.cartaporte_clavestcc_367,367,Componentes electrónicos
+cfd_mx_traslado.cartaporte_clavestcc_369,369,Varios equipos eléctricos
+cfd_mx_traslado.cartaporte_clavestcc_37,37,Equipo de transporte
+cfd_mx_traslado.cartaporte_clavestcc_371,371,Vehículos de motor y equipar
+cfd_mx_traslado.cartaporte_clavestcc_3711,3711,Vehículos de motor ensamblados
+cfd_mx_traslado.cartaporte_clavestcc_37111,37111,Carros pasajeros
+cfd_mx_traslado.cartaporte_clavestcc_37112,37112,Camiones tractores y camiones
+cfd_mx_traslado.cartaporte_clavestcc_37113,37113,"Autocares, asd, departamento de bomberos"
+cfd_mx_traslado.cartaporte_clavestcc_3712,3712,Carrocerías de turismos
+cfd_mx_traslado.cartaporte_clavestcc_3713,3713,Carrocerías de camiones y autobuses
+cfd_mx_traslado.cartaporte_clavestcc_3714,3714,Piezas de vehículos de motor
+cfd_mx_traslado.cartaporte_clavestcc_37147,37147,Partes de carrocería de vehículos de motor
+cfd_mx_traslado.cartaporte_clavestcc_3715,3715,Remolques de camiones
+cfd_mx_traslado.cartaporte_clavestcc_372,372,Aeronaves y piezas
+cfd_mx_traslado.cartaporte_clavestcc_373,373,Barcos y embarcaciones
+cfd_mx_traslado.cartaporte_clavestcc_374,374,Equipo de ferrocarril
+cfd_mx_traslado.cartaporte_clavestcc_37422,37422,Vagones de tren de mercancías
+cfd_mx_traslado.cartaporte_clavestcc_375,375,"Motocicletas, bicicletas y repuestos"
+cfd_mx_traslado.cartaporte_clavestcc_376,376,Piezas de vehículos espaciales
+cfd_mx_traslado.cartaporte_clavestcc_379,379,Transporte misceláneo
+cfd_mx_traslado.cartaporte_clavestcc_38,38,Instrumentos y artículos ópticos
+cfd_mx_traslado.cartaporte_clavestcc_381,381,"Instrucción de ingeniería, laboratorio y ciencias"
+cfd_mx_traslado.cartaporte_clavestcc_382,382,"Manómetros, medidores y controles"
+cfd_mx_traslado.cartaporte_clavestcc_383,383,Instrumentos ópticos y lentes
+cfd_mx_traslado.cartaporte_clavestcc_384,384,"Instrucción quirúrgica, médica y dental"
+cfd_mx_traslado.cartaporte_clavestcc_385,385,Productos oftálmicos u ópticos
+cfd_mx_traslado.cartaporte_clavestcc_386,386,Equipo y suministros fotográficos
+cfd_mx_traslado.cartaporte_clavestcc_387,387,"Relojes, relojes, dispositivos y piezas"
+cfd_mx_traslado.cartaporte_clavestcc_39,39,Productos de fabricación misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_391,391,"Joyas, platería y baño"
+cfd_mx_traslado.cartaporte_clavestcc_393,393,Instrumentos musicales y partes
+cfd_mx_traslado.cartaporte_clavestcc_394,394,"Juguetes, diversión y equipamiento deportivo"
+cfd_mx_traslado.cartaporte_clavestcc_3949,3949,Artículos deportivos y deportivos
+cfd_mx_traslado.cartaporte_clavestcc_395,395,"Bolígrafos, lápices y matl de oficina"
+cfd_mx_traslado.cartaporte_clavestcc_396,396,"Bisutería, novedades"
+cfd_mx_traslado.cartaporte_clavestcc_399,399,Productos manufacturados misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_40,40,Materiales de desecho y desecho
+cfd_mx_traslado.cartaporte_clavestcc_401,401,Despojos mortales
+cfd_mx_traslado.cartaporte_clavestcc_402,402,"Desperdicios y desechos, excepto cenizas"
+cfd_mx_traslado.cartaporte_clavestcc_4021,4021,"Chatarra, desechos y relaves de metal"
+cfd_mx_traslado.cartaporte_clavestcc_40211,40211,"Desechos, desechos de hierro y acero"
+cfd_mx_traslado.cartaporte_clavestcc_4022,4022,Desechos y desechos textiles
+cfd_mx_traslado.cartaporte_clavestcc_4024,4024,Desechos y desperdicios de papel
+cfd_mx_traslado.cartaporte_clavestcc_4026,4026,Residuos y desechos de caucho y plástico
+cfd_mx_traslado.cartaporte_clavestcc_41,41,Envíos de carga misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_411,411,Envíos de carga misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_41111,41111,Conjuntos o kits
+cfd_mx_traslado.cartaporte_clavestcc_41114,41114,"Artículos, usados, excl códigos"
+cfd_mx_traslado.cartaporte_clavestcc_41115,41115,"Artículos, usados, rtd para reparación"
+cfd_mx_traslado.cartaporte_clavestcc_412,412,Productos varios
+cfd_mx_traslado.cartaporte_clavestcc_42,42,Contenedores y remolques vacíos
+cfd_mx_traslado.cartaporte_clavestcc_421,421,Envases vacíos nonrev
+cfd_mx_traslado.cartaporte_clavestcc_422,422,Remolques vacíos
+cfd_mx_traslado.cartaporte_clavestcc_423,423,Ingresos remolques vacíos
+cfd_mx_traslado.cartaporte_clavestcc_44,44,Tráfico de transporte de carga
+cfd_mx_traslado.cartaporte_clavestcc_441,441,Tráfico de transitarios
+cfd_mx_traslado.cartaporte_clavestcc_45,45,Transporte asociado o tráfico similar
+cfd_mx_traslado.cartaporte_clavestcc_451,451,Remitente de tráfico
+cfd_mx_traslado.cartaporte_clavestcc_46,46,Envíos mixtos misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_461,461,Envíos mixtos misceláneos
+cfd_mx_traslado.cartaporte_clavestcc_462,462,"Envíos varios mixtos, 2 productos"
+cfd_mx_traslado.cartaporte_clavestcc_48,48,Residuos peligrosos

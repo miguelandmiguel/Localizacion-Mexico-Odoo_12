@@ -1,0 +1,35 @@
+id,clave,name
+cfd_mx_traslado.cartaporte_configvehicular_VL,VL,Vehículo ligero de carga (2 llantas en el eje delantero y 2 llantas en el eje trasero)
+cfd_mx_traslado.cartaporte_configvehicular_C2,C2,Camión Unitario (2 llantas en el eje delantero y 4 llantas en el eje trasero)
+cfd_mx_traslado.cartaporte_configvehicular_C3,C3,Camión Unitario (2 llantas en el eje delantero y 6 o 8 llantas en los dos ejes traseros)
+cfd_mx_traslado.cartaporte_configvehicular_C2R2,C2R2,Camión-Remolque (6 llantas en el camión y 8 llantas en remolque)
+cfd_mx_traslado.cartaporte_configvehicular_C3R2,C3R2,Camión-Remolque (10 llantas en el camión y 8 llantas en remolque)
+cfd_mx_traslado.cartaporte_configvehicular_C2R3,C2R3,Camión-Remolque (6 llantas en el camión y 12 llantas en remolque)
+cfd_mx_traslado.cartaporte_configvehicular_C3R3,C3R3,Camión-Remolque (10 llantas en el camión y 12 llantas en remolque)
+cfd_mx_traslado.cartaporte_configvehicular_T2S1,T2S1,"Tractocamión Articulado (6 llantas en el tractocamión, 4 llantas en el semirremolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T2S2,T2S2,"Tractocamión Articulado (6 llantas en el tractocamión, 8 llantas en el semirremolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T2S3,T2S3,"Tractocamión Articulado (6 llantas en el tractocamión, 12 llantas en el semirremolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S1,T3S1,"Tractocamión Articulado (10 llantas en el tractocamión, 4 llantas en el semirremolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S2,T3S2,"Tractocamión Articulado (10 llantas en el tractocamión, 8 llantas en el semirremolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S3,T3S3,"Tractocamión Articulado (10 llantas en el tractocamión, 12 llantas en el semirremolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T2S1R2,T2S1R2,"Tractocamión Semirremolque-Remolque (6 llantas en el tractocamión, 4 llantas en el semirremolque y 8 llantas en el remolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T2S2R2,T2S2R2,"Tractocamión Semirremolque-Remolque (6 llantas en el tractocamión, 8 llantas en el semirremolque y 8 llantas en el remolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T2S1R3,T2S1R3,"Tractocamión Semirremolque-Remolque (6 llantas en el tractocamión, 4 llantas en el semirremolque y 12 llantas en el remolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S1R2,T3S1R2,"Tractocamión Semirremolque-Remolque (10 llantas en el tractocamión, 4 llantas en el semirremolque y 8 llantas en el remolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S1R3,T3S1R3,"Tractocamión Semirremolque-Remolque (10 llantas en el tractocamión, 4 llantas en el semirremolque y 12 llantas en el remolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S2R2,T3S2R2,"Tractocamión Semirremolque-Remolque (10 llantas en el tractocamión, 8 llantas en el semirremolque y 8 llantas en el remolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S2R3,T3S2R3,"Tractocamión Semirremolque-Remolque (10 llantas en el tractocamión, 8 llantas en el semirremolque y 12 llantas en el remolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S2R4,T3S2R4,"Tractocamión Semirremolque-Remolque (10 llantas en el tractocamión, 8 llantas en el semirremolque y 16 llantas en el remolque)"
+cfd_mx_traslado.cartaporte_configvehicular_T2S2S2,T2S2S2,"Tractocamión Semirremolque-Semirremolque (6 llantas en el tractocamión, 8 llantas en el semirremolque delantero y 8 llantas en el semirremolque trasero)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S2S2,T3S2S2,"Tractocamión Semirremolque-Semirremolque (10 llantas en el tractocamión, 8 llantas en el semirremolque delantero y 8 llantas en el semirremolque trasero)"
+cfd_mx_traslado.cartaporte_configvehicular_T3S3S2,T3S3S2,"Tractocamión Semirremolque-Semirremolque (10 llantas en el tractocamión, 12 llantas en el semirremolque delantero y 8 llantas en el semirremolque trasero)"
+cfd_mx_traslado.cartaporte_configvehicular_OTROEVGP,OTROEVGP,Especializado de carga Voluminosa y/o Gran Peso
+cfd_mx_traslado.cartaporte_configvehicular_OTROSG,OTROSG,Servicio de Grúas
+cfd_mx_traslado.cartaporte_configvehicular_GPLUTA,GPLUTA,Grúa de Pluma Tipo A
+cfd_mx_traslado.cartaporte_configvehicular_GPLUTB,GPLUTB,Grúa de Pluma Tipo B
+cfd_mx_traslado.cartaporte_configvehicular_GPLUTC,GPLUTC,Grúa de Pluma Tipo C
+cfd_mx_traslado.cartaporte_configvehicular_GPLUTD,GPLUTD,Grúa de Pluma Tipo D
+cfd_mx_traslado.cartaporte_configvehicular_GPLATA,GPLATA,Grúa de Plataforma Tipo A
+cfd_mx_traslado.cartaporte_configvehicular_GPLATB,GPLATB,Grúa de Plataforma Tipo B
+cfd_mx_traslado.cartaporte_configvehicular_GPLATC,GPLATC,Grúa de Plataforma Tipo C
+cfd_mx_traslado.cartaporte_configvehicular_GPLATD,GPLATD,Grúa de Plataforma Tipo D

@@ -1011,7 +1011,7 @@ class HrPayslip(models.Model):
                 IngresoNoAcumulable = "%.2f"%(0.0) if float(IngresoNoAcumulable) <= 0 else IngresoNoAcumulable
                 percepciones["SeparacionIndemnizacion"] = {
                     'TotalPagado': "%.2f"%totalSepIndem,
-                    'NumAniosServicio': '%s'%round(empleado.cfdi_anhos_servicio),
+                    'NumAniosServicio': '%s'%empleado.cfdi_anhos_servicio,
                     'UltimoSueldoMensOrd': "%.2f"%ultimo_sueldo_mensual,
                     'IngresoAcumulable': "%.2f"%min(totalSepIndemGravado, ultimo_sueldo_mensual),
                     'IngresoNoAcumulable': IngresoNoAcumulable
@@ -1432,8 +1432,7 @@ class HrPayslip(models.Model):
                 return {'no_error': no_error}
 
             payslip.l10n_mx_edi_pac_status = 'to_sign'
-            filename = ('%s-%s-MX-Payslip-%s.xml' % (
-                payslip.journal_id.code, number, version.replace('.', '-'))).replace('/', '')
+            filename = ('%s-%s-MX-Payslip-%s.xml' % (payslip.journal_id.code, number, version.replace('.', '-'))).replace('/', '')
             ctx = self.env.context.copy()
             ctx.pop('default_type', False)
             payslip.l10n_mx_edi_cfdi_name = filename
@@ -1556,7 +1555,6 @@ class HrPayslip(models.Model):
         except Exception as e:
             _logger.info('----------- Error %s '%(e) )
             return False
-
         msg = ''
         try:
             if hasattr(response, 'CodEstatus'):

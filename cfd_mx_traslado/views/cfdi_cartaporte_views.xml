@@ -1,0 +1,262 @@
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="cfdi_cartaporte_view_form">
+            <field name="name">cfdi_cartaporte_view_form</field>
+            <field name="model">cfdi.cartaporte</field>
+            <field name="arch" type="xml">
+                <form string="CFDI de Traslado">
+                    <sheet string="CFDI Carta Porte">
+                        <div>
+                            <label for="name" string="Carta Porte:" />
+                            <h1 class="mt0">
+                                <field name="name" class="oe_inline" readonly="1" />
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="cfdi_cartaporte_tipo" />
+                                <field name="cfdi_cartaporte_transpinter" />
+                                <field name="cfdi_cartaporte_totaldistrec" />
+                                <field name="traslado_id" invisible="1"/>
+                                <field name="cfdi_require_cartaporte" invisible="1" />
+                            </group>
+                            <group attrs="{'invisible':['|', '|', ('cfdi_cartaporte_transpinter', '=', 'No'), ('cfdi_cartaporte_transpinter', '=', False), ('cfdi_require_cartaporte', '=', False)]}">
+                                <field name="cfdi_cartaporte_entradasalidamerc" />
+                                <field name="cfdi_cartaporte_paisorgdest_id" />
+                                <field name="cfdi_clavetransporte_id" />
+                                <field name="cfdi_clavetransporte_clave" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Ubicaciones">
+                                <field name="cfdi_ubicaciones_ids" mode="tree" attrs="{}" >
+                                    <form>
+                                        <sheet>
+                                            <group col="4">
+                                                <field name="tipoubicacion" />
+                                                <field name="ubicacion_id" />
+                                                <field name="remitentedest_id" />
+                                                <field name="fechahorasaalida" />
+                                                <field name="distanciarecorrida" />
+                                                <field name="cfdi_cartaporte_tipo" invisible="1" />
+                                                <field name="cfdi_clavetransporte_clave" />
+                                            </group>
+                                            <group col="4">
+                                                <field name="numestacion_id" domain="[('clavetransporte_id', '=', cfdi_clavetransporte_clave)]" attrs="{'invisible':[('cfdi_cartaporte_tipo', 'in', ['01'])]}" />
+                                                <field name="tipoestacion_id" attrs="{'invisible':[('cfdi_cartaporte_tipo', 'in', ['01'])]}"/>
+                                                <field name="navegaciontrafico" attrs="{'invisible':[('cfdi_cartaporte_tipo', 'not in', ['02'])]}" />
+                                            </group>
+                                        </sheet>
+                                    </form>
+                                    <tree>
+                                        <field name="sequence" widget="handle" />
+                                        <field name="tipoubicacion" />
+                                        <field name="ubicacion_id" />
+                                        <field name="remitentedest_id" />
+                                        <field name="distanciarecorrida" sum="Total" />
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Mercancias">
+                                <group col="4">
+                                    <field name="cfdi_pesobrutototal" />
+                                    <field name="cfdi_unidadpeso_id" />
+                                    <field name="cfdi_pesonetototal" />
+                                    <field name="cfdi_numtotalmercancias" />
+                                    <field name="cfdi_cargotasacion" />
+                                    <button name="getDatasCartaPorteMercancias" type="object" string="Actualizar Mercancias" />
+                                </group>
+                                <notebook>
+                                    <page string="Mercancia">
+                                        <field name="cfdi_mercancia_ids" mode="tree" attrs="{}" >
+                                            <form string="Mercancia">
+                                                <sheet>
+                                                    <notebook>
+                                                        <page string="Mercancia">
+                                                            <h2><strong>Mercancia</strong></h2>
+                                                            <p><span>
+Nodo requerido para registrar información de los bienes o mercancías que se trasladan en
+los distintos medios de transporte.
+                                                            </span></p>
+                                                            <group>
+                                                                <group>
+                                                                    <field name="bienestransp_id" />
+                                                                    <field name="clavestcc_id" />
+                                                                    <field name="descripcion" />
+                                                                    <field name="cantidad" />
+                                                                    <field name="claveunidad_id" />
+                                                                    <field name="unidad" />
+                                                                    <field name="pesoenkg" />
+                                                                </group>
+                                                                <group>
+                                                                    <field name="materialpeligroso" />
+                                                                    <field name="cvematerialpeligroso_id" attrs="{'invisible':[('materialpeligroso', '=', 'No')]}"  />
+                                                                    <field name="embalaje_id" attrs="{'invisible':[('materialpeligroso', '=', 'No')]}" />
+                                                                    <field name="descripembalaje" attrs="{'invisible':[('embalaje_id', '=', False)]}" />
+                                                                    <field name="valormercancia" />
+                                                                    <field name="fraccionarancelaria" />
+                                                                    <field name="uuicomercioext" />
+                                                                </group>
+                                                            </group>
+                                                        </page>
+                                                        <page string="Pedimimentos">
+                                                            <h2><strong>Pedimimentos</strong></h2>
+                                                            <p>
+                                                                <span>
+Nodo  condicional  para  registrar  la  información  del(los)  número(s) 
+de  pedimento(s)  de  importación  que  se  encuentra(n)  asociado(s) 
+al traslado de los bienes y/o mercancías de procedencia extranjera 
+para acreditar la legal estancia o tenencia durante su traslado en 
+territorio nacional.
+                                                                </span>
+                                                            </p>
+                                                            <field name="pedimento_ids" mode="tree" attrs="{}" >
+                                                                <tree editable="bottom">
+                                                                    <field name="sequence" widget="handle" />
+                                                                    <field name="name" />
+                                                                </tree>
+                                                            </field>
+                                                        </page>
+                                                        <page string="Guias Identificacion">
+                                                            <h2><strong>Guias Identificacion</strong></h2>
+                                                            <p>
+                                                                <span>
+Nodo  condicional  para  registrar  la  información  del(los)  número(s) 
+de guía(s) que se encuentre(n) asociado(s) al(los) paquete(s) que 
+se traslada(n) dentro del territorio nacional. 
+                                                                </span>
+                                                            </p>
+                                                           <field name="guias_ids" mode="tree" attrs="{}" >
+                                                                <tree editable="bottom">
+                                                                    <field name="sequence" widget="handle" />
+                                                                    <field name="name" />
+                                                                    <field name="descripcion" />
+                                                                    <field name="pesoguiaidentificacion" />
+                                                                </tree>
+                                                            </field>
+                                                        </page>
+                                                        <page string="Cantidad Transporta">
+                                                            <h2><strong>Cantidad Transporta</strong></h2>
+                                                            <p>
+                                                                <span>
+Nodo opcional para registrar la cantidad de los bienes y/o 
+mercancías que se trasladan a través de los distintos medios de 
+transporte, que será captada o distribuida en distintos puntos, a fin 
+de identificar el punto de origen y destino correspondiente.
+                                                                </span>
+                                                            </p>
+                                                            <field name="cantidadtransporta_ids" mode="tree" attrs="{}" >
+                                                                <tree editable="bottom">
+                                                                    <field name="sequence" widget="handle" />
+                                                                    <field name="cantidad" />
+                                                                    <field name="idorigen" />
+                                                                    <field name="iddestino" />
+                                                                    <field name="clavetransporte_id" />
+                                                                </tree>
+                                                            </field>
+                                                        </page>
+                                                        <page string="Detalle Mercancia">
+                                                            <h2><strong>Detalle Mercancia</strong></h2>
+                                                            <p>
+                                                                <span>
+Nodo condicional para registrar especificaciones de los bienes y/o 
+mercancías que se trasladan a través de los distintos medios  de 
+transporte. 
+                                                                </span>
+                                                            </p>
+                                                            <field name="detalle_ids" mode="tree" attrs="{}" >
+                                                                <tree editable="bottom">
+                                                                    <field name="sequence" widget="handle" />
+                                                                    <field name="unidadpeso_id" />
+                                                                    <field name="pesobruto" />
+                                                                    <field name="pesoneto" />
+                                                                    <field name="pesotara" />
+                                                                    <field name="numpiezas" />
+                                                                </tree>
+                                                            </field>
+                                                        </page>
+                                                    </notebook>
+                                                </sheet>
+                                            </form>
+                                            <tree string="Mercancia">
+                                                <field name="bienestransp_id" />
+                                                <field name="cantidad" />
+                                                <field name="claveunidad_id" />
+                                                <field name="clavestcc_id" />
+                                                <field name="dimensiones" />
+                                            </tree>
+                                        </field>
+                                    </page>
+                                    <page string="Autotransporte" attrs="{'invisible':[('cfdi_cartaporte_tipo', '!=', '01')]}">
+                                        <h2><strong>Autotransporte</strong></h2>
+                                        <p>
+                                            <span>
+Nodo condicional para registrar la información que permita la 
+identificación del autotransporte de carga, por medio del cual se 
+trasladan los bienes y/o mercancías, que transitan a través de las 
+carreteras del territorio nacional.
+                                            </span>
+                                        </p>
+                                        <group>
+                                            <group string="Permiso SCT">
+                                                <field name="cfdi_autotransporte_permsct_id" />
+                                                <field name="cfdi_autotransporte_numpermisosct" />
+                                            </group>
+                                            <group string="Identificacion Vehicular">
+                                                <field name="cfdi_autotransporte_configvehicular_id" />
+                                                <field name="cfdi_autotransporte_placavm" />
+                                                <field name="cfdi_autotransporte_aniomodelovm" />
+                                            </group>
+                                        </group>
+                                        <group string="Seguros" col="4">
+                                            <field name="cfdi_autotransporte_nombreaseg" />
+                                            <field name="cfdi_autotransporte_polizaeaseg" />
+                                            <field name="cfdi_autotransporte_aseguramedambiente" />
+                                            <field name="cfdi_autotransporte_polizamedambiente" />
+                                            <field name="cfdi_autotransporte_aseguracarga" />
+                                            <field name="cfdi_autotransporte_polizacarga" />
+                                            <field name="cfdi_autotransporte_primaseguro" />
+                                        </group>
+                                        <group string="Remolques">
+                                            <group string="Remolque 01">
+                                                <field name="cfdi_autotransporte_subtiporem_id"/>
+                                                <field name="cfdi_autotransporte_placa" attrs="{'required':[('cfdi_autotransporte_subtiporem_id', '!=', False)]}"/>
+                                            </group>
+                                            <group string="Remolque 02">
+                                                <field name="cfdi_autotransporte_subtiporem02_id"/>
+                                                <field name="cfdi_autotransporte_placa02" attrs="{'required':[('cfdi_autotransporte_subtiporem02_id', '!=', False)]}"/>
+                                            </group>
+                                        </group>
+                                    </page>
+                                </notebook>
+                            </page>
+                            <page string="Figura Transporte" >
+                                <h2><strong>Figura Transporte</strong></h2>
+                                <p>
+                                    <span>
+Nodo condicional para indicar los datos de la(s) figura(s) del 
+transporte que interviene(n) en el traslado de los bienes y/o 
+mercancías realizado a través de los distintos medios de transporte 
+dentro del territorio nacional, cuando el dueño de dicho medio  sea 
+diferente del emisor del comprobante con el complemento Carta Porte.
+                                    </span>
+                                </p>
+                                  <field name="cfdi_tiposfigura_ids" mode="tree" attrs="{}" >
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle" />
+                                        <field name="cfdi_figuratransporte_tipofigura_id" />
+                                        <field name="cfdi_figuratransporte_figura_id" />
+                                        <field name="name" invisible="0" />
+                                        <field name="cartaporte_id" invisible="1" />
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,60 @@
+<odoo>
+  <data>
+    <!-- explicit list view definition -->
+    <!--
+    <record model="ir.ui.view" id="cfd_mx_traslado.list">
+      <field name="name">cfd_mx_traslado list</field>
+      <field name="model">cfd_mx_traslado.cfd_mx_traslado</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name"/>
+          <field name="value"/>
+          <field name="value2"/>
+        </tree>
+      </field>
+    </record>
+    -->
+
+    <!-- actions opening views on models -->
+    <!--
+    <record model="ir.actions.act_window" id="cfd_mx_traslado.action_window">
+      <field name="name">cfd_mx_traslado window</field>
+      <field name="res_model">cfd_mx_traslado.cfd_mx_traslado</field>
+      <field name="view_mode">tree,form</field>
+    </record>
+    -->
+
+    <!-- server action to the one above -->
+    <!--
+    <record model="ir.actions.server" id="cfd_mx_traslado.action_server">
+      <field name="name">cfd_mx_traslado server</field>
+      <field name="model_id" ref="model_cfd_mx_traslado_cfd_mx_traslado"/>
+      <field name="state">code</field>
+      <field name="code">
+        action = {
+          "type": "ir.actions.act_window",
+          "view_mode": "tree,form",
+          "res_model": self._name,
+        }
+      </field>
+    </record>
+    -->
+
+    <!-- Top menu item -->
+    <!--
+    <menuitem name="cfd_mx_traslado" id="cfd_mx_traslado.menu_root"/>
+    -->
+    <!-- menu categories -->
+    <!--
+    <menuitem name="Menu 1" id="cfd_mx_traslado.menu_1" parent="cfd_mx_traslado.menu_root"/>
+    <menuitem name="Menu 2" id="cfd_mx_traslado.menu_2" parent="cfd_mx_traslado.menu_root"/>
+    -->
+    <!-- actions -->
+    <!--
+    <menuitem name="List" id="cfd_mx_traslado.menu_1_list" parent="cfd_mx_traslado.menu_1"
+              action="cfd_mx_traslado.action_window"/>
+    <menuitem name="Server to list" id="cfd_mx_traslado" parent="cfd_mx_traslado.menu_2"
+              action="cfd_mx_traslado.action_server"/>
+    -->
+  </data>
+</odoo>

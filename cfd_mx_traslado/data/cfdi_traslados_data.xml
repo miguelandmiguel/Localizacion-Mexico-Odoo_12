@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <record id="sequence_cfditraslado_seq" model="ir.sequence">
+            <field name="name">CFDI Traslado sequence</field>
+            <field name="code">cfdi.traslados</field>
+            <field name="prefix">T%(range_year)s</field>
+            <field eval="1" name="number_next"/>
+            <field eval="1" name="number_increment"/>
+            <field eval="True" name="use_date_range"/>
+            <field eval="False" name="company_id"/>
+            <field name="padding">4</field>
+        </record>
+
+        <record id="cartaporte_clavetransporte_01" model="cfdi.cartaporte.clavetransporte">
+            <field name="name">Autotransporte</field>
+            <field name="clave">01</field>
+        </record>
+        <record id="cartaporte_clavetransporte_02" model="cfdi.cartaporte.clavetransporte">
+            <field name="name">Transporte Marítimo</field>
+            <field name="clave">02</field>
+        </record>
+        <record id="cartaporte_clavetransporte_03" model="cfdi.cartaporte.clavetransporte">
+            <field name="name">Transporte Aéreo</field>
+            <field name="clave">03</field>
+        </record>
+        <record id="cartaporte_clavetransporte_04" model="cfdi.cartaporte.clavetransporte">
+            <field name="name">Transporte Ferroviario</field>
+            <field name="clave">04</field>
+        </record>
+        <record id="cartaporte_clavetransporte_05" model="cfdi.cartaporte.clavetransporte">
+            <field name="name">Ducto</field>
+            <field name="clave">05</field>
+        </record>
+
+        <record id="cartaporte_tipoestacion_01" model="cfdi.cartaporte.tipoestacion">
+            <field name="name">Origen Nacional</field>
+            <field name="clave">01</field>
+            <field name="clavetransporte_ids" eval="[
+                    (6,0,[
+                        ref('cfd_mx_traslado.cartaporte_clavetransporte_02'),
+                        ref('cfd_mx_traslado.cartaporte_clavetransporte_03'),
+                        ref('cfd_mx_traslado.cartaporte_clavetransporte_04')
+                    ]
+                )
+            ]"/>
+        </record>
+        <record id="cartaporte_tipoestacion_02" model="cfdi.cartaporte.tipoestacion">
+            <field name="name">Intermedia </field>
+            <field name="clave">02</field>
+            <field name="clavetransporte_ids" eval="[
+                    (6,0,[
+                        ref('cfd_mx_traslado.cartaporte_clavetransporte_02'),
+                        ref('cfd_mx_traslado.cartaporte_clavetransporte_03'),
+                        ref('cfd_mx_traslado.cartaporte_clavetransporte_04')
+                    ]
+                )
+            ]"/>
+        </record>
+        <record id="cartaporte_tipoestacion_03" model="cfdi.cartaporte.tipoestacion">
+            <field name="name">Destino Final Nacional </field>
+            <field name="clave">03</field>
+            <field name="clavetransporte_ids" eval="[
+                    (6,0,[
+                        ref('cfd_mx_traslado.cartaporte_clavetransporte_02'),
+                        ref('cfd_mx_traslado.cartaporte_clavetransporte_03'),
+                        ref('cfd_mx_traslado.cartaporte_clavetransporte_04')
+                    ]
+                )
+            ]"/>
+        </record>
+
+        <record id="figuratransporte_01" model="cfdi.cartaporte.figuratransporte">
+            <field name="name">Operador</field>
+            <field name="clave">01</field>
+        </record>
+        <record id="figuratransporte_02" model="cfdi.cartaporte.figuratransporte">
+            <field name="name">Propietario</field>
+            <field name="clave">02</field>
+        </record>
+            <record id="figuratransporte_03" model="cfdi.cartaporte.figuratransporte">
+            <field name="name">Arrendador</field>
+            <field name="clave">03</field>
+        </record>
+            <record id="figuratransporte_04" model="cfdi.cartaporte.figuratransporte">
+            <field name="name">Notificado</field>
+            <field name="clave">04</field>
+        </record>        
+
+    </data>
+</odoo>

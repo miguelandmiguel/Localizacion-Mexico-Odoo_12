@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="cfdiv33">
+            <cfdi:Comprobante
+                xsi:schemaLocation="http://www.sat.gob.mx/cfd/3 http://www.sat.gob.mx/sitio_internet/cfd/3/cfdv33.xsd"
+                xmlns:cfdi="http://www.sat.gob.mx/cfd/3"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                Version="3.3"
+                t-att-Fecha="date"
+                t-att-Folio="record._get_string_cfdi(folio or '', 40)"
+                t-att-Serie="record._get_string_cfdi(serie or '', 25)"
+                Sello=""
+                t-att-FormaPago="(payment_method or '').replace('NA', '99')"
+                t-att-NoCertificado="certificate_number"
+                t-att-Certificado="certificate"
+                t-att-CondicionesDePago="conditions"
+                t-att-SubTotal="amount_untaxed"
+                t-att-Descuento="amount_discount"
+                t-att-Moneda="currency_name"
+                t-att-TipoCambio="rate"
+                t-att-Total="amount_total"
+                t-att-TipoDeComprobante="'T'"
+                t-att-MetodoPago="payment_policy"
+                t-att-LugarExpedicion="issued.zip or supplier.zip"
+                t-att-Confirmacion="confirmation">
+                <t t-set="related" t-value="record.get_cfdi_related()"/>
+                <t t-if="related">
+                    <cfdi:CfdiRelacionados
+                        t-att-TipoRelacion="related['type']">
+                        <t t-foreach="related['related']" t-as="number">
+                            <cfdi:CfdiRelacionado t-att-="number"/>
+                        </t>
+                    </cfdi:CfdiRelacionados>
+                </t>
+            </cfdi:Comprobante>
+        </template>
+    </data>
+</odoo>

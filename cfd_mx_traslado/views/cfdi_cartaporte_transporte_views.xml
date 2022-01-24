@@ -1,0 +1,104 @@
+<odoo>
+    <data>
+
+        <record id="cfdi_cartaporte_transporte_view_form" model="ir.ui.view">
+            <field name="name">cfdi.cartaporte.transporte.view.form</field>
+            <field name="model">cfdi.cartaporte.transporte</field>
+            <field name="arch" type="xml">
+                <form string="Carta Porte - Transporte">
+                    <header>
+                    </header>
+                    <sheet>
+                        <div>
+                            <label for="name" string="Transporte:" />
+                            <h1 class="mt0">
+                                <field name="name" class="oe_inline" readonly="0" />
+                            </h1>
+                        </div>
+                        <h2><strong>Autotransporte</strong></h2>
+                        <p>
+                            <span>
+Nodo condicional para registrar la información que permita la 
+identificación del autotransporte de carga, por medio del cual se 
+trasladan los bienes y/o mercancías, que transitan a través de las 
+carreteras del territorio nacional.
+                            </span>
+                        </p>
+                        <group>
+                            <group string="Permiso SCT">
+                                <field name="cfdi_autotransporte_permsct_id" />
+                                <field name="cfdi_autotransporte_numpermisosct" />
+                            </group>
+                            <group string="Identificacion Vehicular">
+                                <field name="cfdi_autotransporte_configvehicular_id" />
+                                <field name="cfdi_autotransporte_placavm" />
+                                <field name="cfdi_autotransporte_aniomodelovm" />
+                            </group>
+                        </group>
+                        <group string="Seguros" col="4">
+                            <field name="cfdi_autotransporte_nombreaseg" />
+                            <field name="cfdi_autotransporte_polizaeaseg" />
+                            <field name="cfdi_autotransporte_aseguramedambiente" />
+                            <field name="cfdi_autotransporte_polizamedambiente" />
+                            <field name="cfdi_autotransporte_aseguracarga" />
+                            <field name="cfdi_autotransporte_polizacarga" />
+                            <field name="cfdi_autotransporte_primaseguro" />
+                        </group>
+                        <group string="Remolques">
+                            <group string="Remolque 01">
+                                <field name="cfdi_autotransporte_subtiporem_id"/>
+                                <field name="cfdi_autotransporte_placa" attrs="{'required':[('cfdi_autotransporte_subtiporem_id', '!=', False)]}"/>
+                            </group>
+                            <group string="Remolque 02">
+                                <field name="cfdi_autotransporte_subtiporem02_id"/>
+                                <field name="cfdi_autotransporte_placa02" attrs="{'required':[('cfdi_autotransporte_subtiporem02_id', '!=', False)]}"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="cfdi_cartaporte_transporte_view_tree" model="ir.ui.view">
+            <field name="name">cfdi.cartaporte.transporte.view.tree</field>
+            <field name="model">cfdi.cartaporte.transporte</field>
+            <field name="arch" type="xml">
+                <tree string="Carta Porte - Transporte">
+                    <field name="name" />
+                    <field name="cfdi_autotransporte_permsct_id" />
+                    <field name="cfdi_autotransporte_numpermisosct" />
+                    <field name="cfdi_autotransporte_configvehicular_id" />
+                    <field name="cfdi_autotransporte_placavm" />
+                    <field name="cfdi_autotransporte_aniomodelovm" />
+                </tree>
+            </field>
+        </record>
+        <record id="cfdi_cartaporte_transporte_view_search" model="ir.ui.view">
+            <field name="name">cfdi_cartaporte_transporte_view_search</field>
+            <field name="model">cfdi.cartaporte.transporte</field>
+            <field name="arch" type="xml">
+                <search string="Carta Porte - Transporte">
+                    <field name="name"/>
+                </search>
+            </field>
+        </record>
+        <record id="cfdi_cartaporte_transporte_action" model="ir.actions.act_window">
+            <field name="name">Carta Porte - Transporte</field>
+            <field name="res_model">cfdi.cartaporte.transporte</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Define a new account type
+                </p><p>
+                    An account type is used to determine how an account is used in
+                    each journal. The deferral method of an account type determines
+                    the process for the annual closing. Reports such as the Balance
+                    Sheet and the Profit and Loss report use the category
+                    (profit/loss or balance sheet).
+                </p>
+            </field>
+        </record>        
+
+
+
+    </data>
+</odoo>

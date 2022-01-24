@@ -1,0 +1,480 @@
+id,clave,name,description
+cfd_mx_traslado.cartaporte_unidadpeso_Tu,Tu,Contenedor externo,"Tipo de caja de contención que sirve como contenedor de transporte externo, no especificado como equipo de transporte."
+cfd_mx_traslado.cartaporte_unidadpeso_X1A,X1A,Tambor de acero,
+cfd_mx_traslado.cartaporte_unidadpeso_X1B,X1B,Tambor de aluminio,
+cfd_mx_traslado.cartaporte_unidadpeso_X1D,X1D,Tambor contrachapado,
+cfd_mx_traslado.cartaporte_unidadpeso_X1F,X1F,Contenedor flexible,Contenedor de empaque de construcción flexible.
+cfd_mx_traslado.cartaporte_unidadpeso_X1G,X1G,Tambor de fibra,
+cfd_mx_traslado.cartaporte_unidadpeso_X1w,X1w,Tambor de madera,
+cfd_mx_traslado.cartaporte_unidadpeso_X2C,X2C,Barril de madera,
+cfd_mx_traslado.cartaporte_unidadpeso_X3A,X3A,Bidón de acero,
+cfd_mx_traslado.cartaporte_unidadpeso_X3H,X3H,Bidón de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_X43,X43,Bolsa de gran tamaño,Bolsa de tela de plástico o de papel que tiene las dimensiones del pallet sobre el que está construido.
+cfd_mx_traslado.cartaporte_unidadpeso_X44,X44,Bolsa de plástico,"Un tipo de bolsa de plástico, normalmente utilizada para envolver piezas promocionales, publicaciones, muestras de productos y / o catálogos."
+cfd_mx_traslado.cartaporte_unidadpeso_X4A,X4A,Caja de acero,
+cfd_mx_traslado.cartaporte_unidadpeso_X4B,X4B,Caja de aluminio,
+cfd_mx_traslado.cartaporte_unidadpeso_X4C,X4C,Caja de  madera natural,
+cfd_mx_traslado.cartaporte_unidadpeso_X4D,X4D,Caja de contrachapado,
+cfd_mx_traslado.cartaporte_unidadpeso_X4F,X4F,Caja de madera reconstituida,
+cfd_mx_traslado.cartaporte_unidadpeso_X4G,X4G,Caja de cartón,
+cfd_mx_traslado.cartaporte_unidadpeso_X4H,X4H,Caja de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_X5H,X5H,Bolsa de plástico tejido,
+cfd_mx_traslado.cartaporte_unidadpeso_X5L,X5L,Bolsa textil,
+cfd_mx_traslado.cartaporte_unidadpeso_X5M,X5M,Bolsa de papel,
+cfd_mx_traslado.cartaporte_unidadpeso_X6H,X6H,"Recipiente de plástico, Contenedor compuesto.",
+cfd_mx_traslado.cartaporte_unidadpeso_X6P,X6P,"Recipiente de vidrio, Contenedor compuesto.",
+cfd_mx_traslado.cartaporte_unidadpeso_X7A,X7A,Estuche para carro,Tipo de contenedor portátil diseñado para almacenar equipo para el transporte en un automóvil.
+cfd_mx_traslado.cartaporte_unidadpeso_X7B,X7B,Estuche de madera,Un estuche de madera para retener sustancias o artículos.
+cfd_mx_traslado.cartaporte_unidadpeso_X8A,X8A,Pallet de madera,"Plataforma o caja abierta de madera, en la que se conservan las mercancías para facilitar su manejo mecánico durante el transporte y almacenamiento."
+cfd_mx_traslado.cartaporte_unidadpeso_X8B,X8B,Cajón de madera,"Un contenedor de madera, en el que se conservan las mercancías para facilitar su manipulación mecánica durante el transporte y almacenamiento."
+cfd_mx_traslado.cartaporte_unidadpeso_X8C,X8C,Madera flejada,Piezas sueltas o sin contenedor de madera atadas o envueltas.
+cfd_mx_traslado.cartaporte_unidadpeso_XAA,XAA,Contenedor intermedio  para gráneles de plástico rígido,
+cfd_mx_traslado.cartaporte_unidadpeso_XAB,XAB,Contenedor de fibra,"Recipiente de contención de fibra, utilizado para retener sustancias o artículos."
+cfd_mx_traslado.cartaporte_unidadpeso_XAC,XAC,Contenedor de papel,"Recipiente de contención de papel, para retener sustancias o artículos."
+cfd_mx_traslado.cartaporte_unidadpeso_XAD,XAD,Contenedor de madera,"Recipiente de contención de madera, para retener sustancias o artículos."
+cfd_mx_traslado.cartaporte_unidadpeso_XAE,XAE,Aerosol,Una unidad de cuenta que define el número de Aerosoles
+cfd_mx_traslado.cartaporte_unidadpeso_XAF,XAF,"Pallet modular con collares,  80cms * 60cms",Pallet de tamaño estándar con dimensiones de 80 centímetros por 60 centímetros (cms).
+cfd_mx_traslado.cartaporte_unidadpeso_XAG,XAG,Pallet o empaquetado,La carga del pallet se asegura con una película de plástico transparente envuelta alrededor y luego encogido firmemente.
+cfd_mx_traslado.cartaporte_unidadpeso_XAH,XAH,"Pallet, 100cms X 110cms",Pallet tamaño estándar con dimensiones de 100 centímetros por 110 centímetros (cms).
+cfd_mx_traslado.cartaporte_unidadpeso_XAI,XAI,Contenedor tipo concha,
+cfd_mx_traslado.cartaporte_unidadpeso_XAJ,XAJ,Cono,Contenedor utilizado en el transporte de material lineal como el hilo.
+cfd_mx_traslado.cartaporte_unidadpeso_XAL,XAL,Esfera,Recipiente de contención esférico para retener sustancias o artículos.
+cfd_mx_traslado.cartaporte_unidadpeso_XAM,XAM,Ampolleta no protegida,
+cfd_mx_traslado.cartaporte_unidadpeso_XAP,XAP,Ampolleta protegida,
+cfd_mx_traslado.cartaporte_unidadpeso_XAT,XAT,Atomizador,
+cfd_mx_traslado.cartaporte_unidadpeso_XAV,XAV,Cápsula,
+cfd_mx_traslado.cartaporte_unidadpeso_XB4,XB4,Cinturón,Banda utiliza para retener varios artículos juntos.
+cfd_mx_traslado.cartaporte_unidadpeso_XBA,XBA,Barril,
+cfd_mx_traslado.cartaporte_unidadpeso_XBB,XBB,Bobina,
+cfd_mx_traslado.cartaporte_unidadpeso_XBC,XBC,Cajón para botellas / Estante para botellas,
+cfd_mx_traslado.cartaporte_unidadpeso_XBD,XBD,Tablero,
+cfd_mx_traslado.cartaporte_unidadpeso_XBE,XBE,Flejado,
+cfd_mx_traslado.cartaporte_unidadpeso_XBF,XBF,Globo no protegido,
+cfd_mx_traslado.cartaporte_unidadpeso_XBG,XBG,Bolso,Recipiente de material flexible con tapa abierta o cerrada.
+cfd_mx_traslado.cartaporte_unidadpeso_XBH,XBH,Manojo,
+cfd_mx_traslado.cartaporte_unidadpeso_XBI,XBI,Compartimiento,
+cfd_mx_traslado.cartaporte_unidadpeso_XBJ,XBJ,Cubeta,
+cfd_mx_traslado.cartaporte_unidadpeso_XBK,XBK,Cesta,
+cfd_mx_traslado.cartaporte_unidadpeso_XBL,XBL,Paca comprimida,
+cfd_mx_traslado.cartaporte_unidadpeso_XBM,XBM,Cuenco,
+cfd_mx_traslado.cartaporte_unidadpeso_XBN,XBN,Paca no comprimida,
+cfd_mx_traslado.cartaporte_unidadpeso_XBO,XBO,Botella no-protegida y cilíndrica,Recipiente de forma cilíndrica de cuello estrecho sin material de empaque protector externo.
+cfd_mx_traslado.cartaporte_unidadpeso_XBP,XBP,Globo protegido,
+cfd_mx_traslado.cartaporte_unidadpeso_XBQ,XBQ,Botella cilíndrica protegida,Recipiente de forma cilíndrica de cuello estrecho con material de empaque protector externo.
+cfd_mx_traslado.cartaporte_unidadpeso_XBR,XBR,Barra,
+cfd_mx_traslado.cartaporte_unidadpeso_XBS,XBS,"Botella, no-protegida en forma de bulbo",Recipiente en forma de bulbo de cuello estrecho sin material de empaque protector externo.
+cfd_mx_traslado.cartaporte_unidadpeso_XBT,XBT,Rollo de tela,
+cfd_mx_traslado.cartaporte_unidadpeso_XBU,XBU,Butt,Barril de 1/2 tonel
+cfd_mx_traslado.cartaporte_unidadpeso_XBV,XBV,Botella de bulbo protegido,Recipiente en forma de bulbo de cuello estrecho con material de empaque protector externo.
+cfd_mx_traslado.cartaporte_unidadpeso_XBW,XBW,Caja para líquidos,
+cfd_mx_traslado.cartaporte_unidadpeso_XBX,XBX,Caja,
+cfd_mx_traslado.cartaporte_unidadpeso_XBY,XBY,"Tablero, con fleje/ agrupados/ armados",
+cfd_mx_traslado.cartaporte_unidadpeso_XBZ,XBZ,"Barras, con fleje/ agrupados/ armados",
+cfd_mx_traslado.cartaporte_unidadpeso_XCA,XCA,Lata rectangular,
+cfd_mx_traslado.cartaporte_unidadpeso_XCB,XCB,Cajón para cerveza,
+cfd_mx_traslado.cartaporte_unidadpeso_XCC,XCC,Mantequera,
+cfd_mx_traslado.cartaporte_unidadpeso_XCD,XCD,Lata con mango y boquilla,
+cfd_mx_traslado.cartaporte_unidadpeso_XCE,XCE,Cesto tejido,
+cfd_mx_traslado.cartaporte_unidadpeso_XCF,XCF,Cofre,
+cfd_mx_traslado.cartaporte_unidadpeso_XCG,XCG,Contenedor tipo Jaula,
+cfd_mx_traslado.cartaporte_unidadpeso_XCH,XCH,Cajonera,
+cfd_mx_traslado.cartaporte_unidadpeso_XCI,XCI,Frasco,
+cfd_mx_traslado.cartaporte_unidadpeso_XCJ,XCJ,Ataúd,
+cfd_mx_traslado.cartaporte_unidadpeso_XCK,XCK,Barrica,
+cfd_mx_traslado.cartaporte_unidadpeso_XCL,XCL,Espiral,
+cfd_mx_traslado.cartaporte_unidadpeso_XCM,XCM,Paquete de tarjetas,Paquete plano normalmente hecho de cartón desde / hacia el cual el producto es a menudo colgado o unido.
+cfd_mx_traslado.cartaporte_unidadpeso_XCN,XCN,"Contenedor, no especificado como equipo de transporte",
+cfd_mx_traslado.cartaporte_unidadpeso_XCO,XCO,Garrafón no protegido,
+cfd_mx_traslado.cartaporte_unidadpeso_XCP,XCP,Garrafón protegido,
+cfd_mx_traslado.cartaporte_unidadpeso_XCQ,XCQ,Cartucho,Paquete que contiene una carga tal como un explosivo propulsor para armas de fuego o tóner de tinta para una impresora.
+cfd_mx_traslado.cartaporte_unidadpeso_XCR,XCR,Cajón,
+cfd_mx_traslado.cartaporte_unidadpeso_XCS,XCS,Estuche,
+cfd_mx_traslado.cartaporte_unidadpeso_XCT,XCT,Cartón,
+cfd_mx_traslado.cartaporte_unidadpeso_XCU,XCU,Vaso,
+cfd_mx_traslado.cartaporte_unidadpeso_XCV,XCV,Cubierta,
+cfd_mx_traslado.cartaporte_unidadpeso_XCW,XCW,Jaula estilo rodillo,
+cfd_mx_traslado.cartaporte_unidadpeso_XCX,XCX,Lata cilíndrica,
+cfd_mx_traslado.cartaporte_unidadpeso_XCY,XCY,Cilindro,
+cfd_mx_traslado.cartaporte_unidadpeso_XCZ,XCZ,Lona,
+cfd_mx_traslado.cartaporte_unidadpeso_XDA,XDA,Cajón multicapa de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XDB,XDB,Cajón de varias capas de madera,
+cfd_mx_traslado.cartaporte_unidadpeso_XDC,XDC,Cajón multicapa de cartón,
+cfd_mx_traslado.cartaporte_unidadpeso_XDG,XDG,"Jaula, Según la clasificación de la compañía (Commonwealth Handling Equipment Pool (CHEP))",
+cfd_mx_traslado.cartaporte_unidadpeso_XDH,XDH,"Caja, Según la clasificación de la compañía (CHEP), Eurobox",Caja montada sobre una base de pallet Según la clasificación de la compañía (CHEP).
+cfd_mx_traslado.cartaporte_unidadpeso_XDI,XDI,Tambor de hierro,
+cfd_mx_traslado.cartaporte_unidadpeso_XDJ,XDJ,"damajuana o garrafa, no protegido",
+cfd_mx_traslado.cartaporte_unidadpeso_XDK,XDK,"Cajón a granel, cartón",
+cfd_mx_traslado.cartaporte_unidadpeso_XDL,XDL,Cajas de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XDM,XDM,Cajones a granel de madera,
+cfd_mx_traslado.cartaporte_unidadpeso_XDN,XDN,Dispensador,
+cfd_mx_traslado.cartaporte_unidadpeso_XDP,XDP,"damajuana o garrafa, protegido",
+cfd_mx_traslado.cartaporte_unidadpeso_XDR,XDR,Tambor,
+cfd_mx_traslado.cartaporte_unidadpeso_XDS,XDS,Bandeja de una capa sin cubierta y de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XDT,XDT,Bandeja de una capa sin cubierta y de madera,
+cfd_mx_traslado.cartaporte_unidadpeso_XDU,XDU,Bandeja de una capa sin cubierta y  poliestireno,
+cfd_mx_traslado.cartaporte_unidadpeso_XDV,XDV,Bandeja de una capa sin cubierta y de cartón,
+cfd_mx_traslado.cartaporte_unidadpeso_XDW,XDW,Bandeja de dos capas sin tapa y con bandeja de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XDX,XDX,Bandeja de dos capas sin cubierta y de madera,
+cfd_mx_traslado.cartaporte_unidadpeso_XDY,XDY,Bandeja de dos capas sin cubierta y de cartón,
+cfd_mx_traslado.cartaporte_unidadpeso_XEC,XEC,Bolsa de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XED,XED,"Estuche, con pallet de base",
+cfd_mx_traslado.cartaporte_unidadpeso_XEE,XEE,"Estuche, con pallet base de madera",
+cfd_mx_traslado.cartaporte_unidadpeso_XEF,XEF,"Estuche, con pallet base de cartón",
+cfd_mx_traslado.cartaporte_unidadpeso_XEG,XEG,"Estuche, con pallet base de plástico",
+cfd_mx_traslado.cartaporte_unidadpeso_XEH,XEH,"Estuche, con pallet base de metal",
+cfd_mx_traslado.cartaporte_unidadpeso_XEI,XEI,Estuche isotérmico,
+cfd_mx_traslado.cartaporte_unidadpeso_XEN,XEN,Sobre,
+cfd_mx_traslado.cartaporte_unidadpeso_XFB,XFB,Bolsa flexible,"Bolsa de contención flexible hecha de plástico, usado típicamente para el transporte de mercancías no peligrosas a granel, que usan contenedores de transporte de tamaño estándar."
+cfd_mx_traslado.cartaporte_unidadpeso_XFC,XFC,Cajón para fruta,
+cfd_mx_traslado.cartaporte_unidadpeso_XFD,XFD,Cajón enmarcado,
+cfd_mx_traslado.cartaporte_unidadpeso_XFE,XFE,Tanque flexible,"Contenedor flexible de plástico, usado típicamente para el transporte de cargas no peligrosas a granel usando contenedores de transporte de tamaño estándar."
+cfd_mx_traslado.cartaporte_unidadpeso_XFI,XFI,Firkin,Barril de 41 litros
+cfd_mx_traslado.cartaporte_unidadpeso_XFL,XFL,Matraz,
+cfd_mx_traslado.cartaporte_unidadpeso_XFO,XFO,Cajón para zapatos,
+cfd_mx_traslado.cartaporte_unidadpeso_XFP,XFP,Caja auxiliar para película fotográfica,
+cfd_mx_traslado.cartaporte_unidadpeso_XFR,XFR,Marco,
+cfd_mx_traslado.cartaporte_unidadpeso_XFT,XFT,Contenedor para alimentos,
+cfd_mx_traslado.cartaporte_unidadpeso_XFW,XFW,Carro de cama plana,Módulo con ruedas en el que las bandejas u otros artículos de forma regular se empacan para fines de transporte.
+cfd_mx_traslado.cartaporte_unidadpeso_XFX,XFX,Bolsa flexible tipo contenedor,
+cfd_mx_traslado.cartaporte_unidadpeso_XGB,XGB,Botella para gas,Cilindro metálico de cuello estrecho para la retención de gas licuado o comprimido.
+cfd_mx_traslado.cartaporte_unidadpeso_XGI,XGI,Viga,
+cfd_mx_traslado.cartaporte_unidadpeso_XGL,XGL,Contenedor tipo galón,Contenedor con una capacidad de un galón.
+cfd_mx_traslado.cartaporte_unidadpeso_XGR,XGR,Recipiente de vidrio,Recipiente de contención de vidrio para retener sustancias o artículos.
+cfd_mx_traslado.cartaporte_unidadpeso_XGU,XGU,Bandeja contenedor para apilar horizontalmente objetos planos,Bandeja para contiene objetos planos apilados uno encima del otro.
+cfd_mx_traslado.cartaporte_unidadpeso_XGY,XGY,Costal de Yute,"Hecho de yute, usado para transportar mercancías gruesas, tales como granos, patatas, y otros productos agrícolas."
+cfd_mx_traslado.cartaporte_unidadpeso_XGZ,XGZ,Vigas con correas o agrupadas,
+cfd_mx_traslado.cartaporte_unidadpeso_XHA,XHA,Cesta con mango y de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XHB,XHB,Cesta con mango y de madera,
+cfd_mx_traslado.cartaporte_unidadpeso_XHC,XHC,Cesta  con asa y de  cartón,
+cfd_mx_traslado.cartaporte_unidadpeso_XHG,XHG,Hogshead,Barril de 1/4 de tonel
+cfd_mx_traslado.cartaporte_unidadpeso_XHN,XHN,Gancho,"Artefacto, cuya forma con un gancho en la parte superior, tiene el propósito de colgar artículos de un carril."
+cfd_mx_traslado.cartaporte_unidadpeso_XHR,XHR,Cesto,
+cfd_mx_traslado.cartaporte_unidadpeso_XIA,XIA,Paquete con pantalla y de madera,
+cfd_mx_traslado.cartaporte_unidadpeso_XIB,XIB,Paquete  con pantalla y de cartón,
+cfd_mx_traslado.cartaporte_unidadpeso_XIC,XIC,Paquete con pantalla y de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XID,XID,Paquete con pantalla y de metal,
+cfd_mx_traslado.cartaporte_unidadpeso_XIE,XIE,Paquete de mostrador.,
+cfd_mx_traslado.cartaporte_unidadpeso_XIF,XIF,Envase para alimentos,"Envase flexible tubular o de piel, posiblemente transparente, a menudo utilizado para contener alimentos (por ejemplo salami)."
+cfd_mx_traslado.cartaporte_unidadpeso_XIG,XIG,Paquete envuelto en papel,
+cfd_mx_traslado.cartaporte_unidadpeso_XIH,XIH,Tambor de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XIK,XIK,Paquete de cartón con los agujeros para botellas,Material de empaque realizado en cartón que facilita la separación de botellas individuales de vidrio o plástico.
+cfd_mx_traslado.cartaporte_unidadpeso_XIL,XIL,Bandeja rígida con tapa y apilable (CEN TS 14482: 2002),Bandeja rígida apilable empotrada compatible con CEN TS 14482: 2002.
+cfd_mx_traslado.cartaporte_unidadpeso_XIN,XIN,Lingote,
+cfd_mx_traslado.cartaporte_unidadpeso_XIZ,XIZ,Lingotes  con correas/ agrupados,
+cfd_mx_traslado.cartaporte_unidadpeso_XJB,XJB,Bolsa jumbo,"Bolsa de contención flexible, ampliamente utilizada para almacenamiento, transporte y manipulación de materiales en polvo, escamas o granulares. Típicamente construido a partir de tejido de polipropileno (PP) tejido en forma de bolsas cúbicas."
+cfd_mx_traslado.cartaporte_unidadpeso_XJC,XJC,Bidón rectangular,
+cfd_mx_traslado.cartaporte_unidadpeso_XJG,XJG,Jarra,
+cfd_mx_traslado.cartaporte_unidadpeso_XJR,XJR,Tarro,
+cfd_mx_traslado.cartaporte_unidadpeso_XJT,XJT,Bolsa de yute,
+cfd_mx_traslado.cartaporte_unidadpeso_XJY,XJY,"Bidón, cilíndrico",
+cfd_mx_traslado.cartaporte_unidadpeso_XKG,XKG,Barrilete,
+cfd_mx_traslado.cartaporte_unidadpeso_XKI,XKI,Kit (Conjunto de piezas),Conjunto de artículos o implementos utilizados para un propósito específico.
+cfd_mx_traslado.cartaporte_unidadpeso_XLE,XLE,Valijas,"Colección de bolsas, cajas y / o contenedores que contienen objetos personales para un viaje."
+cfd_mx_traslado.cartaporte_unidadpeso_XLG,XLG,Bitácora,
+cfd_mx_traslado.cartaporte_unidadpeso_XLT,XLT,Lote,
+cfd_mx_traslado.cartaporte_unidadpeso_XLU,XLU,Caja de arrastre,Caja de madera para el transporte y almacenamiento de frutas y verduras.
+cfd_mx_traslado.cartaporte_unidadpeso_XLV,XLV,Contenedor pequeño,"Contenedor de madera o metal, usado para empacar artículos de uso doméstico y personales."
+cfd_mx_traslado.cartaporte_unidadpeso_XLZ,XLZ,Registros  con fleje/ agrupados/ armados,
+cfd_mx_traslado.cartaporte_unidadpeso_XMA,XMA,Cajón metálico,Caja de contención hecha de metal para retener sustancias o artículos.
+cfd_mx_traslado.cartaporte_unidadpeso_XMB,XMB,Múltiplo de bolsas,
+cfd_mx_traslado.cartaporte_unidadpeso_XMC,XMC,Cajón para leche,
+cfd_mx_traslado.cartaporte_unidadpeso_XME,XME,Contenedor de metal,"Tipo de caja de contención hecha de metal para retener sustancias o artículos, no especificado de otro modo como equipo de transporte."
+cfd_mx_traslado.cartaporte_unidadpeso_XMR,XMR,Recipiente de metal,Recipiente de contención de metal para retener sustancias o artículos.
+cfd_mx_traslado.cartaporte_unidadpeso_XMS,XMS,Saco milti-pared,
+cfd_mx_traslado.cartaporte_unidadpeso_XMT,XMT,Tapete,
+cfd_mx_traslado.cartaporte_unidadpeso_XMW,XMW,Contenedor envuelto en plástico,Recipiente de contención envuelto en plástico para retener sustancias o artículos.
+cfd_mx_traslado.cartaporte_unidadpeso_XMX,XMX,Caja pequeña de cerillos,
+cfd_mx_traslado.cartaporte_unidadpeso_XNA,XNA,No disponible,
+cfd_mx_traslado.cartaporte_unidadpeso_XNE,XNE,Sin empaque o no empaquetado,
+cfd_mx_traslado.cartaporte_unidadpeso_XNF,XNF,"Sin empaque o no empaquetado, unidad simple",
+cfd_mx_traslado.cartaporte_unidadpeso_XNG,XNG,"Sin empaque o no empaquetado, unidades múltiples",
+cfd_mx_traslado.cartaporte_unidadpeso_XNS,XNS,Caja nido,
+cfd_mx_traslado.cartaporte_unidadpeso_XNT,XNT,Red,
+cfd_mx_traslado.cartaporte_unidadpeso_XNU,XNU,Red de plástico con tubo,
+cfd_mx_traslado.cartaporte_unidadpeso_XNV,XNV,Red textil con tubo,
+cfd_mx_traslado.cartaporte_unidadpeso_XOA,XOA,"Pallet, Según la clasificación de la compañía (Commonwealth Handling Equipment Pool (CHEP) 40 cm x 60 cm",Pallet de dimensiones 40 centímetros x 60 centímetros.
+cfd_mx_traslado.cartaporte_unidadpeso_XOB,XOB,"Pallet, Según la clasificación de la compañía (Commonwealth Handling Equipment Pool (CHEP) 80 cm x 120 cm",Pallet de dimensiones 80 centímetros x 120 centímetros.
+cfd_mx_traslado.cartaporte_unidadpeso_XOC,XOC,"Pallet, Según la clasificación de la compañía (Commonwealth Handling Equipment Pool (CHEP) 100 cm x 120 cm",Pallet de dimensiones 100 centímetros x 120 centímetros.
+cfd_mx_traslado.cartaporte_unidadpeso_XOD,XOD,"Pallet, AS 4068-1993",Pallet con  estándar australiano de dimensiones 115.5 centímetros x 116.5 centímetros.
+cfd_mx_traslado.cartaporte_unidadpeso_XOE,XOE,"Pallet, ISO T11","Pallet con estándar ISO de dimensiones 110 centímetros x 110 centímetros, prevalente en la región Asia-Pacífico."
+cfd_mx_traslado.cartaporte_unidadpeso_XOF,XOF,"Plataforma, peso o dimensión no especificada",Plataforma de carga equivalente del Pallet de dimensiones desconocidas o peso desconocido.
+cfd_mx_traslado.cartaporte_unidadpeso_XOK,XOK,Bloque,"Una pieza sólida de una sustancia dura, tal como granito, que tiene uno o más lados planos."
+cfd_mx_traslado.cartaporte_unidadpeso_XOT,XOT,Octabin,"Envase estándar de cartón de grandes dimensiones para almacenar por ejemplo verduras, gránulos de plástico u otros productos secos."
+cfd_mx_traslado.cartaporte_unidadpeso_XP2,XP2,Charola,"Recipiente ancho y abierto, usualmente de metal."
+cfd_mx_traslado.cartaporte_unidadpeso_XPA,XPA,Cajetilla,Paquete pequeño.
+cfd_mx_traslado.cartaporte_unidadpeso_XPB,XPB,"Pallet, Caja combinada y abierta con caja y pallet.",
+cfd_mx_traslado.cartaporte_unidadpeso_XPC,XPC,Paquete postal,
+cfd_mx_traslado.cartaporte_unidadpeso_XPD,XPD,Pallet modular con collares (80cms * 100cms),Pallet tamaño estándar de dimensiones 80 centímetros por 100 centímetros (cms).
+cfd_mx_traslado.cartaporte_unidadpeso_XPE,XPE,Pallet modular con collares (80cms * 120cms),Pallet tamaño estándar de dimensiones 80 centímetros por 120 centímetros (cms).
+cfd_mx_traslado.cartaporte_unidadpeso_XPF,XPF,Corral,Pequeño recinto abierto para retener animales.
+cfd_mx_traslado.cartaporte_unidadpeso_XPG,XPG,Placa,
+cfd_mx_traslado.cartaporte_unidadpeso_XPH,XPH,Cantaro,
+cfd_mx_traslado.cartaporte_unidadpeso_XPI,XPI,Pleca,
+cfd_mx_traslado.cartaporte_unidadpeso_XPJ,XPJ,Canastilla,
+cfd_mx_traslado.cartaporte_unidadpeso_XPK,XPK,Paquete,Unidad de empaque estándar.
+cfd_mx_traslado.cartaporte_unidadpeso_XPL,XPL,Balde,
+cfd_mx_traslado.cartaporte_unidadpeso_XPN,XPN,Tablón,
+cfd_mx_traslado.cartaporte_unidadpeso_XPO,XPO,Bolsa pequeña,
+cfd_mx_traslado.cartaporte_unidadpeso_XPR,XPR,Contenedor de plástico,Recipiente de contención de plástico para retener sustancias o artículos.
+cfd_mx_traslado.cartaporte_unidadpeso_XPT,XPT,Maceta,
+cfd_mx_traslado.cartaporte_unidadpeso_XPU,XPU,Cacerola,
+cfd_mx_traslado.cartaporte_unidadpeso_XPV,XPV,"Tubos, con fleje/ agrupados/ armados",
+cfd_mx_traslado.cartaporte_unidadpeso_XPX,XPX,Pallet,"Plataforma o caja abierta, generalmente de madera, en la que se conservan las mercancías para facilitar el manejo mecánico durante el transporte y almacenamiento."
+cfd_mx_traslado.cartaporte_unidadpeso_XPY,XPY,Placas con fleje/ agrupados/ armados,
+cfd_mx_traslado.cartaporte_unidadpeso_XPZ,XPZ,Tablones con fleje/ agrupados/ armados,
+cfd_mx_traslado.cartaporte_unidadpeso_XQA,XQA,Tambor de acero con cabeza no desmontable,
+cfd_mx_traslado.cartaporte_unidadpeso_XQB,XQB,Tambor de  acero con cabeza extraíble,
+cfd_mx_traslado.cartaporte_unidadpeso_XQC,XQC,Tambor de aluminio con cabeza no extraíble,
+cfd_mx_traslado.cartaporte_unidadpeso_XQD,XQD,Tambor de aluminio con cabeza extraíble,
+cfd_mx_traslado.cartaporte_unidadpeso_XQF,XQF,"Tambor, plástico con cabeza no desmontable",
+cfd_mx_traslado.cartaporte_unidadpeso_XQG,XQG,"Tambor, plástico, cabeza extraíble",
+cfd_mx_traslado.cartaporte_unidadpeso_XQH,XQH,Barril de madera con tapón,
+cfd_mx_traslado.cartaporte_unidadpeso_XQJ,XQJ,Barril de madera con cabeza desprendible,
+cfd_mx_traslado.cartaporte_unidadpeso_XQK,XQK,Bidón de acero con cabeza no desmontable,
+cfd_mx_traslado.cartaporte_unidadpeso_XQL,XQL,Bidón de acero con cabeza desmontable,
+cfd_mx_traslado.cartaporte_unidadpeso_XQM,XQM,Bidón de plástico con cabeza no desmontable,
+cfd_mx_traslado.cartaporte_unidadpeso_XQN,XQN,Bidón de plástico con cabeza extraíble,
+cfd_mx_traslado.cartaporte_unidadpeso_XQP,XQP,Caja de madera natural estándar,
+cfd_mx_traslado.cartaporte_unidadpeso_XQQ,XQQ,Caja de madera natural con muros a prueba de filtraciones,
+cfd_mx_traslado.cartaporte_unidadpeso_XQR,XQR,Caja de plástico expandida,
+cfd_mx_traslado.cartaporte_unidadpeso_XQS,XQS,Caja de plástico sólida,
+cfd_mx_traslado.cartaporte_unidadpeso_XRD,XRD,Rod,
+cfd_mx_traslado.cartaporte_unidadpeso_XRG,XRG,Anillo,
+cfd_mx_traslado.cartaporte_unidadpeso_XRJ,XRJ,"Estante, Perchero para ropa",
+cfd_mx_traslado.cartaporte_unidadpeso_XRK,XRK,Estante,
+cfd_mx_traslado.cartaporte_unidadpeso_XRL,XRL,Carrete,Dispositivo giratorio cilíndrico con un reborde en cada extremo en el que se enrollan los materiales.
+cfd_mx_traslado.cartaporte_unidadpeso_XRO,XRO,Rollo,
+cfd_mx_traslado.cartaporte_unidadpeso_XRT,XRT,Red Roja,Material de confinamiento hecho de redes de malla roja para retener artículos (por ejemplo árboles).
+cfd_mx_traslado.cartaporte_unidadpeso_XRZ,XRZ,Varillas  con fleje/ agrupados/ armados,
+cfd_mx_traslado.cartaporte_unidadpeso_XSA,XSA,Saco,
+cfd_mx_traslado.cartaporte_unidadpeso_XSB,XSB,Losa,
+cfd_mx_traslado.cartaporte_unidadpeso_XSC,XSC,Cajón poco profundo,
+cfd_mx_traslado.cartaporte_unidadpeso_XSD,XSD,Huso,
+cfd_mx_traslado.cartaporte_unidadpeso_XSE,XSE,Baúl,
+cfd_mx_traslado.cartaporte_unidadpeso_XSH,XSH,Bolsa pequeña hermética,
+cfd_mx_traslado.cartaporte_unidadpeso_XSI,XSI,Patín,Una plataforma o plataforma móvil baja para facilitar el manejo y transporte de mercancías.
+cfd_mx_traslado.cartaporte_unidadpeso_XSK,XSK,Carcasa esqueleto,
+cfd_mx_traslado.cartaporte_unidadpeso_XSL,XSL,Hoja de deslizamiento,Láminas de plástico duro se utilizan principalmente como la base sobre la cual apilan mercancías para optimizar el espacio dentro de un contenedor. Puede utilizarse como alternativa a un embalaje paletizado.
+cfd_mx_traslado.cartaporte_unidadpeso_XSM,XSM,Hoja de metal,
+cfd_mx_traslado.cartaporte_unidadpeso_XSO,XSO,Carrete pequeño,"Contenedor de empaque utilizado en el transporte de artículos tales como alambre, cable, cinta e hilo."
+cfd_mx_traslado.cartaporte_unidadpeso_XSP,XSP,Hoja de empaque de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XSS,XSS,Cajón de acero,
+cfd_mx_traslado.cartaporte_unidadpeso_XSU,XSU,Maleta,
+cfd_mx_traslado.cartaporte_unidadpeso_XSV,XSV,Sobre de acero,
+cfd_mx_traslado.cartaporte_unidadpeso_XSW,XSW,Envoltorio,Mercancías retenidas en una película de plástico transparente que ha sido envuelta alrededor y luego encogido fuertemente a las mercancías.
+cfd_mx_traslado.cartaporte_unidadpeso_XSY,XSY,Manga,
+cfd_mx_traslado.cartaporte_unidadpeso_XSZ,XSZ,Hojas  con fleje/ agrupados/ armados,
+cfd_mx_traslado.cartaporte_unidadpeso_XT1,XT1,Tableta,"Artículo suelto o sin empaque en forma de barra, bloque o pieza."
+cfd_mx_traslado.cartaporte_unidadpeso_XTB,XTB,Tina,
+cfd_mx_traslado.cartaporte_unidadpeso_XTC,XTC,Caja para té,
+cfd_mx_traslado.cartaporte_unidadpeso_XTD,XTD,Tubo plegable,
+cfd_mx_traslado.cartaporte_unidadpeso_XTG,XTG,Contenedor de tanque genérico,Recipiente especialmente construido para el transporte de líquidos y gases a granel.
+cfd_mx_traslado.cartaporte_unidadpeso_XTI,XTI,Tierce,Barril de 1/6 parte de tonel
+cfd_mx_traslado.cartaporte_unidadpeso_XTK,XTK,Tanque rectangular,
+cfd_mx_traslado.cartaporte_unidadpeso_XTL,XTL,Tina con tapa,
+cfd_mx_traslado.cartaporte_unidadpeso_XTN,XTN,Hojalata,
+cfd_mx_traslado.cartaporte_unidadpeso_XTO,XTO,Tonel,Barril con capacidad para 982 litros
+cfd_mx_traslado.cartaporte_unidadpeso_XTR,XTR,Maletero,
+cfd_mx_traslado.cartaporte_unidadpeso_XTS,XTS,Estructura,
+cfd_mx_traslado.cartaporte_unidadpeso_XTT,XTT,Bolsa de mano,Una gran bolsa o cesto.
+cfd_mx_traslado.cartaporte_unidadpeso_XTU,XTU,Tubo,
+cfd_mx_traslado.cartaporte_unidadpeso_XTV,XTV,Tubo con boquilla,"Tubo de plástico, metal o cartón, provisto de una boquilla, que contiene un producto líquido o semilíquido, por ejemplo silicio."
+cfd_mx_traslado.cartaporte_unidadpeso_XTW,XTW,Pallet tricapa,Una paleta ligera hecha de cartón ondulado resistente.
+cfd_mx_traslado.cartaporte_unidadpeso_XTY,XTY,Tanque cilíndrico,
+cfd_mx_traslado.cartaporte_unidadpeso_XTZ,XTZ,Tubos  con fleje/ agrupados/ armados,
+cfd_mx_traslado.cartaporte_unidadpeso_XUC,XUC,Sin empaque,
+cfd_mx_traslado.cartaporte_unidadpeso_XUN,XUN,Unidad,"Tipo de paquete compuesto de un solo artículo u objeto, no especificado de otro modo como una unidad de equipo de transporte."
+cfd_mx_traslado.cartaporte_unidadpeso_XVA,XVA,Tanque,
+cfd_mx_traslado.cartaporte_unidadpeso_XVG,XVG,"Tanque de gas (a 1,031 mbar y 15° C)",
+cfd_mx_traslado.cartaporte_unidadpeso_XVI,XVI,Frasco pequeño,
+cfd_mx_traslado.cartaporte_unidadpeso_XVK,XVK,Paquete transportable,Tipo de cajón de madera.
+cfd_mx_traslado.cartaporte_unidadpeso_XVL,XVL,Contenedor para líquidos a granel,
+cfd_mx_traslado.cartaporte_unidadpeso_XVN,XVN,Vehículo,Medio de transporte autopropulsado.
+cfd_mx_traslado.cartaporte_unidadpeso_XVO,XVO,"Contenedor para sólido de partículas grandes a granel (""nódulos"")",
+cfd_mx_traslado.cartaporte_unidadpeso_XVP,XVP,Envasado al vacío,
+cfd_mx_traslado.cartaporte_unidadpeso_XVQ,XVQ,Tanque para Gas licuado (a temperatura / presión anormal),
+cfd_mx_traslado.cartaporte_unidadpeso_XVR,XVR,Contenedor para sólidos de partículas granulares a granel (Granos),
+cfd_mx_traslado.cartaporte_unidadpeso_XVS,XVS,Contenedor de chatarra a granel,Chatarra suelta o sin empaquetar transportada a granel.
+cfd_mx_traslado.cartaporte_unidadpeso_XVY,XVY,"Contenedor para sólido de partículas finas a granel (""polvos"")",
+cfd_mx_traslado.cartaporte_unidadpeso_XWA,XWA,Contenedor de granel intermedio,"Recipiente reutilizable hecho de metal, plástico, textiles, madera o materiales compuestos utilizados para facilitar el transporte de sólidos y líquidos a granel en volúmenes manejables."
+cfd_mx_traslado.cartaporte_unidadpeso_XWB,XWB,Botella de mimbre,
+cfd_mx_traslado.cartaporte_unidadpeso_XWC,XWC,Contenedor intermedio para gráneles y de acero,
+cfd_mx_traslado.cartaporte_unidadpeso_XWD,XWD,Contenedor intermedio para gráneles y de aluminio,
+cfd_mx_traslado.cartaporte_unidadpeso_XWF,XWF,Contenedor intermedio para gráneles y de metal,
+cfd_mx_traslado.cartaporte_unidadpeso_XWG,XWG,Contenedor intermedio para gráneles y de acero presurizado menor a 10 kpa,
+cfd_mx_traslado.cartaporte_unidadpeso_XWH,XWH,"Contenedor intermedio para gráneles y de aluminio, presurizado menor a 10 kpa",
+cfd_mx_traslado.cartaporte_unidadpeso_XWJ,XWJ,Contenedor intermedio para gráneles y de metal con una presión de 10 kpa,
+cfd_mx_traslado.cartaporte_unidadpeso_XWK,XWK,Contenedor intermedio para gráneles y de acero para líquido,
+cfd_mx_traslado.cartaporte_unidadpeso_XWL,XWL,Contenedor intermedio para gráneles y de aluminio para líquido,
+cfd_mx_traslado.cartaporte_unidadpeso_XWM,XWM,Contenedor intermedio para gráneles y de metal para líquido,
+cfd_mx_traslado.cartaporte_unidadpeso_XWN,XWN,Contenedor intermedio para gráneles con tejido plástico sin capa con revestimiento,
+cfd_mx_traslado.cartaporte_unidadpeso_XWP,XWP,Contenedor intermedio para gráneles con tejido plástico y recubierto,
+cfd_mx_traslado.cartaporte_unidadpeso_XWQ,XWQ,Contenedor intermedio para gráneles con tejido plástico con revestimiento,
+cfd_mx_traslado.cartaporte_unidadpeso_XWR,XWR,"Contenedor intermedio para gráneles con tejido plástico, revestido y con forro",
+cfd_mx_traslado.cartaporte_unidadpeso_XWS,XWS,Contenedor intermedio para gráneles con película de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XWT,XWT,Contenedor intermedio para gráneles textil sin capa / forro,
+cfd_mx_traslado.cartaporte_unidadpeso_XWU,XWU,Contenedor intermedio para gráneles de madera natural con forro interior,
+cfd_mx_traslado.cartaporte_unidadpeso_XWV,XWV,Contenedor intermedio para gráneles textil recubierto,
+cfd_mx_traslado.cartaporte_unidadpeso_XWW,XWW,Contenedor intermedio para gráneles textil con revestimiento,
+cfd_mx_traslado.cartaporte_unidadpeso_XWX,XWX,Contenedor intermedio para gráneles textil recubierto y con forro,
+cfd_mx_traslado.cartaporte_unidadpeso_XWY,XWY,Contenedor intermedio para gráneles contrachapado con revestimiento interior,
+cfd_mx_traslado.cartaporte_unidadpeso_XWZ,XWZ,Contenedor intermedio para gráneles de madera reconstituida con revestimiento interior,
+cfd_mx_traslado.cartaporte_unidadpeso_XXA,XXA,"Bolsa de tejido plástico, sin abrigo interior ni forro",
+cfd_mx_traslado.cartaporte_unidadpeso_XXB,XXB,Bolsa de tejido plástico a prueba de filtraciones,
+cfd_mx_traslado.cartaporte_unidadpeso_XXC,XXC,Bolsa de tejido plástico resistente al agua,
+cfd_mx_traslado.cartaporte_unidadpeso_XXD,XXD,Bolsa con película de plástico,
+cfd_mx_traslado.cartaporte_unidadpeso_XXF,XXF,Bolsa textil sin capa ni forro interior,
+cfd_mx_traslado.cartaporte_unidadpeso_XXG,XXG,Bolsa textil a prueba de filtraciones,
+cfd_mx_traslado.cartaporte_unidadpeso_XXH,XXH,Bolsa textil resistente al agua,
+cfd_mx_traslado.cartaporte_unidadpeso_XXJ,XXJ,Bolsa de papel multi-pared,
+cfd_mx_traslado.cartaporte_unidadpeso_XXK,XXK,"Bolsa de papel multi-pared, resistente al agua",
+cfd_mx_traslado.cartaporte_unidadpeso_XYA,XYA,"Empaque compuesto, recipiente de plástico en tambor de acero",
+cfd_mx_traslado.cartaporte_unidadpeso_XYB,XYB,"Empaque compuesto, recipiente de plástico en cajas de acero",
+cfd_mx_traslado.cartaporte_unidadpeso_XYC,XYC,"Empaque compuesto, recipiente de plástico en tambor de aluminio",
+cfd_mx_traslado.cartaporte_unidadpeso_XYD,XYD,"Empaque compuesto, recipiente de plástico en cajón de aluminio",
+cfd_mx_traslado.cartaporte_unidadpeso_XYF,XYF,"Empaque compuesto, recipiente de plástico en caja de madera",
+cfd_mx_traslado.cartaporte_unidadpeso_XYG,XYG,"Empaque compuesto, recipiente de plástico en tambor de madera contrachapada",
+cfd_mx_traslado.cartaporte_unidadpeso_XYH,XYH,"Empaque compuesto, recipiente de plástico en caja de madera contrachapada",
+cfd_mx_traslado.cartaporte_unidadpeso_XYJ,XYJ,"Empaque compuesto, recipiente de plástico en tambor de fibra",
+cfd_mx_traslado.cartaporte_unidadpeso_XYK,XYK,"Empaque compuesto, recipiente de plástico en caja de cartón",
+cfd_mx_traslado.cartaporte_unidadpeso_XYL,XYL,"Empaque compuesto, recipiente de plástico en el tambor de plástico",
+cfd_mx_traslado.cartaporte_unidadpeso_XYM,XYM,"Empaque compuesto, recipiente de plástico en caja de plástico sólido",
+cfd_mx_traslado.cartaporte_unidadpeso_XYN,XYN,"Empaque compuesto, receptáculo de vidrio en tambor de acero",
+cfd_mx_traslado.cartaporte_unidadpeso_XYP,XYP,"Empaque compuesto, receptáculo de vidrio en caja de cajas de acero",
+cfd_mx_traslado.cartaporte_unidadpeso_XYQ,XYQ,"Empaque compuesto, recipiente de vidrio en tambor de aluminio",
+cfd_mx_traslado.cartaporte_unidadpeso_XYR,XYR,"Empaque compuesto, receptáculo de vidrio en caja de aluminio",
+cfd_mx_traslado.cartaporte_unidadpeso_XYS,XYS,"Empaque compuesto, recipiente de vidrio en caja de madera",
+cfd_mx_traslado.cartaporte_unidadpeso_XYT,XYT,"Empaque compuesto, recipiente de vidrio en tambor de madera contrachapada",
+cfd_mx_traslado.cartaporte_unidadpeso_Xyv,Xyv,"Empaque compuesto, recipiente de vidrio en el cesto de mimbre",
+cfd_mx_traslado.cartaporte_unidadpeso_XYW,XYW,"Empaque compuesto, recipiente de vidrio en tambor de fibra",
+cfd_mx_traslado.cartaporte_unidadpeso_XYX,XYX,"Empaque compuesto, recipiente de vidrio en caja de cartón",
+cfd_mx_traslado.cartaporte_unidadpeso_XYY,XYY,"Empaque compuesto, recipiente de vidrio en paquete de plástico expandible",
+cfd_mx_traslado.cartaporte_unidadpeso_XYZ,XYZ,"Empaque compuesto, recipiente de vidrio en paquete de plástico sólido",
+cfd_mx_traslado.cartaporte_unidadpeso_XZA,XZA,"Contenedor de granel intermedio, papel, multi-pared",
+cfd_mx_traslado.cartaporte_unidadpeso_XZB,XZB,Bolsa grande,
+cfd_mx_traslado.cartaporte_unidadpeso_XZC,XZC,"Contenedor intermedio para gráneles de papel, multi-pared y resistente al agua",
+cfd_mx_traslado.cartaporte_unidadpeso_XZD,XZD,"Contenedor intermedio para gráneles de plástico rígido, con equipo estructural para sólidos",
+cfd_mx_traslado.cartaporte_unidadpeso_XZF,XZF,"Contenedor intermedio para gráneles de plástico rígido, autoportante para sólidos",
+cfd_mx_traslado.cartaporte_unidadpeso_XZG,XZG,"Contenedor intermedio para gráneles de plástico rígido, con equipo estructural, presurizado",
+cfd_mx_traslado.cartaporte_unidadpeso_XZH,XZH,"Contenedor intermedio para gráneles de plástico rígido, autoportante y presurizado",
+cfd_mx_traslado.cartaporte_unidadpeso_XZJ,XZJ,"Contenedor intermedio para gráneles de plástico rígido, con equipo estructural para líquidos",
+cfd_mx_traslado.cartaporte_unidadpeso_XZK,XZK,"Contenedor intermedio para gráneles de plástico rígido, autoportante, líquidos",
+cfd_mx_traslado.cartaporte_unidadpeso_XZL,XZL,"Contenedor intermedio para gráneles, compuesto y de plástico rígido, sólidos",
+cfd_mx_traslado.cartaporte_unidadpeso_XZM,XZM,"Contenedor intermedio para gráneles, compuesto y de plástico flexible, sólidos",
+cfd_mx_traslado.cartaporte_unidadpeso_XZN,XZN,"Contenedor intermedio para gráneles, compuesto y de plástico rígido, presurizado",
+cfd_mx_traslado.cartaporte_unidadpeso_XZP,XZP,"Contenedor intermedio para gráneles, compuesto y de plástico flexible, presurizado",
+cfd_mx_traslado.cartaporte_unidadpeso_XZQ,XZQ,"Contenedor intermedio para gráneles, compuesto y de plástico rígido, líquidos",
+cfd_mx_traslado.cartaporte_unidadpeso_XZR,XZR,"Contenedor intermedio para gráneles, compuesto y de plástico flexible para líquidos",
+cfd_mx_traslado.cartaporte_unidadpeso_XZS,XZS,"Contenedor intermedio para gráneles, compuesto",
+cfd_mx_traslado.cartaporte_unidadpeso_XZT,XZT,Contenedor intermedio para gráneles con tablero de fibras,
+cfd_mx_traslado.cartaporte_unidadpeso_XZU,XZU,Contenedor intermedio para gráneles flexible,
+cfd_mx_traslado.cartaporte_unidadpeso_XZV,XZV,"Contenedor intermedio para gráneles de metal, distinto del acero",
+cfd_mx_traslado.cartaporte_unidadpeso_XZW,XZW,"Contenedor intermedio para gráneles, de madera natural",
+cfd_mx_traslado.cartaporte_unidadpeso_XZX,XZX,"Contenedor intermedio para gráneles, de contrachapado",
+cfd_mx_traslado.cartaporte_unidadpeso_XZY,XZY,"Contenedor intermedio para gráneles, de madera reconstituida",
+cfd_mx_traslado.cartaporte_unidadpeso_KGM,KGM,Kilogramo,Una unidad de masa igual a mil gramos.
+cfd_mx_traslado.cartaporte_unidadpeso_MC,MC,Microgramo,
+cfd_mx_traslado.cartaporte_unidadpeso_DJ,DJ,Decagramo,
+cfd_mx_traslado.cartaporte_unidadpeso_DG,DG,Decigramo,
+cfd_mx_traslado.cartaporte_unidadpeso_GRM,GRM,Gramo,"Medida de masa, de símbolo g, que es igual a la milésima parte de un kilogramo."
+cfd_mx_traslado.cartaporte_unidadpeso_CGM,CGM,Centigramo,
+cfd_mx_traslado.cartaporte_unidadpeso_TNE,TNE,Tonelada (tonelada métrica),Sinónimo: tonelada métrica
+cfd_mx_traslado.cartaporte_unidadpeso_DTN,DTN,Decitonelada métrica,"Sinónimo: centner, métrico 100 kg; Quintal, métrico 100 kg"
+cfd_mx_traslado.cartaporte_unidadpeso_MGM,MGM,Miligramo,"Medida de masa, de símbolo mg, que es igual a la milésima parte de un gramo."
+cfd_mx_traslado.cartaporte_unidadpeso_HGM,HGM,Hectogramo,
+cfd_mx_traslado.cartaporte_unidadpeso_KTN,KTN,Kilotonelada Métrica,
+cfd_mx_traslado.cartaporte_unidadpeso_2U,2U,Megagramo,
+cfd_mx_traslado.cartaporte_unidadpeso_LBR,LBR,Libra,"Unidad monetaria de Irlanda (hasta su sustitución por el euro), Reino Unido, Chipre, Egipto, Líbano, Malta, Siria y otros países."
+cfd_mx_traslado.cartaporte_unidadpeso_GRN,GRN,Grano,"Es la mínima unidad de masa en el sistema inglés de medidas. Se considera con el mismo valor en cualquier país anglosajón. Se utiliza para estimar con más sensibilidad y precisión la poca masa de pequeños objetos (medicamentos, drogas, pólvora, proyectiles, piezas de joyería, etc.)."
+cfd_mx_traslado.cartaporte_unidadpeso_ONZ,ONZ,Onza (avoirdupois),"Es una unidad de masa usada desde la Antigua Roma para pesar con mayor precisión las mercancías y otros artículos, especialmente si su peso era menor que una libra romana"
+cfd_mx_traslado.cartaporte_unidadpeso_CWI,CWI,Hundredweight,
+cfd_mx_traslado.cartaporte_unidadpeso_CWA,CWA,Hundred pound,
+cfd_mx_traslado.cartaporte_unidadpeso_LTN,LTN,Tonelada (UK) o tonelada larga (estados unidos),Sinónimo: tonelada bruta (2240 ​​lb)
+cfd_mx_traslado.cartaporte_unidadpeso_STI,STI,Estone (UK),
+cfd_mx_traslado.cartaporte_unidadpeso_STN,STN,Tonelada (estados unidos) o tonelada corta (UK y estados unidos),Sinónimo: tonelada neta (2000 lb)
+cfd_mx_traslado.cartaporte_unidadpeso_APZ,APZ,Onza troy u onza farmacéutica ,
+cfd_mx_traslado.cartaporte_unidadpeso_F13,F13,Slug,Una unidad de masa. Un slug es la masa acelerada a 1 pie por segundo por segundo por una fuerza de 1 libra.
+cfd_mx_traslado.cartaporte_unidadpeso_K64,K64,Libra (avoirdupois) por grado fahrenheit,
+cfd_mx_traslado.cartaporte_unidadpeso_L69,L69,Tonelada por kelvin,
+cfd_mx_traslado.cartaporte_unidadpeso_L87,L87,Tonelada corta por grado fahrenheit,
+cfd_mx_traslado.cartaporte_unidadpeso_M85,M85,"Tonelada, ensayo","Unidad de masa no conforme al sistema internacional, utilizada en la mineralogía para determinar la concentración de metales preciosos en el mineral de acuerdo con la masa del metal precioso en miligramos en una muestra de la masa de un sonido de ensayo (número de onzas troy en una tonelada corta (1 000 lb))."
+cfd_mx_traslado.cartaporte_unidadpeso_M86,M86,Libra Alemana,Anticuada unidad de masa usada en Alemania.
+cfd_mx_traslado.cartaporte_unidadpeso_J33,J33,Microgramo por kilogramo,
+cfd_mx_traslado.cartaporte_unidadpeso_L32,L32,Nanogramo por kilogramo,
+cfd_mx_traslado.cartaporte_unidadpeso_NA,NA,Miligramo por kilogramo,
+cfd_mx_traslado.cartaporte_unidadpeso_M29,M29,Kilogramo por kilogramo,
+cfd_mx_traslado.cartaporte_unidadpeso_M91,M91,Libra por libra,Proporción de la masa consistente en la libra avoirdupois según el sistema unitario avoirdupois dividido por la libra avoirdupois según el sistema unitario avoirdupois.
+cfd_mx_traslado.cartaporte_unidadpeso_Q29,Q29,Microgramo por hectogramo,Microgramo por hectogramo
+cfd_mx_traslado.cartaporte_unidadpeso_MTQ,MTQ,Metro cúbico,Sinónimo: metro cúbico
+cfd_mx_traslado.cartaporte_unidadpeso_MAL,MAL,Megalitro,
+cfd_mx_traslado.cartaporte_unidadpeso_LTR,LTR,Litro,"Es una unidad de volumen equivalente a un decímetro cúbico (1 dm³). Su uso es aceptado en el Sistema Internacional de Unidades (SI), aunque ya no pertenece estrictamente a él."
+cfd_mx_traslado.cartaporte_unidadpeso_MMQ,MMQ,Milímetro cúbico,"Medida de longitud, de símbolo mm, que es igual a la milésima parte de un metro."
+cfd_mx_traslado.cartaporte_unidadpeso_CMQ,CMQ,Centímetro cúbico,"Medida de longitud, de símbolo cm, que es igual a la centésima parte de un metro."
+cfd_mx_traslado.cartaporte_unidadpeso_DMQ,DMQ,Decímetro cúbico,"Medida de longitud, de símbolo dm, que es igual a la décima parte de un metro."
+cfd_mx_traslado.cartaporte_unidadpeso_MLT,MLT,Mililitro,"Medida de volumen, de símbolo ml, que es igual a la milésima parte de un litro."
+cfd_mx_traslado.cartaporte_unidadpeso_HLT,HLT,Hectolitro,"Es una unidad de volumen equivalente a cien litros, representado por el símbolo hl. Es el segundo múltiplo del litro y también equivale a 100 decímetros cúbicos (0,1 metros cúbicos)."
+cfd_mx_traslado.cartaporte_unidadpeso_CLT,CLT,Centilitro,"Medida de volumen, de símbolo cl, que es igual a la centésima parte de un litro."
+cfd_mx_traslado.cartaporte_unidadpeso_DMA,DMA,Decámetro cúbico,
+cfd_mx_traslado.cartaporte_unidadpeso_H19,H19,Hectómetro cúbico,
+cfd_mx_traslado.cartaporte_unidadpeso_H20,H20,Kilómetro cúbico,
+cfd_mx_traslado.cartaporte_unidadpeso_M71,M71,Metro cúbico por pascal (joules),"Unidad de Energía del sistema internacional, metro elevado al exponente 3 y dividido por la unidad pascal."
+cfd_mx_traslado.cartaporte_unidadpeso_DLT,DLT,Decilitro,
+cfd_mx_traslado.cartaporte_unidadpeso_4G,4G,Microlitro,
+cfd_mx_traslado.cartaporte_unidadpeso_K6,K6,Kilolitro,
+cfd_mx_traslado.cartaporte_unidadpeso_A44,A44,Decalitro,
+cfd_mx_traslado.cartaporte_unidadpeso_G94,G94,Centímetro cúbico por bar,
+cfd_mx_traslado.cartaporte_unidadpeso_G95,G95,Litro por bar,
+cfd_mx_traslado.cartaporte_unidadpeso_G96,G96,Metro cúbico por bar,
+cfd_mx_traslado.cartaporte_unidadpeso_G97,G97,Mililitro por bar ,
+cfd_mx_traslado.cartaporte_unidadpeso_5I,5I,Pies cúbicos estándar,Utilice estándar (código común WSD)
+cfd_mx_traslado.cartaporte_unidadpeso_INQ,INQ,Pulgada cúbica,Sinónimo: pulgada cuadrada
+cfd_mx_traslado.cartaporte_unidadpeso_FTQ,FTQ,Pie cúbico,
+cfd_mx_traslado.cartaporte_unidadpeso_YDQ,YDQ,Yarda cúbica,
+cfd_mx_traslado.cartaporte_unidadpeso_GLI,GLI,Galón (UK),"Es una unidad de volumen que se emplea en los países anglófonos (especialmente Estados Unidos) o con influencia de estos (como Liberia, Guatemala, Panamá, Honduras, Nicaragua, El Salvador, Colombia y parcialmente en México), para medir volúmenes de líquidos, principalmente la gasolina y su precio. Antiguamente, el volumen de un galón dependía de lo que se midiera, y dónde. Sin embargo, en el siglo XIX existían dos definiciones de uso común: ""galón de vino"" (wine gallon) y ""galón de cerveza británico"" (ale gallon).
+Es equivalente a 3.7854 litros."
+cfd_mx_traslado.cartaporte_unidadpeso_GLL,GLL,Galón (EUA),"Es una unidad de volumen que se emplea en los países anglófonos (especialmente Estados Unidos) o con influencia de estos (como Liberia, Guatemala, Panamá, Honduras, Nicaragua, El Salvador, Colombia y parcialmente en México), para medir volúmenes de líquidos, principalmente la gasolina y su precio. Antiguamente, el volumen de un galón dependía de lo que se midiera, y dónde. Sin embargo, en el siglo XIX existían dos definiciones de uso común: ""galón de vino"" (wine gallon) y ""galón de cerveza británico"" (ale gallon)."
+cfd_mx_traslado.cartaporte_unidadpeso_PT,PT,Pinta (US),Utilice pinta líquida (código común PTL)
+cfd_mx_traslado.cartaporte_unidadpeso_PTI,PTI,Pint (uk),"Es una unidad de volumen inglesa en el sistema imperial y los Estados Unidos. La versión imperial usada en el UK es de 20 onzas líquidas y es equivalente a 568,26125 ml, mientras que en los EUA es de 16 onzas líquidas y es equivalente a 473,17647 ml."
+cfd_mx_traslado.cartaporte_unidadpeso_QTI,QTI,Cuarto (UK),Es una unidad de medida de volumen equivalente a media fanega. En Castilla equivalía a aproximadamente a 6 celemines. La medida real cambia según regiones o incluso localidades.
+cfd_mx_traslado.cartaporte_unidadpeso_PTL,PTL,Pinta líquida (estados unidos),
+cfd_mx_traslado.cartaporte_unidadpeso_QTL,QTL,Cuarto de líquido (estadis unidos),
+cfd_mx_traslado.cartaporte_unidadpeso_PTD,PTD,Pinta seca (estados unidos),
+cfd_mx_traslado.cartaporte_unidadpeso_OZI,OZI,Onza líquida (UK),
+cfd_mx_traslado.cartaporte_unidadpeso_QT,QT,Cuarto (EUA),Utilice cuarto de galón líquido (código común QTL)
+cfd_mx_traslado.cartaporte_unidadpeso_J57,J57,Barril (uk petróleo),Es el nombre de varias unidades de volumen usadas en el Reino Unido y en los Estados Unidos.
+cfd_mx_traslado.cartaporte_unidadpeso_K21,K21,Pie cúbico por grado fahrenheit,
+cfd_mx_traslado.cartaporte_unidadpeso_K23,K23,Pie cúbico por psi (libra por pulgada cuadrada),
+cfd_mx_traslado.cartaporte_unidadpeso_L43,L43,Peck (UK),"Un peck es una unidad tradicional de medida de volúmenes. Aunque puede ser utilizado para medir seco y líquido, se utiliza generalmente para las materias secas. Es igual a 1/4 bushel, 2 galones, o 8 cuartos de galón."
+cfd_mx_traslado.cartaporte_unidadpeso_L61,L61,Pinta (US seco),Utilice pinta seca (código común PTD)
+cfd_mx_traslado.cartaporte_unidadpeso_L62,L62,Cuarto de galón (seco de los EUA),Utilice cuarto seco (EUA) (código común QTD)
+cfd_mx_traslado.cartaporte_unidadpeso_L84,L84,Tonelada (flota UK),
+cfd_mx_traslado.cartaporte_unidadpeso_L86,L86,Tonelada (flota estados unidos),
+cfd_mx_traslado.cartaporte_unidadpeso_M11,M11,Yarda cúbica por grado fahrenheit,
+cfd_mx_traslado.cartaporte_unidadpeso_M14,M14,Yarda cúbica por psi (libra por pulgada cuadrada),
+cfd_mx_traslado.cartaporte_unidadpeso_OZA,OZA,Onza líquida (estados unidos),
+cfd_mx_traslado.cartaporte_unidadpeso_BUI,BUI,Bushel (UK),"Un bushel tiene 4 pecks o 32 quarts, y equivale a 1,03205 del bushel de los Estados Unidos, que a su vez equivale a 0,35238 hectolitros. La palabra bushel está cayendo en desuso rápidamente."
+cfd_mx_traslado.cartaporte_unidadpeso_BUA,BUA,Bushel (EUA),"El bushel es una unidad de medida de capacidad para mercancía sólida en los países anglosajones (países de habla inglesa). Se utiliza en el comercio de granos, harinas y otros productos análogos."
+cfd_mx_traslado.cartaporte_unidadpeso_BLL,BLL,Barril (EUA),"Un barril estadounidense es igual a:
+42 galones estadounidenses
+168 cuartos estadounidenses
+336 pintas estadounidenses
+1344 gills estadounidenses
+5376 onzas líquidas estadounidenses
+158.987294928 litros"
+cfd_mx_traslado.cartaporte_unidadpeso_BLD,BLD,Barril seco (EUA),
+cfd_mx_traslado.cartaporte_unidadpeso_GLD,GLD,Galón seco (EUA),
+cfd_mx_traslado.cartaporte_unidadpeso_QTD,QTD,Cuarto seco (estados unidos),
+cfd_mx_traslado.cartaporte_unidadpeso_G26,G26,Estere,
+cfd_mx_traslado.cartaporte_unidadpeso_G21,G21,Taza (unidad de volumen),
+cfd_mx_traslado.cartaporte_unidadpeso_G24,G24,Cucharada (estados unidos),"1/2 onzas fluidas, 3 cucharaditas, 15 mililitros"
+cfd_mx_traslado.cartaporte_unidadpeso_G25,G25,Cucharilla (estados unidos),1/6 onzas fluidas o 5 mililitros
+cfd_mx_traslado.cartaporte_unidadpeso_G23,G23,Peck,Es una unidad de medida imperial y habitual en  Estados Unidos de volumen seco.
+cfd_mx_traslado.cartaporte_unidadpeso_M67,M67,Acre-pie,"Unidad de volúmen, la cúal es usada en los Estados Unidos para medir la capacidad de las presas."
+cfd_mx_traslado.cartaporte_unidadpeso_M68,M68,Cordón,Unidad tradicional del volumen de leña apilada que se ha medido con un cordón.
+cfd_mx_traslado.cartaporte_unidadpeso_M69,M69,Milla cúbica (reino unido),
+cfd_mx_traslado.cartaporte_unidadpeso_M70,M70,Unidad tradicional de capacidad de carga,
+cfd_mx_traslado.cartaporte_unidadpeso_Q32,Q32,Femtolitro,
+cfd_mx_traslado.cartaporte_unidadpeso_Q33,Q33,Picolitro,
+cfd_mx_traslado.cartaporte_unidadpeso_Q34,Q34,Nanolitro,
+cfd_mx_traslado.cartaporte_unidadpeso_NM3,NM3,Metro cúbico normalizado,Metros cúbicos normalizados (temperatura 0 ° C y presión 101325 milibares)
+cfd_mx_traslado.cartaporte_unidadpeso_SM3,SM3,Metro cúbico estándar,Metro cúbico estándar (temperatura 15 ° C y presión 101325 milibares)
