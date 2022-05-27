@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="cfdipayslipv40">
+            <cfdi:Comprobante
+                xmlns:cfdi="http://www.sat.gob.mx/cfd/4"
+                xmlns:nomina12="http://www.sat.gob.mx/nomina12"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/nomina12 http://www.sat.gob.mx/sitio_internet/cfd/nomina/nomina12.xsd"
+                Version="4.0"
+                t-att-Serie="record._get_string_cfdi(serie or '', 25)"
+                t-att-Folio="record._get_string_cfdi(folio or '', 40)"
+                t-att-Fecha="date"
+                Sello=""
+                t-att-NoCertificado="certificate_number"
+                t-att-Certificado="certificate"
+                t-att-SubTotal="subtotal"
+                t-att-Descuento="descuento"
+                t-att-Moneda="'MXN'"
+                t-att-Total="total"
+                t-att-TipoDeComprobante="'N'"
+                Exportacion="01"
+                t-att-MetodoPago="'PUE'"
+                t-att-LugarExpedicion="issued.zip or supplier.zip"
+                t-att-Confirmacion="confirmacion">
+                <t t-set="related" t-value="record.get_cfdi_related()"/>
+                <t t-if="related">
+                    <cfdi:CfdiRelacionados
+                        t-att-TipoRelacion="related['type']">
+                        <t t-foreach="related['related']" t-as="number">
+                            <cfdi:CfdiRelacionado t-att-UUID="number"/>
+                        </t>
+                    </cfdi:CfdiRelacionados>
+                </t>
+                <cfdi:Emisor
+                    t-att-Rfc="supplier.vat"
+                    t-att-Nombre="record._get_string_cfdi(supplier.name, 254)"
+                    t-att-RegimenFiscal="fiscal_position.l10n_mx_edi_code"/>
+                <cfdi:Receptor
+                    t-att-Rfc="customer.cfdi_rfc"
+                    t-att-Nombre="record._get_string_cfdi(customer.cfdi_complete_name, 254)"
+                    t-att-DomicilioFiscalReceptor="customer.address_home_id and customer.address_home_id.zip or ''"
+                    t-att-RegimenFiscalReceptor="customer.address_home_id and customer.address_home_id.property_account_position_id.l10n_mx_edi_code or ''"
+                    t-att-UsoCFDI="'CN01'"
+                    />
+                <cfdi:Conceptos>
+                    <cfdi:Concepto
+                        ClaveProdServ="84111505"
+                        Cantidad="1"
+                        ClaveUnidad="ACT"
+                        Descripcion="Pago de nómina"
+                        t-att-ValorUnitario="importe"
+                        t-att-Importe="importe"
+                        t-att-Descuento="descuento"
+                        ObjetoImp="01" />
+                </cfdi:Conceptos>
+                <cfdi:Complemento>
+                    <nomina12:Nomina
+                        xmlns:nomina12="http://www.sat.gob.mx/nomina12"
+                        xsi:schemaLocation="http://www.sat.gob.mx/nomina12 http://www.sat.gob.mx/sitio_internet/cfd/nomina/nomina12.xsd"
+                        Version="1.2" 
+                        t-att-TipoNomina="record.cfdi_tipo_nomina"
+                        t-att-FechaPago="record.cfdi_date_payment"
+                        t-att-FechaFinalPago="record.date_to"
+                        t-att-FechaInicialPago="record.date_from"
+                        t-att-NumDiasPagados="NumDiasPagados"
+                        t-att-TotalPercepciones="TotalPercepciones"
+                        t-att-TotalDeducciones="TotalDeducciones" 
+                        t-att-TotalOtrosPagos="TotalOtrosPagos" >
+                        <nomina12:Emisor
+                            t-att-Curp="EmisorCurp"
+                            t-att-RegistroPatronal="RegistroPatronal"
+                            t-att-RfcPatronOrigen="RfcPatronOrigen" >
+                            <t t-if="EntidadSNCF" >
+                                <nomina12:EntidadSNCF 
+                                    t-att-OrigenRecurso="EntidadSNCF['OrigenRecurso']"
+                                    t-att-MontoRecursoPropio="EntidadSNCF.get('MontoRecursoPropio')" />
+                            </t>
+                        </nomina12:Emisor>
+                        <nomina12:Receptor
+                            t-att-Curp="customer.cfdi_curp"
+                            t-att-NumSeguridadSocial="customer.cfdi_imss"
+                            t-att-FechaInicioRelLaboral="fecha_alta"
+                            t-att-Antigüedad="antiguedad"
+                            t-att-TipoContrato="record.contract_id.type_id and record.contract_id.type_id.code"
+                            t-att-Sindicalizado="'Sí' if customer.cfdi_sindicalizado else 'No'"
+                            t-att-TipoJornada="customer.cfdi_tipojornada_id and customer.cfdi_tipojornada_id.code"
+                            t-att-TipoRegimen="record.contract_id.cfdi_regimencontratacion_id and record.contract_id.cfdi_regimencontratacion_id.code"
+                            t-att-NumEmpleado="customer.cfdi_code_emp"
+                            t-att-Departamento="customer.department_id and customer.department_id.name.replace('/', '')"
+                            t-att-Puesto="customer.job_id and customer.job_id.name.replace('/', '')"
+                            t-att-RiesgoPuesto="RiesgoPuesto"
+                            t-att-PeriodicidadPago="periodicidad_pago"
+                            t-att-Banco="banco"
+                            t-att-CuentaBancaria="num_cuenta"
+                            t-att-SalarioBaseCotApor="record.get_salary_line_total('C510D')"
+                            t-att-SalarioDiarioIntegrado="record.get_salary_line_total('SD')"
+                            t-att-ClaveEntFed="customer.address_id and customer.address_id.state_id.code" />
+                        <t t-if="Percepciones is not None">
+                            <t t-set="attrPercepciones" t-value="Percepciones.get('attrs')"/>
+                            <t t-set="linePercepciones" t-value="Percepciones.get('lines')"/>
+                            <nomina12:Percepciones
+                                t-att-TotalSueldos="attrPercepciones.get('TotalSueldos')"
+                                t-att-TotalSeparacionIndemnizacion="attrPercepciones.get('TotalSeparacionIndemnizacion')"
+                                t-att-TotalJubilacionPensionRetiro="attrPercepciones.get('TotalJubilacionPensionRetiro')"
+                                t-att-TotalGravado="attrPercepciones.get('TotalGravado')" 
+                                t-att-TotalExento="attrPercepciones.get('TotalExento')" >
+                                <t t-foreach="Percepciones['lines']" t-as="line">
+                                    <t t-set="AccionesOTitulos" t-value="line.get('acciones_titulos')"/>
+                                    <t t-set="HorasExtra" t-value="line.get('horas_extras')"/>
+                                    <t t-set="attrLine" t-value="line.get('attrs')"/>
+                                    <nomina12:Percepcion 
+                                        t-att-Clave="attrLine['Clave']" 
+                                        t-att-Concepto="attrLine['Concepto']" 
+                                        t-att-ImporteExento="attrLine.get('ImporteExento')" 
+                                        t-att-ImporteGravado="attrLine.get('ImporteGravado')"
+                                        t-att-TipoPercepcion="attrLine.get('TipoPercepcion')" >
+                                        <t t-if="AccionesOTitulos is not None">
+                                            <nomina12:AccionesOTitulos
+                                                t-att-ValorMercado="AccionesOTitulos['ValorMercado']" 
+                                                t-att-PrecioAlOtorgarse="AccionesOTitulos.get('PrecioAlOtorgarse')" />
+                                        </t>
+                                        <t t-if="HorasExtra is not None">
+                                            <nomina12:HorasExtra
+                                                t-att-Dias="HorasExtra.get('Dias')"
+                                                t-att-TipoHoras="HorasExtra.get('TipoHoras')"
+                                                t-att-ImportePagado="HorasExtra.get('ImportePagado')" />
+                                        </t>
+                                    </nomina12:Percepcion>
+                                </t>
+                                <t t-if="JubilacionPensionRetiro is not None">
+                                    <nomina12:JubilacionPensionRetiro
+                                        t-att-TotalUnaExhibicion="JubilacionPensionRetiro.get('TotalUnaExhibicion')"
+                                        t-att-TotalParcialidad="JubilacionPensionRetiro.get('TotalParcialidad')"
+                                        t-att-MontoDiario="JubilacionPensionRetiro.get('MontoDiario')"
+                                        t-att-IngresoAcumulable="JubilacionPensionRetiro.get('IngresoAcumulable')"
+                                        t-att-IngresoNoAcumulable="JubilacionPensionRetiro.get('IngresoNoAcumulable')" />
+                                </t>
+                                <t t-if="SeparacionIndemnizacion is not None">
+                                    <nomina12:SeparacionIndemnizacion
+                                        t-att-TotalPagado="SeparacionIndemnizacion.get('TotalPagado')"
+                                        t-att-NumAñosServicio="SeparacionIndemnizacion.get('NumAniosServicio')"
+                                        t-att-UltimoSueldoMensOrd="SeparacionIndemnizacion.get('UltimoSueldoMensOrd')"
+                                        t-att-IngresoAcumulable="SeparacionIndemnizacion.get('IngresoAcumulable')"
+                                        t-att-IngresoNoAcumulable="SeparacionIndemnizacion.get('IngresoNoAcumulable')" />
+                                </t>
+                            </nomina12:Percepciones>
+                        </t>
+                        <t t-if="Deducciones is not None">
+                            <t t-set="attrDeducciones" t-value="Deducciones.get('attrs')"/>
+                            <nomina12:Deducciones 
+                                t-att-TotalOtrasDeducciones="attrDeducciones.get('TotalOtrasDeducciones')"
+                                t-att-TotalImpuestosRetenidos="attrDeducciones.get('TotalImpuestosRetenidos')" >
+                                <t t-foreach="Deducciones['lines']" t-as="line">
+                                    <nomina12:Deduccion
+                                        t-att-TipoDeduccion="line['TipoDeduccion']" 
+                                        t-att-Clave="line['Clave']" 
+                                        t-att-Concepto="line['Concepto']" 
+                                        t-att-Importe="line.get('Importe')"  />
+                                </t>
+                            </nomina12:Deducciones>
+                        </t>
+                        <t t-if="OtrosPagos is not None">
+                            <t t-set="lineOtrosPagos" t-value="OtrosPagos.get('lines')"/>
+                            <nomina12:OtrosPagos>
+                                <t t-foreach="lineOtrosPagos" t-as="line">
+                                    <t t-set="attrOtrosPagos" t-value="line.get('attrs')"/>
+                                    <t t-set="SubsidioAlEmpleo" t-value="line.get('SubsidioAlEmpleo')"/>
+                                    <t t-set="CompensacionSaldosAFavor" t-value="line.get('CompensacionSaldosAFavor')"/>
+                                    <nomina12:OtroPago
+                                        t-att-TipoOtroPago="attrOtrosPagos['TipoOtroPago']" 
+                                        t-att-Clave="attrOtrosPagos['Clave']" 
+                                        t-att-Concepto="attrOtrosPagos['Concepto']" 
+                                        t-att-Importe="attrOtrosPagos.get('Importe')">
+                                        <t t-if="SubsidioAlEmpleo is not None">
+                                            <nomina12:SubsidioAlEmpleo
+                                                t-att-SubsidioCausado="SubsidioAlEmpleo.get('SubsidioCausado')" />
+                                        </t>
+                                        <t t-if="CompensacionSaldosAFavor is not None">
+                                            <nomina12:CompensacionSaldosAFavor
+                                                t-att-SaldoAFavor="CompensacionSaldosAFavor.get('SaldoAFavor')" 
+                                                t-att-Año="CompensacionSaldosAFavor['Anio']" 
+                                                t-att-RemanenteSalFav="CompensacionSaldosAFavor.get('RemanenteSalFav')" />
+                                        </t>
+                                    </nomina12:OtroPago>
+                                </t>
+                            </nomina12:OtrosPagos>
+                        </t>
+                        <t t-if="Incapacidades is not None">
+                            <nomina12:Incapacidades>
+                            <t t-foreach="Incapacidades" t-as="line">
+                                <nomina12:Incapacidad
+                                    t-att-DiasIncapacidad="line['DiasIncapacidad']" 
+                                    t-att-TipoIncapacidad="line['TipoIncapacidad']" 
+                                    t-att-ImporteMonetario="line.get('ImporteMonetario')" />
+                            </t>
+                            </nomina12:Incapacidades>
+                        </t>
+                    </nomina12:Nomina>
+                </cfdi:Complemento>
+            </cfdi:Comprobante>
+        </template>
+    </data>
+</odoo>

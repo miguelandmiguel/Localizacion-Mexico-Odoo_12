@@ -15,7 +15,8 @@
     'data': [
         'views/report_templates.xml',
         'data/data_report.xml',
-        'data/cfdi.xml',
+        'data/3.3/payslip33.xml',
+        'data/4.0/payslip40.xml',
         'report/report_menu_xml.xml',
         'report/report_educarte.xml',
         'security/ir.model.access.csv',
