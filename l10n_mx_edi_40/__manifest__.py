@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'EDI for Mexico SAT 4.0',
-    'version': '1.4',
+    'version': '1.5',
     'category': 'Hidden',
     'summary': 'Mexican Localization for EDI documents',
     'description': """
@@ -13,9 +13,11 @@ This module allows the creation of the EDI documents and the communication with 
     """,
     'author': "OpenBias",
     'website': "https://bias.com.mx",
-    'depends': ['base'],
+    'depends': ['base_setup', 'account', 'l10n_mx_edi'],
     'data': [
+        "data/4.0/cfdi.xml",
         "data/config_parameter_cfdi_version.xml",
+        "views/account_invoice_views.xml"
         # 'security/ir.model.access.csv',
         # 'views/views.xml',
         # 'views/templates.xml',

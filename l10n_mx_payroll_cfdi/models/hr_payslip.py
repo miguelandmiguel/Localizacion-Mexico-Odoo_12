@@ -1633,7 +1633,6 @@ class HrPayslip(models.Model):
                 xmlacuse = xmlacuse[xmlacuse.find("<CancelaCFDResponse"):xmlacuse.find("</s:Body>")]
                 xmlacuse = xmlacuse.replace('<CancelaCFDResponse "', '<CancelaCFDResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance " ')
                 acuse = xmlacuse
-
             except Exception as e:
                 inv.l10n_mx_edi_log_error(str(e))
                 msg = str(e)
