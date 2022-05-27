@@ -1541,10 +1541,7 @@ class HrPayslip(models.Model):
             return True
         message = ''
         res = self.cancel()
-        if res:
-            self.state = 'cancel'
-            if self.move_id:
-                self.move_id.reverse_moves()
+
 
     @api.multi
     def cancel(self):
@@ -1656,6 +1653,9 @@ class HrPayslip(models.Model):
         if cancelled:
             body_msg = _('The cancel service has been called with success')
             self.l10n_mx_edi_pac_status = 'cancelled'
+            self.state = 'cancel'
+            if self.move_id:
+                self.move_id.reverse_moves()            
             if acuse:
                 base64_str = base64.encodestring(('%s'%(acuse)).encode()).decode().strip()
                 ctx = self.env.context.copy()
