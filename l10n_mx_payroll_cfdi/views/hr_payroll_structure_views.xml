@@ -10,18 +10,26 @@
                 <xpath expr="//notebook/page[1]" position="inside">
                     <group colspan="4" col="4">
                         <group colspan="2" string="Complemento Nómina SAT (+)">
-                            <field name="cfdi_tipo_id"/>
-                            <field name="cfdi_codigoagrupador_id" domain="[('cfdi_tipo_id', '=', cfdi_tipo_id)]" attrs="{'invisible':[('cfdi_tipo_id', '=', False)]}" />
-                            <field name="cfdi_agrupacion_id" attrs="{'invisible':[('cfdi_tipo_id', '=', False)]}" />
-                            <field name="cfdi_gravado_o_exento" attrs="{'invisible':[('cfdi_tipo_id', '=', False)]}" />
-                            <field name="cfdi_tipohoras_id" attrs="{'invisible':[('cfdi_tipo_id', '=', False)]}" />
+                            <group>
+                                <field name="cfdi_tipo_id"/>
+                                <field name="cfdi_codigoagrupador_id" domain="[('cfdi_tipo_id', '=', cfdi_tipo_id)]" attrs="{'invisible':[('cfdi_tipo_id', '=', False)]}" />
+                                <field name="cfdi_agrupacion_id" attrs="{'invisible':[('cfdi_tipo_id', '=', False)]}" />
+                            </group>
+                            <group>
+                                <field name="cfdi_gravado_o_exento" attrs="{'invisible':[('cfdi_tipo_id', '=', False)]}" />
+                                <field name="cfdi_tipohoras_id" attrs="{'invisible':[('cfdi_tipo_id', '=', False)]}" />
+                            </group>
                         </group>
                         <group colspan="2" string="Complemento Nómina SAT (-)">
-                            <field name="cfdi_tipo_neg_id"/>
-                            <field name="cfdi_codigoagrupador_neg_id" domain="[('cfdi_tipo_id', '=', cfdi_tipo_neg_id)]" attrs="{'invisible':[('cfdi_tipo_neg_id', '=', False)]}" />
-                            <field name="cfdi_agrupacion_neg_id" attrs="{'invisible':[('cfdi_tipo_neg_id', '=', False)]}" />
-                            <field name="cfdi_gravado_o_exento_neg" attrs="{'invisible':[('cfdi_tipo_neg_id', '=', False)]}" />
-                            <field name="cfdi_tipohoras_neg_id" attrs="{'invisible':[('cfdi_tipo_neg_id', '=', False)]}" />
+                            <group>
+                                <field name="cfdi_tipo_neg_id"/>
+                                <field name="cfdi_codigoagrupador_neg_id" domain="[('cfdi_tipo_id', '=', cfdi_tipo_neg_id)]" attrs="{'invisible':[('cfdi_tipo_neg_id', '=', False)]}" />
+                                <field name="cfdi_agrupacion_neg_id" attrs="{'invisible':[('cfdi_tipo_neg_id', '=', False)]}" />
+                            </group>
+                            <group>
+                                <field name="cfdi_gravado_o_exento_neg" attrs="{'invisible':[('cfdi_tipo_neg_id', '=', False)]}" />
+                                <field name="cfdi_tipohoras_neg_id" attrs="{'invisible':[('cfdi_tipo_neg_id', '=', False)]}" />
+                            </group>
                         </group>
                     </group>
                 </xpath>

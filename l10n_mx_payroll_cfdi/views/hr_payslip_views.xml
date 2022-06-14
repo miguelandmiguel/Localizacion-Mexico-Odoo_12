@@ -10,7 +10,7 @@
                     <field name="name" invisible="1" />
                 </field>
                 <field name="state" position="after">
-                    <field name="l10n_mx_edi_cfdi_folio_uuid" />
+                    <field name="l10n_mx_edi_cfdi_uuid" />
                     <field name="layout_nomina" />
                 </field>
             </field>
@@ -57,20 +57,27 @@
                         <group col="4">
                             <field name="date_invoice" readonly="1" />
                             <field name="cfdi_timeinvoice" readonly="1" />
-                            <label for="l10n_mx_edi_pac_status" states="done,open,verify,cancel"/>
+                            <label for="l10n_mx_edi_pac_status" states="open,verify,cancel"/>
                             <div class="o_row">
-                                <field name="l10n_mx_edi_pac_status" states="done,open,verify,cancel" />
+                                <field name="l10n_mx_edi_pac_status" states="open,verify,cancel" />
                                 <button name="l10n_mx_edi_update_pac_status" string="Retry" class="oe_link" type="object" 
                                     groups="account.group_account_invoice" 
                                     attrs="{'invisible':[('l10n_mx_edi_pac_status', 'in', ['signed', 'cancelled', 'none', False])]}"/>
                             </div>
-                            <field name="l10n_mx_edi_sat_status" states="done,open,verify,cancel"/>
-                            <field name="l10n_mx_edi_cfdi_uuid" states="done,open,verify,cancel"/>
+                            <label for="l10n_mx_edi_sat_status" states="open,verify,cancel"/>
+                            <div class="o_row">
+                                <field name="l10n_mx_edi_sat_status" states="open,verify,cancel"/>
+                                <!-- 
+                                <button name="l10n_mx_edi_update_pac_status" string="Retry" class="oe_link" type="object" 
+                                    groups="account.group_account_invoice" 
+                                    attrs="{'invisible':['|', ('l10n_mx_edi_pac_status', 'in', ['retry', 'to_sign', 'to_cancel', False]), ('state', '=', 'draft')]}"/> -->
+                            </div>
+                            <label for="l10n_mx_edi_cfdi_uuid" states="open,verify,cancel"/>
+                            <div class="o_row">
+                                <field name="l10n_mx_edi_cfdi_uuid" states="open,verify,cancel"/>
+                            </div>
+                            <field name="l10n_mx_edi_origin"/>
                             <field name="l10n_mx_edi_cfdi_name" />
-                            <field name="cfdi_reason_cancel"/>
-                            <span> </span>
-                            <field name="cfdi_related_id"/>
-                            <field name="l10n_mx_edi_origin" invisible="1"/>
                         </group>
                     </page>
                 </notebook>

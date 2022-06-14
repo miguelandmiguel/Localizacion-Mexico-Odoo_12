@@ -226,76 +226,54 @@ class AccountBankStatement(models.Model):
                 payment_aml_rec = self.env['account.move.line']
                 reconciliationModel = self.env['account.reconciliation.widget']
                 _logger.info(" TEST: Move IDS %s - %s "%(move_lines, st_line.name) )
+                reconcileWidget = False
 
-                if balance == 0:
-                    st_line_ids = st_line.ids
-                    for aml in move_lines:
-                        amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
+                amount = 0
+                for aml in move_lines:
+                    if aml.full_reconcile_id:
+                        continue
+                    if aml.currency_id:
+                        break
+                    amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
+                    if round(amount_total, 2) < round(abs(amount), 2):
+                        st_line_ids = st_line.ids
                         counterpart_aml_dicts.append({
-                            'name': aml.name if aml.name != '/' else aml.move_id.name,
-                            'debit': amount < 0 and -amount or 0,
-                            'credit': amount > 0 and amount or 0,
-                            'counterpart_aml_id': aml.id,
-                            # 'move_line': aml.id
+                                'name': aml.name if aml.name != '/' else aml.move_id.name,
+                                'credit': amount_total < 0 and -amount_total or 0,
+                                'debit': amount_total > 0 and amount_total or 0,
+                                'counterpart_aml_id': aml.id,
+                                'move_line': aml.id
                         })
-                    data = [{
-                        'partner_id': layoutline_id.get('partner_id') and layoutline_id['partner_id'][0] or False,
-                        'counterpart_aml_dicts': counterpart_aml_dicts,
-                        'payment_aml_ids': [],
-                        'new_aml_dicts': [],
-                    }]
-                    _logger.info('---- reconcile Balance %s - IDS %s - DATAS %s '%( balance, st_line_ids, data) )
-                    reconciliationModel.process_bank_statement_line(st_line_ids, data)
-                else:
-                    reconcileWidget = False
-                    amount = 0
-                    for aml in move_lines:
-                        if aml.full_reconcile_id:
-                            continue
-                        if aml.currency_id:
-                            break
-                        amount = aml.currency_id and aml.amount_residual_currency or aml.amount_residual
-                        if round(amount_total, 2) < round(abs(amount), 2):
-                            st_line_ids = st_line.ids
-                            counterpart_aml_dicts.append({
-                                    'name': aml.name if aml.name != '/' else aml.move_id.name,
-                                    'credit': amount_total < 0 and -amount_total or 0,
-                                    'debit': amount_total > 0 and amount_total or 0,
-                                    'counterpart_aml_id': aml.id,
-                                    'move_line': aml.id
-                            })
-                            data = [{
-                                'partner_id': aml.partner_id.id,
-                                'counterpart_aml_dicts': counterpart_aml_dicts,
-                                'payment_aml_ids': [],
-                                'new_aml_dicts': [],
-                                'move_line': False,
-                            }]
-                            reconcileWidget = True
-                            res=True
-                            reconciliationModel.process_bank_statement_line(st_line_ids, data)
-                            _logger.info("03 ----------- Start Reconcile %s - %s - %s - %s -%s -%s "%(data, st_line.name, st_line_ids, amount, amount_total, balance))
-                            break
-                        elif round(amount_total, 2) >= round(abs(amount), 2):
-                            amount_total -= abs(amount)
-                            counterpart_aml_dicts.append({
-                                    'name': aml.name if aml.name != '/' else aml.move_id.name,
-                                    'debit': amount < 0 and -amount or 0,
-                                    'credit': amount > 0 and amount or 0,
-                                    'move_line': aml,
-                            })
-                        else:
-                            counterpart_aml_dicts.append({
-                                    'name': aml.name if aml.name != '/' else aml.move_id.name,
-                                    'debit': balance < 0 and -balance or 0,
-                                    'credit': balance > 0 and balance or 0,
-                                    'move_line': aml,
-                            })
-                    if reconcileWidget == False and len(counterpart_aml_dicts) > 0:
-                        _logger.info("03 ----------- Start Reconcile %s - %s - %s - %s -%s -%s "%(counterpart_aml_dicts, st_line.name, payment_aml_rec, amount, amount_total, balance))
-                        res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
-
-
+                        data = [{
+                            'partner_id': aml.partner_id.id,
+                            'counterpart_aml_dicts': counterpart_aml_dicts,
+                            'payment_aml_ids': [],
+                            'new_aml_dicts': [],
+                            'move_line': False,
+                        }]
+                        reconcileWidget = True
+                        res=True
+                        reconciliationModel.process_bank_statement_line(st_line_ids, data)
+                        _logger.info("03 ----------- Start Reconcile %s - %s - %s - %s -%s -%s "%(data, st_line.name, st_line_ids, amount, amount_total, balance))
+                        break
+                    elif round(amount_total, 2) >= round(abs(amount), 2):
+                        amount_total -= abs(amount)
+                        counterpart_aml_dicts.append({
+                                'name': aml.name if aml.name != '/' else aml.move_id.name,
+                                'debit': amount < 0 and -amount or 0,
+                                'credit': amount > 0 and amount or 0,
+                                'move_line': aml,
+                        })
+                    else:
+                        counterpart_aml_dicts.append({
+                                'name': aml.name if aml.name != '/' else aml.move_id.name,
+                                'debit': balance < 0 and -balance or 0,
+                                'credit': balance > 0 and balance or 0,
+                                'move_line': aml,
+                        })
+                if reconcileWidget == False and len(counterpart_aml_dicts) > 0:
+                    _logger.info("03 ----------- Start Reconcile %s - %s - %s - %s -%s -%s "%(counterpart_aml_dicts, st_line.name, payment_aml_rec, amount, amount_total, balance))
+                    res = st_line.with_context(ctx).process_reconciliation(counterpart_aml_dicts, payment_aml_rec, open_balance_dicts)
                 if use_new_cursor:
                     cr.commit()
                 _logger.info("04 ----------- End Reconcile: %s - %s"%(res or '', st_line.name))
