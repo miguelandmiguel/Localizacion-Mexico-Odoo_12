@@ -1096,9 +1096,25 @@ class HrPayslip(models.Model):
             }
             for otro_pago in nodo_o:
                 tipo_otro_pago, nombre_otro_pago = self._get_code(otro_pago)
+                if otro_pago.total == 0.0 and tipo_otro_pago == '002' and TipoRegimen == '02':
+                    otros_pagos['lines'].append({
+                        'attrs': {
+                            'TipoOtroPago': tipo_otro_pago,
+                            'Clave': tipo_otro_pago,
+                            'Concepto': nombre_otro_pago.replace(".", "").replace("/", "").replace("(", "").replace(")", ""),
+                            'Importe': "%.2f"%abs(otro_pago.total)
+                        },
+                        'SubsidioAlEmpleo': {
+                            'SubsidioCausado': "%.2f"%abs(otro_pago.total)
+                        },
+                    })
+                    continue
+                if otro_pago.total == 0.0 and tipo_otro_pago == '002' and TipoRegimen != '02':
+                    continue                    
                 if otro_pago.total == 0.0 and tipo_otro_pago != '002':
                     continue
-                
+                _logger.info('-------------- CFDI %s %s %s '%( otro_pago.total, tipo_otro_pago, TipoRegimen  ) )
+
                 nombre_otro_pago = otro_pago.name or ''
                 attrs = {
                     'TipoOtroPago': tipo_otro_pago,

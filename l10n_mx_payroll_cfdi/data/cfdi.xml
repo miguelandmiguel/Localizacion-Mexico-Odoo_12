@@ -2,6 +2,8 @@
 <odoo>
     <data>
         <template id="cfdipayslipv33">
+            <t t-set="TipoContrato" t-value="record.contract_id.type_id and record.contract_id.type_id.code or None" />
+            <t t-set="RegistroPatronal" t-value="RegistroPatronal if TipoContrato in ['01', '02', '03', '04', '05', '06', '07', '08'] else None" />
             <cfdi:Comprobante
                 xmlns:cfdi="http://www.sat.gob.mx/cfd/3"
                 xmlns:nomina12="http://www.sat.gob.mx/nomina12"
@@ -75,22 +77,22 @@
                         </nomina12:Emisor>
                         <nomina12:Receptor
                             t-att-Curp="customer.cfdi_curp"
-                            t-att-NumSeguridadSocial="customer.cfdi_imss"
-                            t-att-FechaInicioRelLaboral="fecha_alta"
-                            t-att-Antigüedad="antiguedad"
-                            t-att-TipoContrato="record.contract_id.type_id and record.contract_id.type_id.code"
+                            t-att-NumSeguridadSocial="customer.cfdi_imss if RegistroPatronal else None"
+                            t-att-FechaInicioRelLaboral="fecha_alta if RegistroPatronal else None"
+                            t-att-Antigüedad="antiguedad if RegistroPatronal else None"
+                            t-att-TipoContrato="TipoContrato"
                             t-att-Sindicalizado="'Sí' if customer.cfdi_sindicalizado else 'No'"
                             t-att-TipoJornada="customer.cfdi_tipojornada_id and customer.cfdi_tipojornada_id.code"
                             t-att-TipoRegimen="record.contract_id.cfdi_regimencontratacion_id and record.contract_id.cfdi_regimencontratacion_id.code"
                             t-att-NumEmpleado="customer.cfdi_code_emp"
                             t-att-Departamento="customer.department_id and customer.department_id.name.replace('/', '')"
                             t-att-Puesto="customer.job_id and customer.job_id.name.replace('/', '')"
-                            t-att-RiesgoPuesto="RiesgoPuesto"
+                            t-att-RiesgoPuesto="RiesgoPuesto if RegistroPatronal else None"
                             t-att-PeriodicidadPago="periodicidad_pago"
                             t-att-Banco="banco"
                             t-att-CuentaBancaria="num_cuenta"
                             t-att-SalarioBaseCotApor="record.get_salary_line_total('C510D')"
-                            t-att-SalarioDiarioIntegrado="record.get_salary_line_total('SD')"
+                            t-att-SalarioDiarioIntegrado="record.get_salary_line_total('SD') if RegistroPatronal else None"
                             t-att-ClaveEntFed="customer.address_id and customer.address_id.state_id.code" />
                         <t t-if="Percepciones is not None">
                             <t t-set="attrPercepciones" t-value="Percepciones.get('attrs')"/>
@@ -156,7 +158,7 @@
                                 </t>
                             </nomina12:Deducciones>
                         </t>
-                        <t t-if="OtrosPagos is not None">
+                        <t t-if="OtrosPagos is not None and OtrosPagos.get('lines') != []">
                             <t t-set="lineOtrosPagos" t-value="OtrosPagos.get('lines')"/>
                             <nomina12:OtrosPagos>
                                 <t t-foreach="lineOtrosPagos" t-as="line">
