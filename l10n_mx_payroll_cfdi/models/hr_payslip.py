@@ -194,6 +194,10 @@ class HrPayslip(models.Model):
             ('fdbvenn', ' FDB Venn'),
             ('banorte', 'Banorte'),
             ('bbva', 'BBVA Bancomer'),
+            ('banamex', 'Banamex'),
+            ('hsbc', 'HSBC'),
+            ('banbajio', 'Banbajio'),
+            ('bancoppel', 'Bancoppel'),
             ('inter', 'Interbancarios'),
             ('efectivo', 'Efectivo')
         ], string='Dispersion Nomina', default='efectivo', compute='_compute_dispersionnomina')
@@ -201,36 +205,23 @@ class HrPayslip(models.Model):
 
     @api.multi
     def _compute_dispersionnomina(self):
+        layout = {
+            '002': 'banamex',
+            '012': 'bbva',
+            '021': 'hsbc',
+            '030': 'banbajio',
+            '072': 'banorte',
+            '137': 'bancoppel',
+            '151': 'fdbvenn',
+            'inter': 'inter'
+        }
         for payslip in self:
             layout_nomina = 'efectivo'
             bic = payslip.employee_id.bank_account_id and payslip.employee_id.bank_account_id.bank_id and payslip.employee_id.bank_account_id.bank_id.bic or False
             if not bic:
                 payslip.layout_nomina = layout_nomina
                 continue
-
-            if bic == '012':
-                layout_nomina = 'bbva'
-            elif bic == '072':
-                layout_nomina = 'banorte'
-            elif bic == '151':
-                layout_nomina = 'fdbvenn'                
-            else:
-                layout_nomina = 'inter'
-
-            """
-            if bic == '012':
-                layout_nomina = 'bbva'
-            else:
-                if payslip.company_id.sin_dispersion_banorte:
-                    layout_nomina = 'bbva_inter'
-                else:
-                    if bic == '072':
-                        layout_nomina = 'banorte'
-                    elif bic not in ['012', '072']:
-                        layout_nomina = 'bbva_inter'
-            """
-            if bic == '151':
-                _logger.info('------ layout_nomina %s %s - '%(payslip.number, layout_nomina) )
+            layout_nomina = layout.get(bic) or 'inter'
             payslip.layout_nomina = layout_nomina
 
     @api.one

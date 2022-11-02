@@ -101,7 +101,7 @@ class AccountInvoice(models.Model):
             'datas': xml_signed,
             'mimetype': 'application/xml'
         })
-        return True        
+        return True
 
 class AccountInvoiceLine(models.Model):
     _inherit = 'account.invoice.line'

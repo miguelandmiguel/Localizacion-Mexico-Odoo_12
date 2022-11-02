@@ -87,6 +87,34 @@ class HrPayslipRun(models.Model):
         return ''
 
     #---------------------------------------
+    #  Dispersion Nominas BBVA - Inter HSBC Bancoppel
+    #---------------------------------------
+    @api.multi
+    def dispersion_bbva_inter_hsbcbancoppel(self):
+        for run_id in self:
+            where = ['hsbc', 'bancoppel']
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina in where)
+            if p_ids:
+                _logger.info('---------- Layout BBVA Inter HSBC Bancoppel %s '%( len(p_ids) ) )
+                return p_ids.dispersion_bbva_inter_datas( run_id )
+        return ''
+
+    #---------------------------------------
+    #  Dispersion Nominas BBVA - Inter SIN BANBAJIO-BANORTE-BANAMEX
+    #---------------------------------------
+    @api.multi
+    def dispersion_bbva_inter_banbajiobanortebanamex(self):
+        for run_id in self:
+            where = ['bbva', 'banbajio', 'banorte', 'banamex']
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina not in where)
+            if p_ids:
+                _logger.info('---------- Layout BBVA Inter SIN SIN BANBAJIO-BANORTE-BANAMEX %s '%( len(p_ids) ) )
+                return p_ids.dispersion_bbva_inter_datas( run_id )
+        return ''        
+
+
+
+    #---------------------------------------
     #  Dispersion Nominas BBVA - Inter - Venn
     #---------------------------------------
     @api.multi
@@ -419,6 +447,10 @@ class HrPayslip(models.Model):
             file_value += file_row + '\r\n'
         return file_value
 
+
+#---------------------------------------
+#  Dispersion de Nóminas
+#---------------------------------------
 class ReportBanorteFdbVennTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionfdbvenntxt'
     _inherit = 'report.report_txt.abstract'
@@ -434,6 +466,9 @@ class ReportBanorteFdbVennTxt(models.AbstractModel):
         company_id = self.env.user.company_id
         return ' FDBVenn%s.PAG'%( company_id.clave_emisora or 'DispersionBanorte.txt' )
 
+#---------------------------------------
+#  Dispersion de Nóminas Banorte
+#---------------------------------------
 class ReportBanorteTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionbanortetxt'
     _inherit = 'report.report_txt.abstract'
@@ -464,8 +499,12 @@ class ReportBanorteInterTxt(models.AbstractModel):
         company_id = self.env.user.company_id
         return '%s.PAG'%( company_id.clave_emisora or 'DispersionBanorte.txt' )
 
+#---------------------------------------
+#  Dispersion de Nóminas BBVA
+#---------------------------------------
 class ReportBBVATxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvatxt'
+    _description = 'Dispersion BBVA - BBVA'
     _inherit = 'report.report_txt.abstract'
 
     def __init__(self, pool, cr):
@@ -477,6 +516,7 @@ class ReportBBVATxt(models.AbstractModel):
 
 class ReportBBVAInterTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvaintertxt'
+    _description = 'Dispersion BBVA - Inter'
     _inherit = 'report.report_txt.abstract'
 
     def __init__(self, pool, cr):
@@ -487,8 +527,43 @@ class ReportBBVAInterTxt(models.AbstractModel):
             body = obj.dispersion_bbva_inter_datas()
             txtfile.write(b'%s'%body.encode('utf-8'))
 
+class ReportPayslipBBVAHSBCBancoppelTxt(models.AbstractModel):
+    _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvahsbcbancoppeltxt'
+    _description = 'Dispersion BBVA - HSBC Bancoppel'
+    _inherit = 'report.report_txt.abstract'
+
+    def __init__(self, pool, cr):
+        self.sheet_header = None
+
+    def generate_txt_report(self, txtfile, data, objects):
+        for obj in objects:
+            body = obj.dispersion_bbva_inter_hsbcbancoppel()
+            txtfile.write(b'%s'%body.encode('utf-8'))
+
+    def generate_txt_reportname(self, objs):
+        company_id = self.env.user.company_id
+        return 'DispersionBBVA_Inter_%s.txt'%( company_id.id or 'DispersionHsbcBancoppel' )
+
+class ReportPayslipBBVABanbajioBanorteBanamexTxt(models.AbstractModel):
+    _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvabajiobanortebantxt'
+    _description = 'Dispersion BBVA SIN Banbajio Banorte Banamex'
+    _inherit = 'report.report_txt.abstract'
+
+    def __init__(self, pool, cr):
+        self.sheet_header = None
+
+    def generate_txt_report(self, txtfile, data, objects):
+        for obj in objects:
+            body = obj.dispersion_bbva_inter_banbajiobanortebanamex()
+            txtfile.write(b'%s'%body.encode('utf-8'))
+
+    def generate_txt_reportname(self, objs):
+        company_id = self.env.user.company_id
+        return 'DispersionBBVA_Inter_%s.txt'%( company_id.id or 'DispersionHsbcBancoppel' )        
+
 class ReportPayslipBBVAInterVennTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.payslipdispersionbbvaintervenntxt'
+    _description = 'Dispersion BBVA - Inter Venn'
     _inherit = 'report.report_txt.abstract'
 
     def __init__(self, pool, cr):
@@ -506,18 +581,17 @@ class ReportPayslipBBVAInterVennTxt(models.AbstractModel):
 
 class ReportPayslipBBVATxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.payslipdispersionbbvavenntxt'
+    _description = 'Dispersion BBVA - Venn'
     _inherit = 'report.report_txt.abstract'
 
     def __init__(self, pool, cr):
         self.sheet_header = None
 
     def generate_txt_report(self, txtfile, data, objects):
-        # print('---- objects', objects)
-        # objs = objects.filtered(lambda r: r.layout_nomina == 'inter')
         body = objects.with_context(rechazo=True).dispersion_bbva_inter_venn_datas()
-        # body = obj.dispersion_bbva_inter_datas()
         txtfile.write(b'%s'%body.encode('utf-8'))
 
     def generate_txt_reportname(self, objs):
         company_id = self.env.user.company_id
         return 'DispersionBBVA_Inter_%s.txt'%( company_id.id or 'DispersionBanorte' )
+

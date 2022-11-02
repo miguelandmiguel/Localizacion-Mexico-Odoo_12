@@ -40,14 +40,14 @@
             <field name="arch" type="xml">
                 <field name="move_name" position="before">
                     <field name="l10n_mx_edi_amece_addenda" invisible="1" />
-                </field>            
+                </field>
                 <notebook position="inside">
                     <page string="Addenda Amece" attrs="{'invisible':[('l10n_mx_edi_amece_addenda', '=', False)]}">
                         <group > 
                             <group>
                                 <button name="action_generate_addendaammece" type="object" string="Generar Addenda AMECE" class="oe_highlight" groups="account.group_account_invoice"/>
                             </group>
-                        </group>                        
+                        </group>
                         <group>
                             <group>
                                 <field name="l10n_mx_edi_amece_referenceidentification" attrs="{'required': [('l10n_mx_edi_amece_addenda', '!=', False)]}" />

@@ -214,7 +214,20 @@ class OdooFTP():
         logging.info("CRON _import Security %s - File Delete %s "%(self.security, filename) )
         return True  
 
+class WizardConnectionTool(models.TransientModel):
+    """Credit Notes"""
+    _name = "wizard.connection.tool"
+    _description = "wizard.connection.tool"
 
+    name = fields.Char(string="Name", default="Import Files", readonly=True)
+    note = fields.Text(string="Note", readonly=True)
+
+    @api.multi
+    def button_import(self):
+        Configure = self.env['connection_tool.configure']
+        import_id = self._context.get('import_id')
+        if import_id:
+            imprt = Configure.browse(import_id)._import(flag_imp=False, automatic=False)
 
 class Conector(models.Model):
     _name = "connection_tool.connector"

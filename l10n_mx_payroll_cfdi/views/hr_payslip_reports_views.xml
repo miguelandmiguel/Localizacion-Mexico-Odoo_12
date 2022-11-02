@@ -65,6 +65,24 @@
             file="payslipdispersionbbvavenntxt"
             attachment_use="True" />
 
+        <report
+            id="dispersionbbvahsbcbancoppeltxt"
+            model="hr.payslip.run"
+            string="BBVA Interbancarias HSBC-BANCOPPEL"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.dispersionbbvahsbcbancoppeltxt"
+            file="dispersionbbvahsbcbancoppeltxt"
+            attachment_use="True" />
+
+        <report
+            id="dispersionbbvabajiobanortebantxt"
+            model="hr.payslip.run"
+            string="BBVA Interbancarias SIN BANBAJIO-BANORTE-BANAMEX"
+            report_type="txt"
+            name="l10n_mx_payroll_cfdi.dispersionbbvabajiobanortebantxt"
+            file="dispersionbbvabajiobanortebantxt"
+            attachment_use="True" />
+
          
 
     </data>

@@ -64,7 +64,7 @@
                         t-att-NumDiasPagados="NumDiasPagados"
                         t-att-TotalPercepciones="TotalPercepciones"
                         t-att-TotalDeducciones="TotalDeducciones" 
-                        t-att-TotalOtrosPagos="TotalOtrosPagos" >
+                        t-att-TotalOtrosPagos="TotalOtrosPagos if (OtrosPagos is not None and OtrosPagos.get('lines') != []) else None" >
                         <nomina12:Emisor
                             t-att-Curp="EmisorCurp"
                             t-att-RegistroPatronal="RegistroPatronal"

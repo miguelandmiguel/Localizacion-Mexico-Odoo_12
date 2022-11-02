@@ -171,7 +171,20 @@ FIELD_TYPES = [(key, key) for key in sorted(fields.Field.by_type)]
 
 
 
+class WizardConnectionTool(models.TransientModel):
+    """Credit Notes"""
+    _name = "wizard.connection.tool"
+    _description = "wizard.connection.tool"
 
+    name = fields.Char(string="Name", default="Import Files", readonly=True)
+    note = fields.Text(string="Note", readonly=True)
+
+    @api.multi
+    def button_import(self):
+        Configure = self.env['connection_tool.configure']
+        import_id = self._context.get('import_id')
+        if import_id:
+            imprt = Configure.browse(import_id)._import(flag_imp=False, automatic=False)
 
 
 
@@ -1338,21 +1351,7 @@ class Configure(models.Model):
 # access_connection_tool_sheet,connection_tool.sheet,model_connection_tool_sheet,,1,1,1,1
 
 
-class WizardConnectionTool(models.TransientModel):
-    """Credit Notes"""
 
-    _name = "wizard.connection.tool"
-    _description = "wizard.connection.tool"
-
-    name = fields.Char(string="Name", default="Import Files", readonly=True)
-    note = fields.Text(string="Note", readonly=True)
-
-    @api.multi
-    def button_import(self):
-        Configure = self.env['connection_tool.configure']
-        import_id = self._context.get('import_id')
-        if import_id:
-            imprt = Configure.browse(import_id)._import(flag_imp=False, automatic=False)
 
 
 

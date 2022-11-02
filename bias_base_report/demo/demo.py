@@ -9,6 +9,7 @@ model_id = env['report.txt.wiz'].create({
 action = model_id.action_report_txt()
 
 
+
 model_id = env['report.zip.wiz'].create({
   'name': 'Reporte ZIP',
 })
