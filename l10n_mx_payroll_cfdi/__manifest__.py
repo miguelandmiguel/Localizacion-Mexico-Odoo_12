@@ -10,7 +10,7 @@
     'author': "OpenBias",
     'website': "https://bias.com.mx",
     'category': 'Uncategorized',
-    'version': '1.16',
+    'version': '1.17',
     'depends': ['base_setup', 'hr', 'hr_payroll', 'account', 'l10n_mx_payroll'],
     'data': [
         'views/report_templates.xml',
@@ -21,6 +21,7 @@
         'security/ir.model.access.csv',
         'views/hr_payroll_account_views.xml',
         'views/res_company_views.xml',
+        'views/res_partner_bank_views.xml',
         'views/hr_payslip_run_views.xml',
         'views/hr_payslip_views.xml',
         'views/hr_payroll_structure_views.xml',

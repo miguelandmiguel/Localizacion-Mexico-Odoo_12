@@ -1,0 +1,16 @@
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="view_partner_bank_banbajio_form">
+            <field name="name">view_partner_bank_banbajio_form</field>
+            <field name="model">res.partner.bank</field>
+            <field name="inherit_id" ref="base.view_partner_bank_form"/>
+            <field name="arch" type="xml">
+                <field name="acc_holder_name" position="after">
+                    <field name="grupo_afinidad"/>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</odoo>

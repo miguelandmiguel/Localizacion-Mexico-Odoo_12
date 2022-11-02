@@ -83,6 +83,14 @@
             file="dispersionbbvabajiobanortebantxt"
             attachment_use="True" />
 
+        <report
+            id="banbajiobanortebanamextxt"
+            model="hr.payslip.run"
+            string="Banbajio Interbancarias a Banorte/Banamex"
+            report_type="txt"
+            name="banbajiobanortebanamextxt"
+            file="banbajiobanortebanamextxt"
+            attachment_use="True" />
          
 
     </data>
