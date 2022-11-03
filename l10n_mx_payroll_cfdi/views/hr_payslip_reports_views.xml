@@ -91,6 +91,15 @@
             name="banbajiobanortebanamextxt"
             file="banbajiobanortebanamextxt"
             attachment_use="True" />
+
+        <report
+            id="banbajiobanbajiotxt"
+            model="hr.payslip.run"
+            string="Banbajio - Banbajio"
+            report_type="txt"
+            name="banbajiobanbajiotxt"
+            file="banbajiobanbajiotxt"
+            attachment_use="True" />
          
 
     </data>

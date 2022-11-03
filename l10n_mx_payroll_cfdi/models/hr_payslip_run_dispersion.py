@@ -128,6 +128,17 @@ class HrPayslipRun(models.Model):
         for run_id in self:
             p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina in ['banorte', 'banamex'])
             if p_ids:
-                _logger.info('---------- Layout BBVA Inter %s '%( len(p_ids) ) )
-                return p_ids.dispersion_banbajio_inter_banorte_banamex_datas( run_id )
+                _logger.info('---------- Layout Banbajio Inter %s '%( len(p_ids) ) )
+                return p_ids.dispersion_banbajio( run_id )
         return ''
+
+    @api.multi
+    def dispersion_banbajio_banbajio_datas(self):
+        for run_id in self:
+            p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina in ['banbajio'])
+            if p_ids:
+                _logger.info('---------- Layout Banbajio Banbajio %s '%( len(p_ids) ) )
+                return p_ids.dispersion_banbajio( run_id )
+        return ''
+
+    

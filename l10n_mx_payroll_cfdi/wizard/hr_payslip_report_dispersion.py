@@ -91,6 +91,10 @@ class ReportBBVATxt(models.AbstractModel):
         body = objects.dispersion_bbva_datas()
         txtfile.write(b'%s'%body.encode('utf-8'))
 
+    def generate_txt_reportname(self, objs):
+        company_id = self.env.user.company_id
+        return 'Dispersion_BBVA_BBVA_%s.txt'%( company_id.id or 'Dispersion_BBVA_BBVA' )
+
 class ReportBBVAInterTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvaintertxt'
     _description = 'Dispersion BBVA - Inter'
@@ -103,6 +107,10 @@ class ReportBBVAInterTxt(models.AbstractModel):
         for obj in objects:
             body = obj.dispersion_bbva_inter_datas()
             txtfile.write(b'%s'%body.encode('utf-8'))
+
+    def generate_txt_reportname(self, objs):
+        company_id = self.env.user.company_id
+        return 'Dispersion_BBVA_Inter_%s.txt'%( company_id.id or 'Dispersion_BBVA_Inter' )
 
 class ReportPayslipBBVAHSBCBancoppelTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvahsbcbancoppeltxt'
@@ -119,7 +127,7 @@ class ReportPayslipBBVAHSBCBancoppelTxt(models.AbstractModel):
 
     def generate_txt_reportname(self, objs):
         company_id = self.env.user.company_id
-        return 'DispersionBBVA_Inter_%s.txt'%( company_id.id or 'DispersionHsbcBancoppel' )
+        return 'Dispersion_BBVA_Inter_%s.txt'%( company_id.id or 'Dispersion_BBVA_Inter' )
 
 class ReportPayslipBBVABanbajioBanorteBanamexTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.dispersionbbvabajiobanortebantxt'
@@ -136,7 +144,7 @@ class ReportPayslipBBVABanbajioBanorteBanamexTxt(models.AbstractModel):
 
     def generate_txt_reportname(self, objs):
         company_id = self.env.user.company_id
-        return 'DispersionBBVA_Inter_%s.txt'%( company_id.id or 'DispersionHsbcBancoppel' )        
+        return 'Dispersion_BBVA_Inter_%s.txt'%( company_id.id or 'Dispersion_BBVA_Inter' )
 
 class ReportPayslipBBVAInterVennTxt(models.AbstractModel):
     _name = 'report.l10n_mx_payroll_cfdi.payslipdispersionbbvaintervenntxt'
@@ -153,7 +161,7 @@ class ReportPayslipBBVAInterVennTxt(models.AbstractModel):
 
     def generate_txt_reportname(self, objs):
         company_id = self.env.user.company_id
-        return 'DispersionBBVA_Venn_%s.txt'%( company_id.id or 'DispersionBBVA_Venn' )
+        return 'Dispersion_BBVA_Venn_%s.txt'%( company_id.id or 'Dispersion_BBVA_Venn' )
 
 
 class ReportPayslipBBVATxt(models.AbstractModel):
@@ -170,7 +178,7 @@ class ReportPayslipBBVATxt(models.AbstractModel):
 
     def generate_txt_reportname(self, objs):
         company_id = self.env.user.company_id
-        return 'DispersionBBVA_Inter_%s.txt'%( company_id.id or 'DispersionBanorte' )
+        return 'Dispersion_BBVA_Inter_Venn_%s.txt'%( company_id.id or 'Dispersion_BBVA_Inter_Venn' )
 
 
 #---------------------------------------
@@ -191,4 +199,22 @@ class ReportPayslipBanbajioBanorteBanamexTxt(models.AbstractModel):
 
     def generate_txt_reportname(self, objs):
         company_id = self.env.user.company_id
-        return 'DispersionBanbajio_Inter_%s.txt'%( company_id.id or 'DispersionBanbajio_Inter' )
+        return 'Dispersion_Banbajio_Inter_%s.txt'%( company_id.id or 'Dispersion_Banbajio_Inter' )
+
+
+class ReportPayslipBanbajioBanbajioTxt(models.AbstractModel):
+    _name = 'report.banbajiobanbajiotxt'
+    _description = 'Dispersion Banbajio a Banbajio'
+    _inherit = 'report.report_txt.abstract'
+
+    def __init__(self, pool, cr):
+        self.sheet_header = None
+
+    def generate_txt_report(self, txtfile, data, objects):
+        for obj in objects:
+            body = obj.dispersion_banbajio_banbajio_datas()
+            txtfile.write(b'%s'%body.encode('utf-8'))
+
+    def generate_txt_reportname(self, objs):
+        company_id = self.env.user.company_id
+        return 'Dispersion_Banbajio_Banbajio_%s.txt'%( company_id.id or 'Dispersion_Banbajio_Banbajio' )

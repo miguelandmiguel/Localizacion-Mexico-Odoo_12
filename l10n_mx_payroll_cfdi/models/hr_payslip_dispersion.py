@@ -29,7 +29,7 @@ class HrPayslip(models.Model):
     #---------------------------------------
     #  Dispersion Nominas Banorte Interbancarios
     #---------------------------------------
-    def dispersion_banbajio_inter_banorte_banamex_datas(self, run_id=None):
+    def dispersion_banbajio(self, run_id=None):
         def get_header(acc_id):
             encabezado = "010000001030S900"
             encabezado += "{:.7}".format( (acc_id.grupo_afinidad or "").rjust(7, "0") )
