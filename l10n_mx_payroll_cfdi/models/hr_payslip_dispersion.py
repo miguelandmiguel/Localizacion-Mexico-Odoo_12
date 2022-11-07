@@ -42,7 +42,8 @@ class HrPayslip(models.Model):
         def get_body(acc_id, indx=0, line=None):
             total = line.get_salary_line_total('C99')
             if total <= 0:
-                return ""        
+                return ""
+            total = "{:.2f}".format(total)
             acc_number = line.employee_id.bank_account_id and line.employee_id.bank_account_id.acc_number or ""
             detalle = "02"
             detalle += "{:.7}".format( str(indx or "").rjust(7, "0") )
@@ -50,7 +51,7 @@ class HrPayslip(models.Model):
             detalle += "{:.8}".format( str(run_id.cfdi_date_payment).replace('-', '') )
             detalle += "000"
             detalle += "030"
-            detalle += "{:.15}".format( str(total).replace(".", "").rjust(15, "0") )
+            detalle += "{:.15}".format( total.replace(".", "").rjust(15, "0") )
             detalle += "{:.8}".format( str(run_id.cfdi_date_payment).replace('-', '') )
             detalle += "00{:.20} ".format( acc_id.acc_number.rjust(20, "0") )
             detalle += "00{:.20} ".format( str(acc_number or "").rjust(20, "0") )
@@ -62,11 +63,12 @@ class HrPayslip(models.Model):
             return detalle
 
         def get_footer(indx, total):
+            total = "{:.2f}".format(total)
             sumario = "09"
             sumario += "{:.7}".format( str(indx or 0).rjust(7, "0") )
             sumario += "90"
             sumario += "{:.7}".format( str(indx-1 or 0).rjust(7, "0") )
-            sumario += "{:.18}".format( str(total).replace(".", "").rjust(18, "0") )
+            sumario += "{:.18}".format( total.replace(".", "").rjust(18, "0") )
             sumario += "{:.145}".format( " ".rjust(145, " ") )
             sumario += "\r\n"
             return sumario

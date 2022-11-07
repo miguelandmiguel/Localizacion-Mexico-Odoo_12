@@ -10,7 +10,7 @@
     'author': "OpenBias",
     'website': "https://bias.com.mx",
     'category': 'Uncategorized',
-    'version': '1.18',
+    'version': '1.19',
     'depends': ['base_setup', 'hr', 'hr_payroll', 'account', 'l10n_mx_payroll'],
     'data': [
         'views/report_templates.xml',
