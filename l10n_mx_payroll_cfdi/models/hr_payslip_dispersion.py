@@ -31,8 +31,9 @@ class HrPayslip(models.Model):
     #---------------------------------------
     def dispersion_banbajio(self, run_id=None):
         def get_header(acc_id):
+            #  "{:.7}".format( (acc_id.grupo_afinidad or "").rjust(7, "0") )
             encabezado = "010000001030S900"
-            encabezado += "{:.7}".format( (acc_id.grupo_afinidad or "").rjust(7, "0") )
+            encabezado += "0001QY7"
             encabezado += "{:.8}".format( str(run_id.cfdi_date_payment).replace('-', '') )
             encabezado += "{:.20}".format( acc_id.acc_number.rjust(20, "0") )
             encabezado += "{:.130}".format( " ".rjust(130, " ") )
