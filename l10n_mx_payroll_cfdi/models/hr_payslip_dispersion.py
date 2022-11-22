@@ -68,7 +68,7 @@ class HrPayslip(models.Model):
             sumario = "09"
             sumario += "{:.7}".format( str(indx or 0).rjust(7, "0") )
             sumario += "90"
-            sumario += "{:.7}".format( str(indx-1 or 0).rjust(7, "0") )
+            sumario += "{:.7}".format( str(indx-2 or 0).rjust(7, "0") )
             sumario += "{:.18}".format( total.replace(".", "").rjust(18, "0") )
             sumario += "{:.145}".format( " ".rjust(145, " ") )
             sumario += "\r\n"
