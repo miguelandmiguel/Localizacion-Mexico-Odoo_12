@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import threading
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 
 from odoo import _, api, fields, models, tools, registry, SUPERUSER_ID
@@ -30,6 +30,7 @@ class HrPayslip(models.Model):
     #  Dispersion Nominas Banorte Interbancarios
     #---------------------------------------
     def dispersion_banbajio(self, run_id=None):
+        
         def get_header(acc_id):
             #  "{:.7}".format( (acc_id.grupo_afinidad or "").rjust(7, "0") )
             encabezado = "010000001030S900"
@@ -41,19 +42,23 @@ class HrPayslip(models.Model):
             return encabezado
 
         def get_body(acc_id, indx=0, line=None):
+            bajio_inter = self._context.get('bajio_inter') or False
             total = line.get_salary_line_total('C99')
             if total <= 0:
                 return ""
+            fecha = run_id.cfdi_date_payment
+            if bajio_inter:
+                fecha = fecha - timedelta(days = 1)
             total = "{:.2f}".format(total)
             acc_number = line.employee_id.bank_account_id and line.employee_id.bank_account_id.acc_number or ""
             detalle = "02"
             detalle += "{:.7}".format( str(indx or "").rjust(7, "0") )
             detalle += "90"
-            detalle += "{:.8}".format( str(run_id.cfdi_date_payment).replace('-', '') )
+            detalle += "{:.8}".format( str(fecha).replace('-', '') )
             detalle += "000"
             detalle += "030"
             detalle += "{:.15}".format( total.replace(".", "").rjust(15, "0") )
-            detalle += "{:.8}".format( str(run_id.cfdi_date_payment).replace('-', '') )
+            detalle += "{:.8}".format( str(fecha).replace('-', '') )
             detalle += "00{:.20} ".format( acc_id.acc_number.rjust(20, "0") )
             detalle += "00{:.20} ".format( str(acc_number or "").rjust(20, "0") )
             detalle += "{:.7}".format( str(indx or "").rjust(7, "0") )

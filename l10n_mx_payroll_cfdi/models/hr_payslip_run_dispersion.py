@@ -129,7 +129,7 @@ class HrPayslipRun(models.Model):
             p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina in ['banorte', 'banamex'])
             if p_ids:
                 _logger.info('---------- Layout Banbajio Inter %s '%( len(p_ids) ) )
-                return p_ids.dispersion_banbajio( run_id )
+                return p_ids.with_context(bajio_inter=True).dispersion_banbajio( run_id )
         return ''
 
     @api.multi
