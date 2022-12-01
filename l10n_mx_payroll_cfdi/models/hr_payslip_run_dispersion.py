@@ -71,10 +71,10 @@ class HrPayslipRun(models.Model):
     @api.multi
     def dispersion_bbva_inter_datas(self):
         for run_id in self:
-            where = ['inter']
+            where = ['inter', 'banamex', 'hsbc', 'banbajio', 'bancoppel']
             contact_id = self.env.ref('__export__.res_company_21_dbddd78a', False)
             if contact_id:
-                where = ['inter', 'banorte']
+                where = ['inter', 'banorte', 'banamex', 'hsbc', 'banbajio', 'bancoppel']
             p_ids = run_id.slip_ids.filtered(lambda r: r.layout_nomina in where)
             if p_ids:
                 _logger.info('---------- Layout BBVA Inter %s '%( len(p_ids) ) )
